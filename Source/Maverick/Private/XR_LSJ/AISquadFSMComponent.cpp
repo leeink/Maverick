@@ -7,6 +7,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "XR_LSJ/AISquad.h"
+#include "CollisionQueryParams.h"
 // Sets default values for this component's properties
 UAISquadFSMComponent::UAISquadFSMComponent()
 {
@@ -85,16 +86,37 @@ void UAISquadFSMComponent::MoveToArrivalPoint()
 	FPathFindingQuery Query;
 	AISquadController->BuildPathfindingQuery(MoveRequest , Query);
 	FPathFindingResult r = ns->FindPathSync(Query);
-	// 만약 목적지가 길 위에있다면
-	if (r.Result == ENavigationQueryResult::Success)
+
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IsSuccessful true")));
+
+
+	if (r.IsPartial()) //목적지로 갈 수 없다면
 	{
-		// 목적지를 향해서 이동하고싶다.
-		AISquadController->MoveToLocation(GetArrivalPoint());
+		if (r.Result == ENavigationQueryResult::Success)
+		{
+			// 목적지를 향해서 이동하고싶다.
+			AISquadController->MoveToLocation(GetArrivalPoint());
+		}
+		// 그렇지 않다면
+		else
+		{
+			SetPatrolPoint(AISquadBody->GetActorLocation() , PatrolPointRadius , PatrolPoint);
+		}
 	}
-	// 그렇지 않다면
-	else
+	else //목적지로 갈 수 있다면
 	{
-		SetPatrolPoint(AISquadBody->GetActorLocation() , PatrolPointRadius , PatrolPoint);
+		// 만약 목적지가 길 위에있다면
+		if (r.Result == ENavigationQueryResult::Success)
+		{
+			// 목적지를 향해서 이동하고싶다.
+			AISquadController->MoveToLocation(GetArrivalPoint());
+		}
+		// 그렇지 않다면
+		else
+		{
+			SetPatrolPoint(AISquadBody->GetActorLocation() , PatrolPointRadius , PatrolPoint);
+		}
 	}
 }
 

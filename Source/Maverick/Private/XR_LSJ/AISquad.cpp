@@ -21,8 +21,7 @@ AAISquad::AAISquad()
 void AAISquad::BeginPlay()
 {
 	Super::BeginPlay();
-	FTimerHandle handle;
-	GetWorld()->GetTimerManager().SetTimer(handle,this,&AAISquad::TestMove,5.0f,true);
+
 }
 void AAISquad::TestMove()
 {
