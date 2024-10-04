@@ -1,0 +1,187 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "XR_LSJ/AISquadFSMComponent.h"
+#include "AIController.h"
+#include "NavigationSystem.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "XR_LSJ/AISquad.h"
+// Sets default values for this component's properties
+UAISquadFSMComponent::UAISquadFSMComponent()
+{
+	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
+	// off to improve performance if you don't need them.
+	PrimaryComponentTick.bCanEverTick = true;
+
+	// ...
+}
+
+void UAISquadFSMComponent::SetState(EEnemyState NextState)
+{
+	EEnemyState prevState = State;
+	State = NextState;
+
+	// 애니메이션의 상태도 동기화 하고싶다.
+	//Anim->EnemyState = NextState;
+
+	//CurrentTime = 0;
+
+	// 다음 상태가 이동상태가 아니라면 Ai한테 멈추라고 하고싶다.
+	if (NextState != EEnemyState::MOVE)
+	{
+		AISquadController->StopMovement();
+	}
+
+	// 상태가 바뀔때 무엇인가 초기화 하고싶다면 여기서 하세요.
+	switch ( State )
+	{
+	case EEnemyState::IDLE:
+		break;
+	case EEnemyState::MOVE:
+		break;
+	case EEnemyState::ATTACK:
+		break;
+	case EEnemyState::DAMAGE:
+		break;
+	case EEnemyState::DIE:
+		break;
+	default:
+		break;
+	}
+}
+
+void UAISquadFSMComponent::TickMove(const float& DeltaTime)
+{
+	//ArrivalPoint(목적지)가 지정되어 있다면 목적지를 향해 이동
+	//정렬은 향후 추가
+	if(GetArrivalPoint()!=FVector::ZeroVector)
+		MoveToArrivalPoint();
+	//Target이 지정되어 있다면 공격사정거리 안까지 이동 후 공격
+	else if (nullptr != Target)
+		MoveToTarget();
+}
+void UAISquadFSMComponent::TickAttack(const float& DeltaTime)
+{
+}
+void UAISquadFSMComponent::TickDamage(const float& DeltaTime)
+{
+}
+void UAISquadFSMComponent::TickDie(const float& DeltaTime)
+{
+}
+
+void UAISquadFSMComponent::MoveToArrivalPoint()
+{
+	FVector dir = GetArrivalPoint() - AISquadBody->GetActorLocation();
+	float dist = dir.Size();
+
+	auto* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+
+	FAIMoveRequest MoveRequest;
+	MoveRequest.SetGoalLocation(GetArrivalPoint()); 
+	MoveRequest.SetAcceptanceRadius(50);
+
+	FPathFindingQuery Query;
+	AISquadController->BuildPathfindingQuery(MoveRequest , Query);
+	FPathFindingResult r = ns->FindPathSync(Query);
+	// 만약 목적지가 길 위에있다면
+	if (r.Result == ENavigationQueryResult::Success)
+	{
+		// 목적지를 향해서 이동하고싶다.
+		AISquadController->MoveToLocation(GetArrivalPoint());
+	}
+	// 그렇지 않다면
+	else
+	{
+		SetPatrolPoint(AISquadBody->GetActorLocation() , PatrolPointRadius , PatrolPoint);
+	}
+}
+
+void UAISquadFSMComponent::MoveToTarget()
+{
+	FVector dir = Target->GetActorLocation() - AISquadBody->GetActorLocation();
+	float dist = dir.Size();
+	//Me->AddMovementInput(dir.GetSafeNormal());
+
+	FVector destinataion = Target->GetActorLocation();
+
+	auto* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	
+	FAIMoveRequest MoveRequest;
+	MoveRequest.SetGoalLocation(destinataion);
+	MoveRequest.SetAcceptanceRadius(50);
+
+	FPathFindingQuery Query;
+	AISquadController->BuildPathfindingQuery(MoveRequest , Query);
+	FPathFindingResult r = ns->FindPathSync(Query);
+	// 만약 목적지가 길 위에있다면
+	if (r.Result == ENavigationQueryResult::Success)
+	{
+		// 목적지를 향해서 이동하고싶다.
+		AISquadController->MoveToLocation(destinataion);
+		// 만약 목적지와의 거리가 공격 가능거리라면
+		if (nullptr != Target && dist < AttackDistance )
+		{
+			// 공격상태로 전이하고싶다.
+			SetState(EEnemyState::ATTACK);
+		}
+	}
+	// 그렇지 않다면
+	else
+	{
+		SetPatrolPoint(AISquadBody->GetActorLocation() , PatrolPointRadius , PatrolPoint);
+	}
+}
+
+bool UAISquadFSMComponent::SetPatrolPoint(FVector origin, float radius, FVector& dest)
+{
+	// 길위의 랜덤한 위치를 정하고싶다.
+	auto* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	FNavLocation loc;
+	bool isSuccess = ns->GetRandomReachablePointInRadius(origin, radius, loc);
+	// 만약 성공했다면
+	if ( isSuccess )
+	{
+		// 그 위치를 dest에 적용하고싶다.
+		dest = loc.Location;
+	}
+	return isSuccess;
+}
+
+void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
+{
+}
+// Called when the game starts
+void UAISquadFSMComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// ...
+	AISquadBody = Cast<AAISquad>(GetOwner());
+	if(AISquadBody)
+		AISquadController = Cast<AAIController>(AISquadBody->GetController());
+}
+
+
+
+
+// Called every frame
+void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	FString myState = UEnum::GetValueAsString(State);
+	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
+
+	switch ( State )
+	{
+	case EEnemyState::IDLE:		TickIdle(DeltaTime);		break;
+	case EEnemyState::MOVE:		TickMove(DeltaTime);		break;
+	case EEnemyState::ATTACK:	TickAttack(DeltaTime);		break;
+	case EEnemyState::DAMAGE:	TickDamage(DeltaTime);		break;
+	case EEnemyState::DIE:		TickDie(DeltaTime);			break;
+	}
+	// ...
+}
+
