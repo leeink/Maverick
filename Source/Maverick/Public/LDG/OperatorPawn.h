@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class AOperatorSpectatorPawn;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -36,6 +37,9 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UInputMappingContext* OperatorMappingContext;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseLeft;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SpawnSpectator;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -47,9 +51,15 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SwitchSlot3;
 
+	// Spectator Pawn Queue
+	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
+
 	//Scroll Speed
 	UPROPERTY(EditDefaultsOnly, Category = ScrollSpeed, meta = (AllowPrivateAccess = "true"))
 	float ScrollSpeed = 2000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
 	
 	// Mouse Position
 	float MouseX;
@@ -58,6 +68,9 @@ class MAVERICK_API AOperatorPawn : public APawn
 	// Viewport Size
 	int ViewPortX;
 	int ViewPortY;
+
+	// Pre Mouse Clicked Position
+	FVector PreMousePosition;
 
 public:
 	// Sets default values for this pawn's properties
@@ -68,7 +81,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
-	
+
+	void OnMouseLeft(const FInputActionValue& Value);
 	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
