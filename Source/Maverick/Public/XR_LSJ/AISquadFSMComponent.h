@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "AIController.h"
+#include "AITypes.h" 
+#include "Navigation/PathFollowingComponent.h" 
 #include "AISquadFSMComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -20,12 +23,16 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
+	class UNavigationPath* CurrentPath;
+	int32 CurrentPathPointIndex;
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
 	EEnemyState State = EEnemyState::IDLE;
 	void SetState(EEnemyState NextState);
+
+	void OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result);
+	void MovePathAsync(UNavigationPath* NavPath);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -34,6 +41,7 @@ protected:
 	void TickAttack(const float& DeltaTime);
 	void TickDamage(const float& DeltaTime);
 	void TickDie(const float& DeltaTime);
+
 
 	void MoveToArrivalPoint();
 	void MoveToTarget();
