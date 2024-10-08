@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "LDG/OperatorPlayerController.h"
+#include "LDG/OperatorSpectatorPawn.h"
 
 // Sets default values
 AOperatorPawn::AOperatorPawn()
@@ -23,7 +24,7 @@ AOperatorPawn::AOperatorPawn()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
-	Camera -> SetRelativeRotation(FRotator(-40.f, 0.f, 0.f));
+	Camera -> SetRelativeRotation(FRotator(-50.f, 0.f, 0.f));
 }
 
 // Called when the game starts or when spawned
@@ -79,23 +80,23 @@ void AOperatorPawn::Tick(float DeltaTime)
 		if(MouseX <= 10.f)
 		{
 			float deltaOffset = ScrollSpeed * GetWorld() -> GetDeltaSeconds();
-			AddActorWorldOffset(FVector(0.f, deltaOffset,0.f));
+			AddActorLocalOffset(FVector(0.f, -1 * deltaOffset,0.f));
 		}
 		else if(MouseX >= static_cast<float>(ViewPortX) - 10.f)
 		{
 			float deltaOffset = ScrollSpeed * GetWorld() -> GetDeltaSeconds();
-			AddActorWorldOffset(FVector(0.f, -1 * deltaOffset,0.f));
+			AddActorLocalOffset(FVector(0.f, deltaOffset,0.f));
 		}
 
 		if(MouseY <= 10.f)
 		{
 			float deltaOffset = ScrollSpeed * GetWorld() -> GetDeltaSeconds();
-			AddActorWorldOffset(FVector(-1 * deltaOffset, 0.f,0.f));
+			AddActorLocalOffset(FVector(deltaOffset, 0.f,0.f));
 		}
 		else if(MouseY >= static_cast<float>(ViewPortY) - 10.f)
 		{
 			float deltaOffset = ScrollSpeed * GetWorld() -> GetDeltaSeconds();
-			AddActorWorldOffset(FVector(deltaOffset, 0.f,0.f));
+			AddActorLocalOffset(FVector(-1 * deltaOffset, 0.f,0.f));
 		}
 	}
 }
@@ -107,6 +108,7 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeft);
 		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
@@ -114,18 +116,55 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
+void AOperatorPawn::OnMouseLeft(const FInputActionValue& Value)
+{
+	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	{
+		FHitResult HitResult;
+		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+		if(HitResult.bBlockingHit)
+		{
+			PreMousePosition = HitResult.Location;
+		}
+	}
+}
+
 void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
 {
+	AOperatorSpectatorPawn* spawn = GetWorld() -> SpawnActor<AOperatorSpectatorPawn>(SpectatorClass, PreMousePosition, FRotator::ZeroRotator);
+	if(SpectatorPawnArray.Num() == 3)
+	{
+		SpectatorPawnArray.RemoveAt(0);
+	}
+	SpectatorPawnArray.Add(spawn);
 }
 
 void AOperatorPawn::OnSwitchSlot1(const FInputActionValue& Value)
 {
+	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
+	
+	if(PlayerController && SpectatorPawnArray.Num() > 0)
+	{
+		PlayerController -> Possess(SpectatorPawnArray[0]);
+	}
 }
 
 void AOperatorPawn::OnSwitchSlot2(const FInputActionValue& Value)
 {
+	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
+	
+	if(PlayerController && SpectatorPawnArray.Num() > 1)
+	{
+		PlayerController -> Possess(SpectatorPawnArray[1]);
+	}
 }
 
 void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 {
+	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
+	
+	if(PlayerController && SpectatorPawnArray.Num() > 2)
+	{
+		PlayerController -> Possess(SpectatorPawnArray[2]);
+	}
 }
