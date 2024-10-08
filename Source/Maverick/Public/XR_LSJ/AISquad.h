@@ -10,11 +10,13 @@ UCLASS()
 class MAVERICK_API AAISquad : public ACharacter
 {
 	GENERATED_BODY()
-
+	int32 MySquadNumber;
 public:
 	// Sets default values for this character's properties
 	AAISquad();
-
+	
+	int32 GetMySquadNumber() const { return MySquadNumber; }
+	void SetMySquadNumber(int32 val) { MySquadNumber = val; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
