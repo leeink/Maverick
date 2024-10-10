@@ -93,10 +93,13 @@ void UAISquadFSMComponent::MoveToArrivalPoint()
 
 	if (r.IsPartial()) //목적지로 갈 수 없다면
 	{
+		//
+
 		if (r.Result == ENavigationQueryResult::Success)
 		{
-			// 목적지를 향해서 이동하고싶다.
+			// 
 			AISquadController->MoveToLocation(GetArrivalPoint());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IsPartial true %s"),*AISquadController->GetName()));
 		}
 		// 그렇지 않다면
 		else
@@ -111,6 +114,7 @@ void UAISquadFSMComponent::MoveToArrivalPoint()
 		{
 			// 목적지를 향해서 이동하고싶다.
 			AISquadController->MoveToLocation(GetArrivalPoint());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IsPartial false %s"),*AISquadController->GetName()));
 		}
 		// 그렇지 않다면
 		else
@@ -137,6 +141,7 @@ void UAISquadFSMComponent::MoveToTarget()
 	FPathFindingQuery Query;
 	AISquadController->BuildPathfindingQuery(MoveRequest , Query);
 	FPathFindingResult r = ns->FindPathSync(Query);
+
 	// 만약 목적지가 길 위에있다면
 	if (r.Result == ENavigationQueryResult::Success)
 	{
