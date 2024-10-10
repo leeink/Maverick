@@ -3,6 +3,9 @@
 
 #include "LDG/Soldier.h"
 
+#include "AIController.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
+
 // Sets default values
 ASoldier::ASoldier()
 {
@@ -30,9 +33,11 @@ void ASoldier::Wait()
 	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Wait"));
 }
 
-void ASoldier::Move()
+void ASoldier::Move(FVector GoalLocation)
 {
 	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Move"));
+	UAIBlueprintHelperLibrary::GetAIController(this) -> StopMovement();
+	UAIBlueprintHelperLibrary::GetAIController(this) -> MoveToLocation(GoalLocation);
 }
 
 void ASoldier::Attack()

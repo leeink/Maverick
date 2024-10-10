@@ -34,6 +34,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Wait();
-	virtual void Move();
+	virtual void Move(FVector GoalLocation);
 	virtual void Attack();
 };

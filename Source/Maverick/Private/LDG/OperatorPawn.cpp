@@ -3,13 +3,18 @@
 
 #include "LDG/OperatorPawn.h"
 
+#include "AIController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/OperatorSpectatorPawn.h"
+#include "LDG/RifleSoldier.h"
+#include "LDG/Soldier.h"
 
 // Sets default values
 AOperatorPawn::AOperatorPawn()
@@ -31,6 +36,8 @@ AOperatorPawn::AOperatorPawn()
 void AOperatorPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ControlledSoldiers1 = Cast<ARifleSoldier>(UGameplayStatics::GetActorOfClass(GetWorld(), ARifleSoldier::StaticClass()));
 }
 
 void AOperatorPawn::PossessedBy(AController* NewController)
@@ -109,6 +116,7 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeft);
+		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
 		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
@@ -125,6 +133,21 @@ void AOperatorPawn::OnMouseLeft(const FInputActionValue& Value)
 		if(HitResult.bBlockingHit)
 		{
 			PreMousePosition = HitResult.Location;
+		}
+	}
+}
+
+void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
+{
+	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	{
+		FHitResult HitResult;
+		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+		if(HitResult.bBlockingHit)
+		{
+			UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> StopMovement();
+			UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> MoveToLocation(HitResult.Location);
+			//ControlledSoldiers1 -> SetActorLocation(HitResult.Location);
 		}
 	}
 }

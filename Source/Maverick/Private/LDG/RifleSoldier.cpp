@@ -12,9 +12,9 @@ void ARifleSoldier::Wait()
 	Super::Wait();
 }
 
-void ARifleSoldier::Move()
+void ARifleSoldier::Move(FVector GoalLocation)
 {
-	Super::Move();
+	Super::Move(GoalLocation);
 }
 
 void ARifleSoldier::Attack()

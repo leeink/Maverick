@@ -11,6 +11,8 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class ARifleSoldier;
+class ASoldier;
 class AOperatorSpectatorPawn;
 class USpringArmComponent;
 class UCameraComponent;
@@ -38,6 +40,9 @@ class MAVERICK_API AOperatorPawn : public APawn
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_MouseLeft;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseRight;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SpawnSpectator;
@@ -72,6 +77,10 @@ class MAVERICK_API AOperatorPawn : public APawn
 	// Pre Mouse Clicked Position
 	FVector PreMousePosition;
 
+	// Controlled Pawns
+	UPROPERTY()
+	ARifleSoldier* ControlledSoldiers1;
+	
 public:
 	// Sets default values for this pawn's properties
 	AOperatorPawn();
@@ -83,6 +92,7 @@ protected:
 	virtual void UnPossessed() override;
 
 	void OnMouseLeft(const FInputActionValue& Value);
+	void OnMouseRight(const FInputActionValue& Value);
 	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
