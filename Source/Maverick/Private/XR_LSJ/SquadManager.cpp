@@ -6,7 +6,9 @@
 #include "XR_LSJ/AISquadFSMComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
-
+#include "NavigationSystem.h"
+#include "AI/NavigationSystemBase.h"
+#include "NavigationPath.h"
 // Sets default values
 ASquadManager::ASquadManager()
 {
@@ -46,6 +48,78 @@ bool ASquadManager::UpDirectionPoint(AActor* BaseActor,FVector Point)
 	{
 		return false;
 	}
+}
+void ASquadManager::FindPath(const FVector& TargetLocation)
+{
+    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    if(nullptr == NavSystem)
+        return;
+    FVector StartLocation = SquadArray[0]->GetActorLocation();
+    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation);
+    if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
+    {
+       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
+	   {
+		   SquadArray[SquadCount]->FSMComp->MovePathAsync(NavPath);
+	   }
+    }
+    else if(NavPath->IsPartial()) // 경로가 끊겼을때
+    {
+        
+    }
+}
+
+void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
+{
+       // 트레이스 시작과 끝 위치 설정
+    FVector BoxStart = ArrivalPoint;
+    FVector BoxEnd = BoxStart; // X축으로 1000 유닛 떨어진 곳
+
+    // 박스 크기 설정 (X, Y, Z 반지름)
+    FVector BoxHalfSize = FVector(200.f, 200.f, 100.f);
+
+    // 박스의 회전 설정 (필요에 따라 회전 적용)
+    FQuat Rotation = FQuat::Identity;
+
+    // 트레이스 채널과 충돌 파라미터 설정
+    FCollisionQueryParams TraceParams(FName(TEXT("PawnMove")), false, this);
+
+    // 트레이스 결과를 저장할 FHitResult
+    FHitResult HitResult;
+
+    // 박스 트레이스 수행
+    bool bHit = GetWorld()->SweepSingleByChannel(
+        HitResult,         // 충돌 결과
+        BoxStart,             // 시작 위치
+        BoxEnd,               // 끝 위치
+        Rotation,          // 박스의 회전
+        ECC_GameTraceChannel1,    // 트레이스 채널 (가시성 채널 사용)
+        FCollisionShape::MakeBox(BoxHalfSize),  // 박스 모양 설정
+        TraceParams        // 추가 파라미터
+    );
+
+     // 결과 처리
+    if (bHit) //목표지점에 오브젝트 존재 시 
+    {
+        //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
+        //SquadArray를 탐색해서 있으면 넣자
+        //분대장을 기준으로 할 예정
+        for (AAISquad* SquadPawn : SquadArray)
+        {
+            TestPoint = GetBoundingBoxPointsSortedByDistance(SquadPawn, HitResult.GetActor(), 100.0f);
+            break;
+        }
+        FindPath(TargetLocation);
+
+        // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
+        DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
+    }
+    else //목표지점에 오브젝트가 없다면
+    {
+       FindPath(TargetLocation);
+        // 디버그용 박스 트레이스 시각화 (충돌 없을 시 초록색)
+        DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
+    }
 }
 void ASquadManager::TestMove()
 {

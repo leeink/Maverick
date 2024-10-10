@@ -32,6 +32,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	bool UpDirectionPoint(AActor* BaseActor, FVector Point);
+	void FindPath(const FVector& TargetLocation);
+	void CheckLocationForObject(const FVector& TargetLocation);
 	void TestMove();
 public:
 	// Called every frame
