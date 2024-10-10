@@ -4,9 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "AIController.h"
-#include "AITypes.h" 
-#include "Navigation/PathFollowingComponent.h" 
+#include "Navigation/PathFollowingComponent.h"
 #include "AISquadFSMComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -25,13 +23,14 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 	GENERATED_BODY()
 	class UNavigationPath* CurrentPath;
 	int32 CurrentPathPointIndex;
+	FVector SquadPosition;
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
 	EEnemyState State = EEnemyState::IDLE;
 	void SetState(EEnemyState NextState);
-
-	void OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result);
+	UFUNCTION()
+	void OnMoveCompleted(EPathFollowingResult::Type Result);
 	void MovePathAsync(UNavigationPath* NavPath);
 protected:
 	// Called when the game starts
@@ -41,7 +40,6 @@ protected:
 	void TickAttack(const float& DeltaTime);
 	void TickDamage(const float& DeltaTime);
 	void TickDie(const float& DeltaTime);
-
 
 	void MoveToArrivalPoint();
 	void MoveToTarget();
@@ -57,7 +55,7 @@ protected:
 	float AttackDistance = 100.0f;
 	// 네비게이션을 이용해서 길찾기를 하고싶다.
 	UPROPERTY()
-	class AAIController* AISquadController;
+	class AAISquadController* AISquadController;
 
 	FVector PatrolPoint;
 	float PatrolPointRadius = 500;
@@ -72,4 +70,6 @@ public:
 public:
 	FVector GetArrivalPoint() const { return ArrivalPoint; }
 	void SetArrivalPoint(FVector val) { ArrivalPoint = val; }
+	FVector GetSquadPosition() const { return SquadPosition; }
+	void SetSquadPosition(FVector val) { SquadPosition = val; }
 };
