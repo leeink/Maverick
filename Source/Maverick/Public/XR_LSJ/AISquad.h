@@ -11,6 +11,7 @@ class MAVERICK_API AAISquad : public ACharacter
 {
 	GENERATED_BODY()
 	int32 MySquadNumber;
+	
 public:
 	// Sets default values for this character's properties
 	AAISquad();
