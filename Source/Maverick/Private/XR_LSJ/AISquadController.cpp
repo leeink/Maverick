@@ -6,6 +6,10 @@
 
 void AAISquadController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 { 
-	Super::OnMoveCompleted(RequestID, Result);  
-	FCallback_AIController_MoveCompleted.Broadcast(Result.Code); 
+	Super::OnMoveCompleted(RequestID, Result);
+	if (FCallback_AIController_MoveCompleted.IsBound())
+	{
+		FCallback_AIController_MoveCompleted.Broadcast(Result.Code); 
+	}
+		
 };

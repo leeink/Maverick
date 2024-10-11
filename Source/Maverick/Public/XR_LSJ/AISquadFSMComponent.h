@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -10,11 +10,11 @@
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
-	IDLE UMETA(DisplayName = "´ë±â") ,
-	MOVE  UMETA(DisplayName = "ÀÌµ¿") ,
-	ATTACK  UMETA(DisplayName = "°ø°İ") ,
-	DAMAGE UMETA(DisplayName = "µ¥¹ÌÁö") ,
-	DIE UMETA(DisplayName = "Á×À½") ,
+	IDLE UMETA(DisplayName = "ëŒ€ê¸°") ,
+	MOVE  UMETA(DisplayName = "ì´ë™") ,
+	ATTACK  UMETA(DisplayName = "ê³µê²©") ,
+	DAMAGE UMETA(DisplayName = "ë°ë¯¸ì§€") ,
+	DIE UMETA(DisplayName = "ì£½ìŒ") ,
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -22,12 +22,14 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	class UNavigationPath* CurrentPath;
+	class UNavigationPath* PrePath;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
+	EEnemyState CurrentState = EEnemyState::IDLE;
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
-	EEnemyState State = EEnemyState::IDLE;
+	
 	void SetState(EEnemyState NextState);
 	UFUNCTION()
 	void OnMoveCompleted(EPathFollowingResult::Type Result);
@@ -45,21 +47,21 @@ protected:
 	void MoveToTarget();
 	UPROPERTY()
 	class AAISquad* AISquadBody;
-	//ÀÌµ¿ À§Ä¡
+	//ì´ë™ ìœ„ì¹˜
 	UPROPERTY()
 	FVector ArrivalPoint=FVector::ZeroVector;
-	//°ø°İ Å¸°Ù
+	//ê³µê²© íƒ€ê²Ÿ
 	UPROPERTY()
 	class ACharacter* Target;
-	//°ø°İ »çÁ¤°Å¸®
+	//ê³µê²© ì‚¬ì •ê±°ë¦¬
 	float AttackDistance = 100.0f;
-	// ³×ºñ°ÔÀÌ¼ÇÀ» ÀÌ¿ëÇØ¼­ ±æÃ£±â¸¦ ÇÏ°í½Í´Ù.
+	// ë„¤ë¹„ê²Œì´ì…˜ì„ ì´ìš©í•´ì„œ ê¸¸ì°¾ê¸°ë¥¼ í•˜ê³ ì‹¶ë‹¤.
 	UPROPERTY()
 	class AAISquadController* AISquadController;
 
 	FVector PatrolPoint;
 	float PatrolPointRadius = 500;
-	// ³»À§Ä¡¿¡¼­ ¹İ°æ 5¹ÌÅÍ
+	// ë‚´ìœ„ì¹˜ì—ì„œ ë°˜ê²½ 5ë¯¸í„°
 	bool SetPatrolPoint(FVector origin, float radius, FVector& dest);
 
 public:	
@@ -72,4 +74,6 @@ public:
 	void SetArrivalPoint(FVector val) { ArrivalPoint = val; }
 	FVector GetSquadPosition() const { return SquadPosition; }
 	void SetSquadPosition(FVector val) { SquadPosition = val; }
+	EEnemyState GetCurrentState() const { return CurrentState; }
+	void SetCurrentState(EEnemyState val) { CurrentState = val; }
 };

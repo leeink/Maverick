@@ -37,9 +37,9 @@ protected:
 	virtual void BeginPlay() override;
 	//목표지점에서 충돌된 Actor 의 경계값 위치 가져오기 
 	TArray<FVector> GetBoundingBoxPointsSortedByDistance(AActor* TargetActor, float Interval /*= 50.0f*/);
-	//TargetLocation로 가는 경로를 찾아 분대원들에게 전달
+	//TargetLocation로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
 	void FindPath(const FVector& TargetLocation);
-	//엄폐물로 가는 경로를 찾아 분대원들에게 전달
+	//엄폐물로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
 	void FindObstructionPath(TArray<FVector>& TargetLocation);
 	//TargetLocation로 이동한다. 엄폐물이 있다면 엄폐할 수 있는 가장 가까운 위치로 이동한다. 
 	void CheckLocationForObject(const FVector& TargetLocation);

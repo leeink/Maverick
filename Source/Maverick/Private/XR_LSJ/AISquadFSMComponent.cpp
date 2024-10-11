@@ -19,8 +19,8 @@ UAISquadFSMComponent::UAISquadFSMComponent()
 
 void UAISquadFSMComponent::SetState(EEnemyState NextState)
 {
-	EEnemyState prevState = State;
-	State = NextState;
+	EEnemyState prevState = GetCurrentState();
+	SetCurrentState(NextState);
 
 	// 애니메이션의 상태도 동기화 하고싶다.
 	//Anim->EnemyState = NextState;
@@ -34,7 +34,7 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	}
 
 	// 상태가 바뀔때 무엇인가 초기화 하고싶다면 여기서 하세요.
-	switch ( State )
+	switch ( GetCurrentState() )
 	{
 	case EEnemyState::IDLE:
 		break;
@@ -74,10 +74,10 @@ void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 {
     // 이동이 성공적으로 완료된 경우에만 다음 지점으로 이동
-    if (Result == EPathFollowingResult::Success && CurrentPath && CurrentPath->PathPoints.IsValidIndex(CurrentPathPointIndex+1))
+    if (Result == EPathFollowingResult::Success && PrePath == CurrentPath)
     {
         CurrentPathPointIndex++;
-
+		 
         // 남은 경로 지점이 있는지 확인
         if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
         {
@@ -90,6 +90,7 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
         }
         else
         {
+			SetState(EEnemyState::IDLE);
             UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
         }
     }
@@ -99,19 +100,20 @@ void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
 	SetState(EEnemyState::MOVE);
 	CurrentPath = NavPath;
 	CurrentPathPointIndex  = 1;
-	
+	AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
  // 남은 경로 지점이 있는지 확인
     if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
     {
         // 다음 경로 지점으로 이동
         FVector NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
         AISquadController->MoveToLocation(NextPoint);
-
+		PrePath = CurrentPath;
         // 이동 완료 후 다시 OnMoveCompleted 호출
         AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
     }
     else
     {
+		SetState(EEnemyState::IDLE);
         UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
@@ -241,10 +243,10 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FString myState = UEnum::GetValueAsString(State);
+	FString myState = UEnum::GetValueAsString(GetCurrentState());
 	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
 
-	switch ( State )
+	switch ( GetCurrentState() )
 	{
 	case EEnemyState::IDLE:		TickIdle(DeltaTime);		break;
 	case EEnemyState::MOVE:		TickMove(DeltaTime);		break;
