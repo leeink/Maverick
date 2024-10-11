@@ -91,9 +91,12 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
         else
         {
 			SetState(EEnemyState::IDLE);
-            UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
         }
     }
+	else
+	{
+		SetState(EEnemyState::IDLE);
+	}
 }
 void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
 {
