@@ -81,9 +81,18 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
         // 남은 경로 지점이 있는지 확인
         if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
         {
-            // 다음 경로 지점으로 이동
-            FVector NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
-            AISquadController->MoveToLocation(NextPoint);
+           // 다음 경로 지점으로 이동
+			FVector NextPoint;
+			if (CurrentPathPointIndex == CurrentPath->PathPoints.Num() - 1)
+			{
+				NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
+				AISquadController->MoveToLocation(NextPoint);
+			}
+			else
+			{
+				NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex];
+				AISquadController->MoveToLocation(NextPoint, 500.f);
+			}
 
             // 이동 완료 후 다시 OnMoveCompleted 호출
             AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
@@ -98,6 +107,10 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 		SetState(EEnemyState::IDLE);
 	}
 }
+//void UAISquadFSMComponent::RotateToTargetLocation(const FVector& TargetLocation)
+//{
+//	AISquadBody->GetMesh()->SetRelativeRotation()
+//}
 void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
 {
 	SetState(EEnemyState::MOVE);
@@ -107,9 +120,21 @@ void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
  // 남은 경로 지점이 있는지 확인
     if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
     {
-        // 다음 경로 지점으로 이동
-        FVector NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
-        AISquadController->MoveToLocation(NextPoint);
+		// 다음 경로 지점으로 이동
+        FVector NextPoint;
+		if (CurrentPathPointIndex == CurrentPath->PathPoints.Num() - 1)
+		{
+			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
+			AISquadController->MoveToLocation(NextPoint);
+		}
+		else
+		{
+			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex];
+			AISquadController->MoveToLocation(NextPoint,500.f);
+		}
+			
+		
+        
 		PrePath = CurrentPath;
         // 이동 완료 후 다시 OnMoveCompleted 호출
         AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
