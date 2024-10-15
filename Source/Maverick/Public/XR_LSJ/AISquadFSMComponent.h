@@ -23,8 +23,6 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 	GENERATED_BODY()
 	UPROPERTY()
 	class UNavigationPath* CurrentPath;
-	UPROPERTY()
-	class UNavigationPath* PrePath;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
 	EEnemyState CurrentState = EEnemyState::IDLE;

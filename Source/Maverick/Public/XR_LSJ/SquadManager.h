@@ -51,4 +51,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	
+	void GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints);
+	TArray<FVector> GetSurfacePointsOnRotatedBoundingBox(AActor* TargetActor, float Interval /*= 50.0f*/);
 };
