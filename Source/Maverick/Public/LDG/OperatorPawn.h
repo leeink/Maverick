@@ -33,7 +33,6 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
-
 	// Input
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* OperatorMappingContext;
@@ -43,6 +42,12 @@ class MAVERICK_API AOperatorPawn : public APawn
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_MouseRight;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseWheelUp;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseWheelDown;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SpawnSpectator;
@@ -67,7 +72,7 @@ class MAVERICK_API AOperatorPawn : public APawn
 
 	//Scroll Speed
 	UPROPERTY(EditDefaultsOnly, Category = ScrollSpeed, meta = (AllowPrivateAccess = "true"))
-	float ScrollSpeed = 2000.f;
+	float ScrollSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
@@ -99,6 +104,8 @@ protected:
 
 	void OnMouseLeft(const FInputActionValue& Value);
 	void OnMouseRight(const FInputActionValue& Value);
+	void OnMouseWheelUp(const FInputActionValue& Value);
+	void OnMouseWheelDown(const FInputActionValue& Value);
 	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);

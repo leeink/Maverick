@@ -117,6 +117,8 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	{
 		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeft);
 		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
+		EnhancedInputComponent->BindAction(IA_MouseWheelUp , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelUp);
+		EnhancedInputComponent->BindAction(IA_MouseWheelDown , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelDown);
 		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
@@ -149,10 +151,25 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		{
 			if(ControlledSoldiers1 -> IsSelected())
 			{
-				UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> MoveToLocation(HitResult.Location);
+				ControlledSoldiers1 -> Move(HitResult.Location);
 			}
 		}
+		
 	}
+}
+
+void AOperatorPawn::OnMouseWheelUp(const FInputActionValue& Value)
+{
+	const float delta = Value.Get<float>();
+	Camera -> FieldOfView = FMath::Clamp(Camera -> FieldOfView - delta * 4, 45.f, 90.f);
+	ScrollSpeed = FMath::Clamp(ScrollSpeed - delta * 100, 6000.f, 120000.f);
+}
+
+void AOperatorPawn::OnMouseWheelDown(const FInputActionValue& Value)
+{
+	const float delta = Value.Get<float>();
+	Camera -> FieldOfView = FMath::Clamp(Camera -> FieldOfView + delta * 4, 45.f, 90.f);
+	ScrollSpeed = FMath::Clamp(ScrollSpeed + delta * 100, 6000.f, 120000.f);
 }
 
 void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
