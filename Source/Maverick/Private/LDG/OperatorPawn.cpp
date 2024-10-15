@@ -121,6 +121,8 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
+		EnhancedInputComponent->BindAction(IA_Unit1, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit1);
+		EnhancedInputComponent->BindAction(IA_Unit2, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit2);
 	}
 }
 
@@ -145,9 +147,10 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
 		if(HitResult.bBlockingHit)
 		{
-			UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> StopMovement();
-			UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> MoveToLocation(HitResult.Location);
-			//ControlledSoldiers1 -> SetActorLocation(HitResult.Location);
+			if(ControlledSoldiers1 -> IsSelected())
+			{
+				UAIBlueprintHelperLibrary::GetAIController(ControlledSoldiers1) -> MoveToLocation(HitResult.Location);
+			}
 		}
 	}
 }
@@ -190,4 +193,14 @@ void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 	{
 		PlayerController -> Possess(SpectatorPawnArray[2]);
 	}
+}
+
+void AOperatorPawn::OnUnit1(const FInputActionValue& Value)
+{
+	ControlledSoldiers1 -> Selected();
+}
+
+void AOperatorPawn::OnUnit2(const FInputActionValue& Value)
+{
+	ControlledSoldiers1 -> Deselected();
 }

@@ -11,7 +11,12 @@ class MAVERICK_API ASoldier : public ACharacter
 {
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Decal, meta = (AllowPrivateAccess = "true"))
+	UDecalComponent* SelectedDecal;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
+	bool bSelected;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	float Speed;
 
@@ -36,4 +41,8 @@ public:
 	virtual void Wait();
 	virtual void Move(FVector GoalLocation);
 	virtual void Attack();
+	void Selected();
+	void Deselected();
+
+	FORCEINLINE bool IsSelected() const { return bSelected; }
 };

@@ -56,6 +56,12 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SwitchSlot3;
 
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_Unit1;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_Unit2;
+
 	// Spectator Pawn Queue
 	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
 
@@ -97,6 +103,8 @@ protected:
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
+	void OnUnit1(const FInputActionValue& Value);
+	void OnUnit2(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
