@@ -27,7 +27,7 @@ class MAVERICK_API ASquadManager : public AActor
 	int32 MaxSpawnCount = 6;
 	int32 CurrentSquadCount = 6;
 	//이동 테스트
-	FVector ArrivalPoint = FVector(800,0,0);
+	FVector ArrivalPoint = FVector(1500,0,0);
 	//엄폐 위치 목록
 	TArray<FVector> ObstructionPoints;
 

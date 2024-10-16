@@ -21,9 +21,9 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
+
 	UPROPERTY()
-	TArray<FVector> Location;
-	class UNavigationPath* CurrentPath;
+	TArray<FVector> PathVectorArray;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
 	EEnemyState CurrentState = EEnemyState::IDLE;
@@ -34,8 +34,7 @@ public:
 	void SetState(EEnemyState NextState);
 	UFUNCTION()
 	void OnMoveCompleted(EPathFollowingResult::Type Result);
-	void MovePathAsync(UNavigationPath* NavPath);
-	void MovePathAsync(TArray<FVector> NavPath);
+	void MovePathAsync(TArray<FVector>& NavPathArray);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -45,7 +44,6 @@ protected:
 	void TickDamage(const float& DeltaTime);
 	void TickDie(const float& DeltaTime);
 
-	void MoveToArrivalPoint();
 	void MoveToTarget();
 	UPROPERTY()
 	class AAISquad* AISquadBody;
@@ -61,10 +59,6 @@ protected:
 	UPROPERTY()
 	class AAISquadController* AISquadController;
 
-	FVector PatrolPoint;
-	float PatrolPointRadius = 500;
-	// 내위치에서 반경 5미터
-	bool SetPatrolPoint(FVector origin, float radius, FVector& dest);
 
 public:	
 	// Called every frame

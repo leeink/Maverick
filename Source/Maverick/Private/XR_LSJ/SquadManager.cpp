@@ -57,6 +57,7 @@ void ASquadManager::FindPath(const FVector& TargetLocation)
 	   {
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
            DirectionPosition.Z = 0;
+           ArrayLocation.Last()+=DirectionPosition;
            SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
 		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
@@ -84,7 +85,9 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
        for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
 	   {
            ArrayLocation.Last() = TargetLocation[SquadCount];
-           SquadArray[SquadCount]->FSMComp->SetSquadPosition(FVector::ZeroVector);
+           FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
+           DirectionPosition.Z = 0;
+           SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
 		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
@@ -93,36 +96,7 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
          UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
-void ASquadManager::FindObstructionPathTest(TArray<FVector>& TargetLocation)
-{
-    if(TargetLocation.IsEmpty())
-        return;
-    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
-    if(nullptr == NavSystem)
-        return;
-    FVector StartLocation = SquadArray[0]->GetActorLocation();
-   
-    {
-    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation[0]);
-    
-    if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
-    {
-        TArray<FVector> ArrayLocation;
-        ArrayLocation = NavPath->PathPoints;
-       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-	   {
-           ArrayLocation.Last() = TargetLocation[SquadCount];
-           SquadArray[SquadCount]->FSMComp->SetSquadPosition(FVector::ZeroVector);
-		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
-	   }
-    }
-    else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
-    {
-         UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
-    }
-     }
-    
-}
+
 void ASquadManager::CheckLocationForObject()
 {
        // 트레이스 시작과 끝 위치 설정
