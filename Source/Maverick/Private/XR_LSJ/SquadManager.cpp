@@ -6,20 +6,20 @@
 #include "XR_LSJ/AISquadFSMComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
-
+#include "NavigationSystem.h"
+#include "AI/NavigationSystemBase.h"
+#include "NavigationPath.h"
 // Sets default values
 ASquadManager::ASquadManager()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	SquadPositionArray.Add(FVector(0, 100, 0));
-	SquadPositionArray.Add(FVector(0, -100, 0));
-	SquadPositionArray.Add(FVector(0, 0, 0));
-	SquadPositionArray.Add(FVector(-100, 0, 0));
-	SquadPositionArray.Add(FVector(-100, 100, 0));
-	SquadPositionArray.Add(FVector(-100, -100, 0));
-
-	MaxSpawnCount = 6;
+    SquadPositionArray.Add(FVector(0, 0, 0));
+	SquadPositionArray.Add(FVector(150, -200, 0));
+	SquadPositionArray.Add(FVector(-150, -150, 0));
+	SquadPositionArray.Add(FVector(-150, 150, 0));
+	SquadPositionArray.Add(FVector(250, 0, 0));
+	SquadPositionArray.Add(FVector(150, 200, 0));
 }
 
 // Called when the game starts or when spawned
@@ -31,25 +31,62 @@ void ASquadManager::BeginPlay()
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
 		SquadArray[SpawnCount]->SetMySquadNumber(SpawnCount + 1);
 	}
+    AttachToComponent(SquadArray[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+    //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::TestMove, 5.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 5.0f, true);
 }
-//현재 위치에서 가야할 위치가 위인지 아래인지
-bool ASquadManager::UpDirectionPoint(AActor* BaseActor,FVector Point)
+
+void ASquadManager::FindPath(const FVector& TargetLocation)
 {
-    float Direction = FVector::DotProduct (BaseActor->GetActorForwardVector ( ) , Point);
-	if ( Direction > 0 )
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    if(nullptr == NavSystem)
+        return;
+    FVector StartLocation = SquadArray[0]->GetActorLocation();
+    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation);
+    if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
+    {
+       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
+	   {
+           FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
+           DirectionPosition.Z = 0;
+           SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
+		   SquadArray[SquadCount]->FSMComp->MovePathAsync(NavPath);
+	   }
+    }
+    else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
+    {
+         
+    }
 }
-void ASquadManager::TestMove()
+
+void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
 {
-	   // 트레이스 시작과 끝 위치 설정
+    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    if(nullptr == NavSystem)
+        return;
+    FVector StartLocation = SquadArray[0]->GetActorLocation();
+    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation[0]);
+    if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
+    {
+       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
+	   {
+           NavPath->PathPoints.Last() = TargetLocation[SquadCount];
+           FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
+           DirectionPosition.Z = 0;
+           SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
+		   SquadArray[SquadCount]->FSMComp->MovePathAsync(NavPath);
+	   }
+    }
+    else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
+    {
+         
+    }
+}
+
+void ASquadManager::CheckLocationForObject()
+{
+       // 트레이스 시작과 끝 위치 설정
     FVector BoxStart = ArrivalPoint;
     FVector BoxEnd = BoxStart; // X축으로 1000 유닛 떨어진 곳
 
@@ -76,98 +113,75 @@ void ASquadManager::TestMove()
         TraceParams        // 추가 파라미터
     );
 
-    bool UpDirection = false;
-
-    // 결과 처리
-    if (bHit)
+     // 결과 처리
+    if (bHit) //목표지점에 오브젝트 존재 시 
     {
-        
-        FBox Bounds = HitResult.GetActor()->GetComponentsBoundingBox();
         //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
         //SquadArray를 탐색해서 있으면 넣자
-        for (AAISquad* SquadPawn : SquadArray)
-        {
-            TestPoint = GetBoundingBoxPointsSortedByDistance(SquadPawn, HitResult.GetActor(), 100.0f);
-            UpDirection = UpDirectionPoint(SquadPawn,TestPoint[0]);
-            break;
-        }
-        if (UpDirection)
-        {
-        	for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-			{
-				SquadArray[SquadCount]->FSMComp->SetArrivalPoint(TestPoint[SquadCount]);
-				SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-			}
-        }
-        else
-        {
-            for (int SquadCount = SquadArray.Num() - 1; SquadCount >= 0 ; SquadCount--)
-			{
-				SquadArray[SquadCount]->FSMComp->SetArrivalPoint(TestPoint[SquadCount]);
-				SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-			}
-        }
-	
+        //분대장을 기준으로 할 예정
+        ObstructionPoints = GetBoundingBoxPointsSortedByDistance(HitResult.GetActor(), 100.0f);
+        FindObstructionPath(ObstructionPoints);
+        ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
         DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
     }
-    else
+    else //목표지점에 오브젝트가 없다면
     {
-        UpDirection = UpDirectionPoint(SquadArray[0], ArrivalPoint);
-        if (UpDirection)
-        {
-        	for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-			{
-				SquadArray[SquadCount]->FSMComp->SetArrivalPoint(ArrivalPoint+SquadPositionArray[SquadCount]);
-				SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-			}
-         
-        }
-        else
-        {
-            for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-			{
-				SquadArray[SquadCount]->FSMComp->SetArrivalPoint(ArrivalPoint + SquadPositionArray[SquadArray.Num() - 1 - SquadCount]);
-				SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-			}
-        }
+       FindPath(BoxStart);
+       ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 없을 시 초록색)
         DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
     }
-    //LineTrace로 충돌된 물체가 있는지 확인해서 그 물체의 경계값에 서기 
- //   FHitResult OutHit;
-	//FVector Start = ArrivalPoint + FVector(0,0,100);
-	//FVector End = ArrivalPoint + FVector(0,0,-100);
-	//ECollisionChannel TraceChannel = ECollisionChannel::ECC_GameTraceChannel1; //PawnMove //Block 으로 해야 함
-	//FCollisionQueryParams Params;
-
-	////목적지를 가린 액터의 테두리로 이동
-	//if (GetWorld()->LineTraceSingleByChannel(
-	//	OutHit,
-	//	Start,
-	//	End,
-	//	TraceChannel,
-	//	Params))
-	//{
-
-	//	FBox Bounds = OutHit.GetActor()->GetComponentsBoundingBox();
- //       //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
- //       //SquadArray를 탐색해서 있으면 넣자
-	//	TestPoint = GetBoundingBoxPointsSortedByDistance(SquadArray[0], OutHit.GetActor(), 100.0f);
-	//	for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-	//	{
-	//		SquadArray[SquadCount]->FSMComp->SetArrivalPoint(TestPoint[SquadCount]);
-	//		SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-	//	}
-	//}
-	//else
-	//	for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
-	//	{
-	//		SquadArray[SquadCount]->FSMComp->SetArrivalPoint(ArrivalPoint + SquadPositionArray[SquadCount]);
-	//		SquadArray[SquadCount]->FSMComp->SetState(EEnemyState::MOVE);
-	//	}
-	ArrivalPoint*=(-1);
 }
+void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
+{
+       // 트레이스 시작과 끝 위치 설정
+    FVector BoxStart = TargetLocation;
+    FVector BoxEnd = BoxStart; // X축으로 1000 유닛 떨어진 곳
+
+    // 박스 크기 설정 (X, Y, Z 반지름)
+    FVector BoxHalfSize = FVector(200.f, 200.f, 100.f);
+
+    // 박스의 회전 설정 (필요에 따라 회전 적용)
+    FQuat Rotation = FQuat::Identity;
+
+    // 트레이스 채널과 충돌 파라미터 설정
+    FCollisionQueryParams TraceParams(FName(TEXT("PawnMove")), false, this);
+
+    // 트레이스 결과를 저장할 FHitResult
+    FHitResult HitResult;
+
+    // 박스 트레이스 수행
+    bool bHit = GetWorld()->SweepSingleByChannel(
+        HitResult,         // 충돌 결과
+        BoxStart,             // 시작 위치
+        BoxEnd,               // 끝 위치
+        Rotation,          // 박스의 회전
+        ECC_GameTraceChannel1,    // 트레이스 채널 (가시성 채널 사용)
+        FCollisionShape::MakeBox(BoxHalfSize),  // 박스 모양 설정
+        TraceParams        // 추가 파라미터
+    );
+
+     // 결과 처리
+    if (bHit) //목표지점에 오브젝트 존재 시 
+    {
+        //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
+        //SquadArray를 탐색해서 있으면 넣자
+        //분대장을 기준으로 할 예정
+        ObstructionPoints = GetBoundingBoxPointsSortedByDistance(HitResult.GetActor(), 100.0f);
+        FindObstructionPath(ObstructionPoints);
+
+        // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
+        DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
+    }
+    else //목표지점에 오브젝트가 없다면
+    {
+       FindPath(TargetLocation);
+        // 디버그용 박스 트레이스 시각화 (충돌 없을 시 초록색)
+        DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
+    }
+}
+
 // Called every frame
 void ASquadManager::Tick(float DeltaTime)
 {
@@ -175,8 +189,8 @@ void ASquadManager::Tick(float DeltaTime)
 
 }
 
-// 일정 간격(50cm)으로 바운딩 박스 주위를 둘러싼 점들을 MyActor와의 거리 기준으로 정렬
-TArray<FVector> ASquadManager::GetBoundingBoxPointsSortedByDistance(AActor* MyActor, AActor* TargetActor, float Interval /*= 50.0f*/)
+// 일정 간격(50cm)으로 바운딩 박스 주위를 둘러싼 점들을 SquadManager와의 거리 기준으로 정렬
+TArray<FVector> ASquadManager::GetBoundingBoxPointsSortedByDistance(AActor* TargetActor, float Interval /*= 50.0f*/)
 {
     TArray<FVector> Points;
     TArray<float> PointLength;
@@ -186,10 +200,6 @@ TArray<FVector> ASquadManager::GetBoundingBoxPointsSortedByDistance(AActor* MyAc
         return Points;
     }
 
-    // 액터의 바운딩 박스 계산
-    //FBox Bounds = TargetActor->GetComponentsBoundingBox();
-    //FVector Min = Bounds.Min;
-    //FVector Max = Bounds.Max;
     FBox Bounds;
     FVector Min;
     FVector Max;
@@ -232,7 +242,7 @@ TArray<FVector> ASquadManager::GetBoundingBoxPointsSortedByDistance(AActor* MyAc
                 FVector BoundaryPoint = FVector(X, Y, SquadArray[0]->GetActorLocation().Z);
                 Points.Add(BoundaryPoint);
                 //Points index에 해당하는 MyActor와 거리를 구하여 PointLength에 넣는다.
-                PointLength.Add(FVector::Distance(BoundaryPoint,MyActor->GetActorLocation()));
+                PointLength.Add(FVector::Distance(BoundaryPoint,GetActorLocation()));
             }
         }
     }

@@ -11,6 +11,8 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class ARifleSoldier;
+class ASoldier;
 class AOperatorSpectatorPawn;
 class USpringArmComponent;
 class UCameraComponent;
@@ -31,13 +33,21 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
-
 	// Input
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* OperatorMappingContext;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_MouseLeft;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseRight;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseWheelUp;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_MouseWheelDown;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SpawnSpectator;
@@ -51,12 +61,18 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_SwitchSlot3;
 
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_Unit1;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_Unit2;
+
 	// Spectator Pawn Queue
 	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
 
 	//Scroll Speed
 	UPROPERTY(EditDefaultsOnly, Category = ScrollSpeed, meta = (AllowPrivateAccess = "true"))
-	float ScrollSpeed = 2000.f;
+	float ScrollSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
@@ -72,6 +88,10 @@ class MAVERICK_API AOperatorPawn : public APawn
 	// Pre Mouse Clicked Position
 	FVector PreMousePosition;
 
+	// Controlled Pawns
+	UPROPERTY()
+	ARifleSoldier* ControlledSoldiers1;
+	
 public:
 	// Sets default values for this pawn's properties
 	AOperatorPawn();
@@ -83,10 +103,15 @@ protected:
 	virtual void UnPossessed() override;
 
 	void OnMouseLeft(const FInputActionValue& Value);
+	void OnMouseRight(const FInputActionValue& Value);
+	void OnMouseWheelUp(const FInputActionValue& Value);
+	void OnMouseWheelDown(const FInputActionValue& Value);
 	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
+	void OnUnit1(const FInputActionValue& Value);
+	void OnUnit2(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
