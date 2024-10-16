@@ -8,6 +8,7 @@
 #include "CollisionQueryParams.h"
 #include "NavigationPath.h"
 #include "XR_LSJ/AISquadController.h"
+
 // Sets default values for this component's properties
 UAISquadFSMComponent::UAISquadFSMComponent()
 {
@@ -70,7 +71,6 @@ void UAISquadFSMComponent::TickDamage(const float& DeltaTime)
 void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 {
 }
-
 void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 {
     // 이동이 성공적으로 완료된 경우에만 다음 지점으로 이동
@@ -78,34 +78,71 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
     {
         CurrentPathPointIndex++;
 		 
-	 if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
-    {
-		// 다음 경로 지점으로 이동
-        FVector NextPoint;
-		if (CurrentPathPointIndex == CurrentPath->PathPoints.Num() - 1)
+		 if (CurrentPathPointIndex < (Location.Num()))
 		{
-			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex];// + SquadPosition;
-			AISquadController->MoveToLocation(CurrentPath->PathPoints[CurrentPathPointIndex]);
+			//// 다음 경로 지점으로 이동
+			FVector NextPoint;
+			/*		if (CurrentPathPointIndex == Location.Num() - 1)
+					{
+						NextPoint = Location[CurrentPathPointIndex] + SquadPosition;
+						AISquadController->MoveToLocation(NextPoint);
+					}
+					else
+					{
+						NextPoint = Location[CurrentPathPointIndex];
+						AISquadController->MoveToLocation(NextPoint);
+					}*/
+			NextPoint = Location[CurrentPathPointIndex] + SquadPosition;
+				AISquadController->MoveToLocation(NextPoint);
+
 		}
 		else
 		{
-			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex];
-			AISquadController->MoveToLocation(NextPoint);
-		}
-
-            // 이동 완료 후 다시 OnMoveCompleted 호출
-            AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
-        }
-        else
-        {
 			SetState(EEnemyState::IDLE);
-        }
-    }
+			UE_LOG(LogTemp, Warning, TEXT("Reached final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+		}
+	}
 	else
 	{
 		SetState(EEnemyState::IDLE);
+		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
 	}
 }
+
+void UAISquadFSMComponent::MovePathAsync(TArray<FVector> NavPath)
+{
+	SetState(EEnemyState::MOVE);
+	Location = NavPath;
+	CurrentPathPointIndex  = 1;
+	AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
+
+  //남은 경로 지점이 있는지 확인
+    if (CurrentPathPointIndex < (Location.Num()))
+    {
+		// 다음 경로 지점으로 이동
+		FVector NextPoint;
+		if (CurrentPathPointIndex == Location.Num() - 1)
+		{
+			NextPoint = Location[CurrentPathPointIndex] + SquadPosition;
+			AISquadController->MoveToLocation(NextPoint);
+		}
+		else
+		{
+			NextPoint = Location[CurrentPathPointIndex];
+			AISquadController->MoveToLocation(NextPoint);
+		}
+
+			
+        // 이동 완료 후 다시 OnMoveCompleted 호출
+        AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
+    }
+    else
+    {
+		SetState(EEnemyState::IDLE);
+        UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+    }
+}
+
 
 void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
 {
@@ -113,14 +150,15 @@ void UAISquadFSMComponent::MovePathAsync(UNavigationPath* NavPath)
 	CurrentPath = NavPath;
 	CurrentPathPointIndex  = 1;
 	AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
- // 남은 경로 지점이 있는지 확인
+
+  //남은 경로 지점이 있는지 확인
     if (CurrentPathPointIndex < (CurrentPath->PathPoints.Num()))
     {
 		// 다음 경로 지점으로 이동
         FVector NextPoint;
 		if (CurrentPathPointIndex == CurrentPath->PathPoints.Num() - 1)
 		{
-			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex];// + SquadPosition;
+			NextPoint = CurrentPath->PathPoints[CurrentPathPointIndex] + SquadPosition;
 			AISquadController->MoveToLocation(CurrentPath->PathPoints[CurrentPathPointIndex]);
 		}
 		else

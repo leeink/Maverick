@@ -22,6 +22,7 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	UPROPERTY()
+	TArray<FVector> Location;
 	class UNavigationPath* CurrentPath;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
@@ -34,6 +35,7 @@ public:
 	UFUNCTION()
 	void OnMoveCompleted(EPathFollowingResult::Type Result);
 	void MovePathAsync(UNavigationPath* NavPath);
+	void MovePathAsync(TArray<FVector> NavPath);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
