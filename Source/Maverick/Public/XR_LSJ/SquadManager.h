@@ -51,7 +51,6 @@ protected:
 	void FindPath(const FVector& TargetLocation);
 	//엄폐물로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
 	void FindObstructionPath(TArray<FVector>& TargetLocation);
-	void FindObstructionPathTest(TArray<FVector>& TargetLocation);
 	//TargetLocation로 이동한다. 엄폐물이 있다면 엄폐할 수 있는 가장 가까운 위치로 이동한다. 
 	void CheckLocationForObject(const FVector& TargetLocation);
 	//CheckLocationForObject 테스트

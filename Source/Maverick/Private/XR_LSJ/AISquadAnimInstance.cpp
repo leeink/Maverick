@@ -3,6 +3,7 @@
 
 #include "XR_LSJ/AISquadAnimInstance.h"
 #include "XR_LSJ/AISquad.h"
+#include "Animation/AnimMontage.h"
 
 void UAISquadAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
@@ -17,5 +18,5 @@ void UAISquadAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
 	AISquadBody = Cast<AAISquad>(TryGetPawnOwner());
-
+	
 }

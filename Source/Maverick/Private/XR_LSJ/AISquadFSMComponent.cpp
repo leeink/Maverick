@@ -8,6 +8,7 @@
 #include "CollisionQueryParams.h"
 #include "NavigationPath.h"
 #include "XR_LSJ/AISquadController.h"
+#include "XR_LSJ/AISquadAnimInstance.h"
 
 // Sets default values for this component's properties
 UAISquadFSMComponent::UAISquadFSMComponent()
@@ -38,8 +39,10 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	switch ( GetCurrentState() )
 	{
 	case EEnemyState::IDLE:
+		//AISquadAnimInstance->SetIsAttacking(true);
 		break;
 	case EEnemyState::MOVE:
+	//AISquadAnimInstance->SetIsAttacking(true);
 		break;
 	case EEnemyState::ATTACK:
 		break;
@@ -64,6 +67,15 @@ void UAISquadFSMComponent::TickDamage(const float& DeltaTime)
 }
 void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 {
+}
+
+void UAISquadFSMComponent::StartAttack()
+{
+	AISquadBody->PlayAnimMontage(AISquadAnimInstance->GetAttackAM());
+}
+void UAISquadFSMComponent::EndAttack()
+{
+	AISquadBody->StopAnimMontage(AISquadAnimInstance->GetAttackAM());
 }
 void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 {
@@ -122,7 +134,7 @@ void UAISquadFSMComponent::MovePathAsync(TArray<FVector>& NavPathArray)
 			NextPoint = PathVectorArray[CurrentPathPointIndex] + SquadPosition;
 			AISquadController->MoveToLocation(NextPoint, 100.0f);
 		}
-
+		
         // 이동 완료 후 다시 OnMoveCompleted 호출
         AISquadController->FCallback_AIController_MoveCompleted.AddUFunction(this, FName("OnMoveCompleted"));
     }
@@ -181,8 +193,12 @@ void UAISquadFSMComponent::BeginPlay()
 
 	// ...
 	AISquadBody = Cast<AAISquad>(GetOwner());
-	if(AISquadBody)
+	if (AISquadBody)
+	{
 		AISquadController = Cast<AAISquadController>(AISquadBody->GetController());
+		AISquadAnimInstance = Cast<UAISquadAnimInstance>(AISquadBody->GetMesh()->GetAnimInstance());
+	}
+		
 }
 
 

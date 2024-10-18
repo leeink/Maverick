@@ -27,6 +27,8 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
 	EEnemyState CurrentState = EEnemyState::IDLE;
+	class UAISquadAnimInstance* AISquadAnimInstance;
+	bool IsAttacking = false;
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
@@ -44,6 +46,8 @@ protected:
 	void TickDamage(const float& DeltaTime);
 	void TickDie(const float& DeltaTime);
 
+	void StartAttack();
+	void EndAttack();
 	void MoveToTarget();
 	UPROPERTY()
 	class AAISquad* AISquadBody;

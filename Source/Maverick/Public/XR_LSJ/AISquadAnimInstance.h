@@ -15,9 +15,19 @@ class MAVERICK_API UAISquadAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	class AAISquad* AISquadBody;
+	UPROPERTY(EditDefaultsOnly)
+	class UAnimMontage* AttackAM;
 protected:
+	UPROPERTY(BlueprintReadWrite)
+	bool IsAttacking = true;
 	UPROPERTY(BlueprintReadWrite)
 	EEnemyState CurrentState;
 	virtual void NativeUpdateAnimation(float DeltaSeconds);
 	virtual void NativeBeginPlay();
+public:
+
+	class UAnimMontage* GetAttackAM() const { return AttackAM; }
+	void SetAttackAM(class UAnimMontage* val) { AttackAM = val; }
+	bool GetIsAttacking() const { return IsAttacking; }
+	void SetIsAttacking(bool val) { IsAttacking = val; }
 };
