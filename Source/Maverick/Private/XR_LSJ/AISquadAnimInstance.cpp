@@ -20,3 +20,11 @@ void UAISquadAnimInstance::NativeBeginPlay()
 	AISquadBody = Cast<AAISquad>(TryGetPawnOwner());
 	
 }
+
+void UAISquadAnimInstance::AnimNotify_Fire()
+{
+	UE_LOG(LogTemp, Warning, TEXT("1"));
+	if(AISquadBody)
+		AISquadBody->AttackFire();
+}
+
