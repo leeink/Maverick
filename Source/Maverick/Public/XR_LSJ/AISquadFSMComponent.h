@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -10,28 +10,33 @@
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
-	IDLE UMETA(DisplayName = "¥Î±‚") ,
-	MOVE  UMETA(DisplayName = "¿Ãµø") ,
-	ATTACK  UMETA(DisplayName = "∞¯∞›") ,
-	DAMAGE UMETA(DisplayName = "µ•πÃ¡ˆ") ,
-	DIE UMETA(DisplayName = "¡◊¿Ω") ,
+	IDLE UMETA(DisplayName = "ÎåÄÍ∏∞") ,
+	MOVE  UMETA(DisplayName = "Ïù¥Îèô") ,
+	ATTACK  UMETA(DisplayName = "Í≥µÍ≤©") ,
+	DAMAGE UMETA(DisplayName = "Îç∞ÎØ∏ÏßÄ") ,
+	DIE UMETA(DisplayName = "Ï£ΩÏùå") ,
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
-	class UNavigationPath* CurrentPath;
+
+	UPROPERTY()
+	TArray<FVector> PathVectorArray;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
+	EEnemyState CurrentState = EEnemyState::IDLE;
+	class UAISquadAnimInstance* AISquadAnimInstance;
+	bool IsAttacking = false;
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
-	EEnemyState State = EEnemyState::IDLE;
+	
 	void SetState(EEnemyState NextState);
 	UFUNCTION()
 	void OnMoveCompleted(EPathFollowingResult::Type Result);
-	void MovePathAsync(UNavigationPath* NavPath);
+	void MovePathAsync(TArray<FVector>& NavPathArray);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -41,26 +46,23 @@ protected:
 	void TickDamage(const float& DeltaTime);
 	void TickDie(const float& DeltaTime);
 
-	void MoveToArrivalPoint();
+	void StartAttack();
+	void EndAttack();
 	void MoveToTarget();
 	UPROPERTY()
 	class AAISquad* AISquadBody;
-	//¿Ãµø ¿ßƒ°
+	//Ïù¥Îèô ÏúÑÏπò
 	UPROPERTY()
 	FVector ArrivalPoint=FVector::ZeroVector;
-	//∞¯∞› ≈∏∞Ÿ
+	//Í≥µÍ≤© ÌÉÄÍ≤ü
 	UPROPERTY()
 	class ACharacter* Target;
-	//∞¯∞› ªÁ¡§∞≈∏Æ
+	//Í≥µÍ≤© ÏÇ¨Ï†ïÍ±∞Î¶¨
 	float AttackDistance = 100.0f;
-	// ≥◊∫Ò∞‘¿Ãº«¿ª ¿ÃøÎ«ÿº≠ ±Ê√£±‚∏¶ «œ∞ÌΩÕ¥Ÿ.
+	// ÎÑ§ÎπÑÍ≤åÏù¥ÏÖòÏùÑ Ïù¥Ïö©Ìï¥ÏÑú Í∏∏Ï∞æÍ∏∞Î•º ÌïòÍ≥†Ïã∂Îã§.
 	UPROPERTY()
 	class AAISquadController* AISquadController;
 
-	FVector PatrolPoint;
-	float PatrolPointRadius = 500;
-	// ≥ª¿ßƒ°ø°º≠ π›∞Ê 5πÃ≈Õ
-	bool SetPatrolPoint(FVector origin, float radius, FVector& dest);
 
 public:	
 	// Called every frame
@@ -72,4 +74,6 @@ public:
 	void SetArrivalPoint(FVector val) { ArrivalPoint = val; }
 	FVector GetSquadPosition() const { return SquadPosition; }
 	void SetSquadPosition(FVector val) { SquadPosition = val; }
+	EEnemyState GetCurrentState() const { return CurrentState; }
+	void SetCurrentState(EEnemyState val) { CurrentState = val; }
 };
