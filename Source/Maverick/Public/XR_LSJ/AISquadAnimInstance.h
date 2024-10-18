@@ -24,6 +24,8 @@ protected:
 	EEnemyState CurrentState;
 	virtual void NativeUpdateAnimation(float DeltaSeconds);
 	virtual void NativeBeginPlay();
+	UFUNCTION()
+	virtual void AnimNotify_Fire();
 public:
 
 	class UAnimMontage* GetAttackAM() const { return AttackAM; }

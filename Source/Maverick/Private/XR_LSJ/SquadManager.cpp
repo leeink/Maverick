@@ -317,7 +317,7 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
 		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MaxX.X + 5.0f, MinY.Y + (MaxY.Y- MinY.Y)/2 , 0))); // 우하단 뒤쪽
          
          //TargetActor와 SquadManager액터의 가까운 방향에 해당하는 위치를 구한다.
-         EObstructionDirection ObstructionDirection;
+         EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;
 
          for (int DirectionVertexCount = 4; DirectionVertexCount < VertexArray.Num(); DirectionVertexCount++)

@@ -34,7 +34,8 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	{
 		AISquadController->StopMovement();
 	}
-
+	AISquadBody->PlayAnimMontage(AISquadAnimInstance->GetAttackAM());
+	//AISquadBody->StopAnimMontage(AISquadAnimInstance->GetAttackAM());
 	// 상태가 바뀔때 무엇인가 초기화 하고싶다면 여기서 하세요.
 	switch ( GetCurrentState() )
 	{
@@ -42,6 +43,7 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 		//AISquadAnimInstance->SetIsAttacking(true);
 		break;
 	case EEnemyState::MOVE:
+		
 	//AISquadAnimInstance->SetIsAttacking(true);
 		break;
 	case EEnemyState::ATTACK:
