@@ -13,6 +13,21 @@ AAISquad::AAISquad()
 
 	FSMComp = CreateDefaultSubobject<UAISquadFSMComponent>(TEXT("FSMComp"));
 
+	GunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMeshComp"));
+	if (nullptr == GunMesh)
+	{
+		static ConstructorHelpers::FObjectFinder<USkeletalMesh> GunMeshFinder(TEXT("/Game/Asset/FPS_Weapon_Bundle/Weapons/Meshes/Ka47/SK_KA47.SK_KA47"));
+		if (GunMeshFinder.Succeeded())
+		{
+			GunMeshComp->SetSkeletalMesh(GunMeshFinder.Object);
+		}
+	}
+	else
+		GunMeshComp->SetSkeletalMesh(GunMesh);
+	GunMeshComp->SetupAttachment(GetMesh(),FName("RightHandThumb4"));
+	GunMeshComp->SetRelativeLocation(FVector(-3.300448,1.447269,2.664125));
+	GunMeshComp->SetRelativeRotation(FRotator(47.178474,38.000000,190.163415));
+
 	AIControllerClass = AAISquadController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
