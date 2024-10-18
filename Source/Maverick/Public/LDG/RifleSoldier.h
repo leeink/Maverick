@@ -19,6 +19,6 @@ public:
 	
 public:
 	virtual void Wait() override;
-	virtual void Move() override;
+	virtual void Move(FVector GoalLocation) override;
 	virtual void Attack() override;
 };

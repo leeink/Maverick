@@ -3,13 +3,18 @@
 
 #include "LDG/OperatorPawn.h"
 
+#include "AIController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/OperatorSpectatorPawn.h"
+#include "LDG/RifleSoldier.h"
+#include "LDG/Soldier.h"
 
 // Sets default values
 AOperatorPawn::AOperatorPawn()
@@ -31,6 +36,8 @@ AOperatorPawn::AOperatorPawn()
 void AOperatorPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ControlledSoldiers1 = Cast<ARifleSoldier>(UGameplayStatics::GetActorOfClass(GetWorld(), ARifleSoldier::StaticClass()));
 }
 
 void AOperatorPawn::PossessedBy(AController* NewController)
@@ -109,10 +116,15 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeft);
+		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
+		EnhancedInputComponent->BindAction(IA_MouseWheelUp , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelUp);
+		EnhancedInputComponent->BindAction(IA_MouseWheelDown , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelDown);
 		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
+		EnhancedInputComponent->BindAction(IA_Unit1, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit1);
+		EnhancedInputComponent->BindAction(IA_Unit2, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit2);
 	}
 }
 
@@ -127,6 +139,37 @@ void AOperatorPawn::OnMouseLeft(const FInputActionValue& Value)
 			PreMousePosition = HitResult.Location;
 		}
 	}
+}
+
+void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
+{
+	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	{
+		FHitResult HitResult;
+		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+		if(HitResult.bBlockingHit)
+		{
+			if(ControlledSoldiers1 -> IsSelected())
+			{
+				ControlledSoldiers1 -> Move(HitResult.Location);
+			}
+		}
+		
+	}
+}
+
+void AOperatorPawn::OnMouseWheelUp(const FInputActionValue& Value)
+{
+	const float delta = Value.Get<float>();
+	Camera -> FieldOfView = FMath::Clamp(Camera -> FieldOfView - delta * 4, 45.f, 90.f);
+	ScrollSpeed = FMath::Clamp(ScrollSpeed - delta * 100, 6000.f, 120000.f);
+}
+
+void AOperatorPawn::OnMouseWheelDown(const FInputActionValue& Value)
+{
+	const float delta = Value.Get<float>();
+	Camera -> FieldOfView = FMath::Clamp(Camera -> FieldOfView + delta * 4, 45.f, 90.f);
+	ScrollSpeed = FMath::Clamp(ScrollSpeed + delta * 100, 6000.f, 120000.f);
 }
 
 void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
@@ -167,4 +210,14 @@ void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 	{
 		PlayerController -> Possess(SpectatorPawnArray[2]);
 	}
+}
+
+void AOperatorPawn::OnUnit1(const FInputActionValue& Value)
+{
+	ControlledSoldiers1 -> Selected();
+}
+
+void AOperatorPawn::OnUnit2(const FInputActionValue& Value)
+{
+	ControlledSoldiers1 -> Deselected();
 }
