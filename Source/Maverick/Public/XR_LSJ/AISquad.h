@@ -11,11 +11,26 @@ class MAVERICK_API AAISquad : public ACharacter
 {
 	GENERATED_BODY()
 	int32 MySquadNumber;
-	
+
+	UPROPERTY(EditDefaultsOnly,Meta = (AllowPrivateAccess = true))
+	class USkeletalMeshComponent* GunMeshComp;
 public:
 	// Sets default values for this character's properties
 	AAISquad();
-	
+
+	//Bullet
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> BulletFactory; 
+
+	//Muzzle ¿Ã∆Â∆Æ
+	UPROPERTY(EditDefaultsOnly)
+	class UNiagaraSystem* GunMuzzleFXSystem;
+	UPROPERTY(EditDefaultsOnly)
+	class UNiagaraComponent* GunMuzzleFXComponent;
+
+	void SpawnBullet();
+	void AttackFire();
+
 	int32 GetMySquadNumber() const { return MySquadNumber; }
 	void SetMySquadNumber(int32 val) { MySquadNumber = val; }
 protected:
@@ -24,6 +39,7 @@ protected:
 	FVector TestMovePoint = FVector(1000,0,0);
 	void TestMove();
 public:
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

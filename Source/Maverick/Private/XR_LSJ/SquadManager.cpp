@@ -9,6 +9,9 @@
 #include "NavigationSystem.h"
 #include "AI/NavigationSystemBase.h"
 #include "NavigationPath.h"
+#include "PhysicsEngine/ConvexElem.h"
+#include "PhysicsEngine/BodySetup.h"
+#include "Engine/StaticMesh.h"
 // Sets default values
 ASquadManager::ASquadManager()
 {
@@ -34,7 +37,9 @@ void ASquadManager::BeginPlay()
     AttachToComponent(SquadArray[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 5.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+
+    CurrentSquadCount = MaxSpawnCount;
 }
 
 void ASquadManager::FindPath(const FVector& TargetLocation)
@@ -46,12 +51,15 @@ void ASquadManager::FindPath(const FVector& TargetLocation)
     UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation);
     if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
     {
+        TArray<FVector> ArrayLocation;
+        ArrayLocation = NavPath->PathPoints;
        for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
 	   {
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
            DirectionPosition.Z = 0;
+           ArrayLocation.Last()+=DirectionPosition;
            SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
-		   SquadArray[SquadCount]->FSMComp->MovePathAsync(NavPath);
+		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
     else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
@@ -62,25 +70,30 @@ void ASquadManager::FindPath(const FVector& TargetLocation)
 
 void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
 {
+    if(TargetLocation.IsEmpty())
+        return;
     UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
     if(nullptr == NavSystem)
         return;
     FVector StartLocation = SquadArray[0]->GetActorLocation();
-    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation[0]);
+   UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation[0]);
+    
     if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
     {
+        TArray<FVector> ArrayLocation;
+        ArrayLocation = NavPath->PathPoints;
        for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
 	   {
-           NavPath->PathPoints.Last() = TargetLocation[SquadCount];
+           ArrayLocation.Last() = TargetLocation[SquadCount];
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
            DirectionPosition.Z = 0;
            SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
-		   SquadArray[SquadCount]->FSMComp->MovePathAsync(NavPath);
+		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
-    else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
+    else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-         
+         UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
 
@@ -116,10 +129,8 @@ void ASquadManager::CheckLocationForObject()
      // 결과 처리
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
-        //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
-        //SquadArray를 탐색해서 있으면 넣자
-        //분대장을 기준으로 할 예정
-        ObstructionPoints = GetBoundingBoxPointsSortedByDistance(HitResult.GetActor(), 100.0f);
+        ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
+        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
@@ -165,12 +176,10 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
      // 결과 처리
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
-        //SquadArray[0]를 넣는게 아니라 다른 방법을 찾아보자
-        //SquadArray를 탐색해서 있으면 넣자
-        //분대장을 기준으로 할 예정
-        ObstructionPoints = GetBoundingBoxPointsSortedByDistance(HitResult.GetActor(), 100.0f);
+        ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
+        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
-
+        ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
         DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
     }
@@ -188,88 +197,220 @@ void ASquadManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
-// 일정 간격(50cm)으로 바운딩 박스 주위를 둘러싼 점들을 SquadManager와의 거리 기준으로 정렬
-TArray<FVector> ASquadManager::GetBoundingBoxPointsSortedByDistance(AActor* TargetActor, float Interval /*= 50.0f*/)
+// 분대원 수만큼 FVector 만들기
+void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum)
 {
-    TArray<FVector> Points;
-    TArray<float> PointLength;
+    if (OutPoints.Num() == 1 || OutPoints.Num()<CurrentSquadCount) //임시 조치로 분대원보다 OutPoints.Num()이 작으면 위치를 추가한다.
+    {
+        FVector Temp = OutPoints[0];
+        FVector BaseForwardVector;
+        FVector BaseRightVector;
+        if (DirectionNum == EObstructionDirection::Left) //좌측에서 우측을 바라본다.
+        {
+            BaseForwardVector = TargetActor->GetActorRightVector();
+            BaseRightVector = (-1.f)*TargetActor->GetActorForwardVector();
+        }
+        else if (DirectionNum == EObstructionDirection::Right) //우측에서 좌측을 바라본다.
+        {
+            BaseForwardVector = (-1.f)*TargetActor->GetActorRightVector();
+            BaseRightVector = TargetActor->GetActorForwardVector();
+        }        
+         else if (DirectionNum == EObstructionDirection::Down) //하단에서 상단을 바라본다.
+        {
+            BaseForwardVector = TargetActor->GetActorForwardVector();
+            BaseRightVector = TargetActor->GetActorRightVector();
+        }
+         else //상단에서 하단을 바라본다.
+        {
+            BaseForwardVector = (-1.f)*TargetActor->GetActorForwardVector();
+            BaseRightVector = (-1.f)*TargetActor->GetActorRightVector();
+        }
+        OutPoints.Init(FVector::ZeroVector, MaxSpawnCount);
+        OutPoints[5]= Temp;
+        OutPoints[0] = OutPoints[5] + (-1) *BaseForwardVector*SquadPositionArray[5].X;
+        DrawDebugSphere(TargetActor->GetWorld(), OutPoints[0], 10.0f, 12, FColor::Black, false, 5.0f);
+        for (int SquadCount = 1; SquadCount < SquadArray.Num(); SquadCount++)
+	    {
+			FVector DirectionPosition = BaseForwardVector * SquadPositionArray[SquadCount].X + BaseRightVector * SquadPositionArray[SquadCount].Y;
+			DirectionPosition.Z = 0;
+			OutPoints[SquadCount]=(OutPoints[0]+DirectionPosition);// += SquadPositionArray[SquadCount]);
+            UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
+		    DrawDebugSphere(TargetActor->GetWorld(), OutPoints[SquadCount], 10.0f, 12, FColor::Blue, false, 5.0f);
+        }
+    }
+    else if (OutPoints.Num() == 2)
+    {
+        
+    }
+}
+// 두 점 P1, P2 사이를 직선 방정식을 이용해 일정 간격으로 점을 생성
+void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints)
+{
+    float Distance = FVector::Dist(P1, P2);
+    int32 NumPoints = FMath::CeilToInt(Distance / Interval);  // 50cm 간격으로 몇 개의 점을 생성할지 계산
 
+    for (int32 i = 1; i <= NumPoints-1; ++i)
+    {
+        float t = i / static_cast<float>(NumPoints);  // t는 0에서 1 사이를 일정하게 증가
+		FVector Point = FMath::Lerp(P1, P2, t);       // P(t) = (1 - t) * P1 + t * P2
+        Point.Z = SquadArray[0]->GetActorLocation().Z;
+        OutPoints.Add(Point);                         // 점을 결과 배열에 추가
+    }
+}
+// 일정 간격(50cm)으로 바운딩 박스 주위를 둘러싼 점들을 SquadManager와의 거리 기준으로 정렬
+TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* TargetActor, float Interval /*= 50.0f*/)
+{
+    TArray<FVector> VertexArray;
+    TArray<FVector> NewVertexArray;
     if (!TargetActor)
     {
-        return Points;
+        return NewVertexArray;  // 액터가 없으면 빈 배열 반환
     }
 
-    FBox Bounds;
-    FVector Min;
-    FVector Max;
+    // 액터의 바운딩 박스 계산
+    FBox ActorBoundingBox = TargetActor->GetComponentsBoundingBox();
+    
 
-    TSet<UActorComponent*> ComponentSet = TargetActor->GetComponents();
-    TArray<UActorComponent*> ComponentArray;
-    ComponentArray.Append(ComponentSet.Array()); 
-
-    //충돌한 액터의 FTransform 정보를 가진 컴포넌트를 가져오기
-	for (UActorComponent* Component : ComponentArray)
+    UStaticMeshComponent* StaticMeshComp = TargetActor->FindComponentByClass<UStaticMeshComponent>();
+	if (StaticMeshComp)
 	{
-		if (UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(Component))
-		{
-			if (PrimitiveComp->IsRegistered() && PrimitiveComp->IsCollisionEnabled())
-			{
-                FTransform ComponentTransform = PrimitiveComp->GetComponentTransform();
-                FBox ComponentBounds = PrimitiveComp->Bounds.GetBox();
+        UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
 
-                // 유효한 바운딩 박스가 있는지 확인하고 바운딩 박스의 Min, Max 값 구하기
-                if (ComponentBounds.IsValid)
-                {
-                    Bounds = ComponentBounds;
-                    Min = Bounds.Min;
-                    Max = Bounds.Max;
-                    break;
-                }
-			}
-		}
+        // 8개의 극단적 꼭지점을 계산할 변수들
+        FVector3f MinX, MaxX, MinY, MaxY;
+		FPositionVertexBuffer& VertexBuffer = StaticMesh->GetRenderData()->LODResources[0].VertexBuffers.PositionVertexBuffer;
+		MinX = MaxX = VertexBuffer.VertexPosition(0);
+		MinY = MaxY = VertexBuffer.VertexPosition(0);
+         
+         for (uint32 Index = 0; Index < VertexBuffer.GetNumVertices(); ++Index)
+		 {
+			 FVector3f EachVector1 = StaticMesh->GetRenderData()->LODResources[0].VertexBuffers.PositionVertexBuffer.VertexPosition(Index);
+
+			 if (EachVector1.X < MinX.X) MinX = EachVector1;
+			 if (EachVector1.X > MaxX.X) MaxX = EachVector1;
+			 if (EachVector1.Y < MinY.Y) MinY = EachVector1;
+			 if (EachVector1.Y > MaxY.Y) MaxY = EachVector1;
+
+			 if (Index == 1)
+				 UE_LOG(LogTemp, Log, TEXT("Index(%d) : (%s)"), Index, *EachVector1.ToString());
+			 //if (Index == 1)
+				// DrawDebugSphere(TargetActor->GetWorld(), EachVector, 10.0f, 12, FColor::Green, false, 5.0f);
+		 }
+          // 월드 변환 (위치, 회전, 스케일 적용)
+         FTransform ActorTransform = TargetActor->GetActorTransform();
+
+		 FVector FrontLeftVertex = ActorTransform.TransformPosition(FVector(    MinX.X - 20.0f, MinY.Y - 20.0f, 0)); // 좌하단 앞쪽
+		 FVector FrontRightVertex = ActorTransform.TransformPosition(FVector(   MaxX.X + 20.0f, MinY.Y - 20.0f, 0)); // 우하단 앞쪽
+		 FVector BackLeftVertex = ActorTransform.TransformPosition(FVector(     MinX.X - 20.0f, MaxY.Y + 20.0f, 0)); // 좌하단 뒤쪽
+		 FVector BackRightVertex = ActorTransform.TransformPosition(FVector(    MaxX.X + 20.0f, MaxY.Y + 20.0f, 0)); // 우하단 뒤쪽
+         
+         //좌우상하 꼭지점
+		 VertexArray.Add(FrontLeftVertex); // 좌하단 앞쪽
+		 VertexArray.Add(FrontRightVertex); // 우하단 앞쪽
+		 VertexArray.Add(BackLeftVertex); // 좌하단 뒤쪽
+		 VertexArray.Add(BackRightVertex); // 우하단 뒤쪽
+
+         //좌우상하 방향
+         VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MinY.Y - 5.0f, 0))); // 좌하단 앞쪽
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MaxY.Y + 5.0f, 0))); // 우하단 앞쪽
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X- 5.0f,  MinY.Y + (MaxY.Y- MinY.Y)/2, 0))); // 좌하단 뒤쪽
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MaxX.X + 5.0f, MinY.Y + (MaxY.Y- MinY.Y)/2 , 0))); // 우하단 뒤쪽
+         
+         //TargetActor와 SquadManager액터의 가까운 방향에 해당하는 위치를 구한다.
+         EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
+         float DirectionVertexDistance = MaxMoveLength;
+
+         for (int DirectionVertexCount = 4; DirectionVertexCount < VertexArray.Num(); DirectionVertexCount++)
+         {
+             float ActorToVertexDistance = FVector::Distance(VertexArray[DirectionVertexCount], GetActorLocation());
+             if (DirectionVertexDistance > ActorToVertexDistance)
+             {
+                DirectionVertexDistance = ActorToVertexDistance;
+                ObstructionDirection = (EObstructionDirection)(DirectionVertexCount-4);
+             }
+         }
+         switch (ObstructionDirection)
+         {
+         case EObstructionDirection::Left: //VertexArray[4] : 좌측 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
+             break;
+         case EObstructionDirection::Right: //VertexArray[5] : 우측 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
+             break;
+         case EObstructionDirection::Down: //VertexArray[6] : 하단 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
+             break;
+         case EObstructionDirection::Up: //VertexArray[7] : 상단 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
+             break;
+         default:
+             break;
+         }
+             //엄폐 위치가 분대원 수보다 적다면 분대원 위치를 지정해준다.
+		 if (NewVertexArray.Num() < CurrentSquadCount)
+			 MakeObstructionPoint(TargetActor, NewVertexArray, ObstructionDirection);
+         //내적을 한 후 가까운 방향의 꼭지점을 구한다.
+         //VertexArray[4] : 좌측 방향
+         //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
+         //VertexArray[5] : 우측 방향
+         //GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
+         //VertexArray[6] : 하단 방향
+         //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
+         //VertexArray[7] : 상단 방향
+         //GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
+
+         //float TargetActorTopDirection = FVector::DotProduct(TargetActor->GetActorRightVector(), GetActorLocation());
+         //if (TargetActorTopDirection > 0)
+         //{
+         //     //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
+         //     UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
+         //}
+         //else
+         //{
+         //   //GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
+         //    UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
+         //}
+         //  
+         //float TargetActorRightDirection = FVector::DotProduct(TargetActor->GetActorForwardVector(), GetActorLocation());
+         //if (TargetActorRightDirection > 0)
+         //{
+         //     //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
+         //     UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
+         //}
+         //else
+         //{
+         //   //GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
+         //    UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
+         //}
+            
 	}
+  //  float DistanceVertex = 10000.f;
+  //  int j = 4;
+  //  for (int i = 4; i<VertexArray.Num(); i++)
+  //  {
+		//UE_LOG(LogTemp, Log, TEXT("Index(%s)"), *VertexArray[i].ToString());
+		//DrawDebugSphere(TargetActor->GetWorld(), VertexArray[i], 10.0f, 12, FColor::Yellow, false, 5.0f);
+  //      if (DistanceVertex>FVector::Distance(VertexArray[i], GetActorLocation()))
+  //      {
+  //          DistanceVertex = FVector::Distance(VertexArray[i], GetActorLocation());
+  //          UE_LOG(LogTemp, Log, TEXT("DistanceVertex(%d)"), i);
+  //          
+  //      }
+  //      //4 : 좌측
+  //      //5 : 우측
+  //      //6 : 하단
+  //      //7 : 상단
+  //  }
+  //  UE_LOG(LogTemp, Log, TEXT("VertexArray(%d)"), j);
+  //  DrawDebugSphere(TargetActor->GetWorld(), VertexArray[5], 10.0f, 12, FColor::Red, false, 5.0f);
+  //  for (int i = 0; i<NewVertexArray.Num(); i++)
+  //  {
+		//UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *NewVertexArray[i].ToString());
+		//DrawDebugSphere(TargetActor->GetWorld(), NewVertexArray[i], 10.0f, 12, FColor::Yellow, false, 5.0f);
 
+  //  }
+  //  UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
+    
 
-    //목표지점 공간 안에 있는 축을 Interval 간격으로 점을 생성
-    for (float X = Min.X - 10; X <= Max.X; X += Interval)
-    {
-        for (float Y = Min.Y - 10; Y <= Max.Y; Y += Interval)
-        {
-		    // 경계에 해당하는 점만 추가 (즉, 박스의 표면에 있는 점들만)
-            if ((X <= Min.X) || X >= Max.X || Y <= Min.Y || Y > Max.Y - 50)
-            {
-                FVector BoundaryPoint = FVector(X, Y, SquadArray[0]->GetActorLocation().Z);
-                Points.Add(BoundaryPoint);
-                //Points index에 해당하는 MyActor와 거리를 구하여 PointLength에 넣는다.
-                PointLength.Add(FVector::Distance(BoundaryPoint,GetActorLocation()));
-            }
-        }
-    }
-
-    //Points 중에 가장 가까운 6포인트를 찾아서 return한다.
-    TArray<FVector> ClosePoints;
-    ClosePoints.Init(FVector::ZeroVector,6);
-    TArray<float> CloseLength;
-    CloseLength.Init(MaxMoveLength,6);
-     for (int PointLengthCount =0; PointLengthCount<PointLength.Num(); PointLengthCount++)
-    {
-        for (int CloseLengthCount =0; CloseLengthCount<CloseLength.Num(); CloseLengthCount++)
-        {
-            if (CloseLength[CloseLengthCount] > PointLength[PointLengthCount])
-            {
-                // n 번째에 넣게 되면 n번째부터 max까지 한칸씩 밀려나게 한다.
-                for (int currentCount = CloseLength.Num() - 1; currentCount>CloseLengthCount; currentCount--)
-				{
-					ClosePoints[currentCount] = ClosePoints[currentCount - 1];
-					CloseLength[currentCount] = CloseLength[currentCount - 1];
-				}
-                ClosePoints[CloseLengthCount] = Points[PointLengthCount];
-                CloseLength[CloseLengthCount] = PointLength[PointLengthCount];
-                break;
-            }
-        }
-    }
-
-    return ClosePoints;
+    return NewVertexArray;
 }
