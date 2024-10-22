@@ -18,18 +18,28 @@ class MAVERICK_API UAISquadAnimInstance : public UAnimInstance
 	UPROPERTY(EditDefaultsOnly)
 	class UAnimMontage* AttackAM;
 protected:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	bool IsAttacking;
 	UPROPERTY(BlueprintReadWrite)
-	bool IsAttacking = true;
+	float AimYaw;
+	UPROPERTY(BlueprintReadWrite)
+	float AimPitch;
 	UPROPERTY(BlueprintReadWrite)
 	EEnemyState CurrentState;
 	virtual void NativeUpdateAnimation(float DeltaSeconds);
 	virtual void NativeBeginPlay();
+
 	UFUNCTION()
 	virtual void AnimNotify_Fire();
 public:
-
+	void PlayFireMontage();
+	void StopFireMontage();
 	class UAnimMontage* GetAttackAM() const { return AttackAM; }
 	void SetAttackAM(class UAnimMontage* val) { AttackAM = val; }
 	bool GetIsAttacking() const { return IsAttacking; }
 	void SetIsAttacking(bool val) { IsAttacking = val; }
+	float GetAimYaw() const { return AimYaw; }
+	void SetAimYaw(float val) { AimYaw = val; }
+	float GetAimPitch() const { return AimPitch; }
+	void SetAimPitch(float val) { AimPitch = val; }
 };

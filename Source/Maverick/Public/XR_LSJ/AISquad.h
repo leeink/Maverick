@@ -14,6 +14,7 @@ class MAVERICK_API AAISquad : public ACharacter
 
 	UPROPERTY(EditDefaultsOnly,Meta = (AllowPrivateAccess = true))
 	class USkeletalMeshComponent* GunMeshComp;
+
 public:
 	// Sets default values for this character's properties
 	AAISquad();
@@ -38,8 +39,9 @@ protected:
 	virtual void BeginPlay() override;
 	FVector TestMovePoint = FVector(1000,0,0);
 	void TestMove();
-public:
 
+public:
+	float LookTarget(FVector TargetLocation);
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

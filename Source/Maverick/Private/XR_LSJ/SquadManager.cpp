@@ -37,7 +37,7 @@ void ASquadManager::BeginPlay()
     AttachToComponent(SquadArray[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
 
     CurrentSquadCount = MaxSpawnCount;
 }
@@ -93,7 +93,7 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
     }
     else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-         UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+         //UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
 
@@ -130,7 +130,7 @@ void ASquadManager::CheckLocationForObject()
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
-        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
+        //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
@@ -177,7 +177,7 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
-        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
+        //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
@@ -200,7 +200,7 @@ void ASquadManager::Tick(float DeltaTime)
 // 분대원 수만큼 FVector 만들기
 void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum)
 {
-    if (OutPoints.Num() == 1 || OutPoints.Num()<CurrentSquadCount) //임시 조치로 분대원보다 OutPoints.Num()이 작으면 위치를 추가한다.
+    if (OutPoints.Num() == 1 || (OutPoints.Num()<CurrentSquadCount && OutPoints.Num() >= 1)) //임시 조치로 분대원보다 OutPoints.Num()이 작으면 위치를 추가한다.
     {
         FVector Temp = OutPoints[0];
         FVector BaseForwardVector;
@@ -234,7 +234,7 @@ void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& O
 			FVector DirectionPosition = BaseForwardVector * SquadPositionArray[SquadCount].X + BaseRightVector * SquadPositionArray[SquadCount].Y;
 			DirectionPosition.Z = 0;
 			OutPoints[SquadCount]=(OutPoints[0]+DirectionPosition);// += SquadPositionArray[SquadCount]);
-            UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
+            //UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
 		    DrawDebugSphere(TargetActor->GetWorld(), OutPoints[SquadCount], 10.0f, 12, FColor::Blue, false, 5.0f);
         }
     }
@@ -291,10 +291,6 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
 			 if (EachVector1.Y < MinY.Y) MinY = EachVector1;
 			 if (EachVector1.Y > MaxY.Y) MaxY = EachVector1;
 
-			 if (Index == 1)
-				 UE_LOG(LogTemp, Log, TEXT("Index(%d) : (%s)"), Index, *EachVector1.ToString());
-			 //if (Index == 1)
-				// DrawDebugSphere(TargetActor->GetWorld(), EachVector, 10.0f, 12, FColor::Green, false, 5.0f);
 		 }
           // 월드 변환 (위치, 회전, 스케일 적용)
          FTransform ActorTransform = TargetActor->GetActorTransform();
