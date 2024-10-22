@@ -4,7 +4,8 @@
 #include "XR_LSJ/AISquadBullet.h"
 #include <GameFramework/ProjectileMovementComponent.h>
 #include "Components/SphereComponent.h"
-#include "../../../../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 AAISquadBullet::AAISquadBullet()
@@ -12,7 +13,7 @@ AAISquadBullet::AAISquadBullet()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	CollisionComp->SetCollisionProfileName(TEXT("BlockAll"));
+	CollisionComp->SetCollisionProfileName(TEXT("EnemyBullet"));
 	CollisionComp->SetSphereRadius(13);
 	CollisionComp->SetCanEverAffectNavigation(false);
 	SetRootComponent(CollisionComp);
@@ -26,12 +27,19 @@ AAISquadBullet::AAISquadBullet()
 		MeshComp->SetupAttachment(RootComponent);
 	}
 	
-	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp"));
-	MovementComp->SetUpdatedComponent(RootComponent);
-	MovementComp->InitialSpeed = 5000;
-	MovementComp->MaxSpeed = 5000;
-	MovementComp->bShouldBounce = true;
-	MovementComp->Bounciness = 0.3f;
+	SetMovementComp(CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp")));
+	GetMovementComp()->SetUpdatedComponent(RootComponent);
+
+}
+
+void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	if (OtherActor && OtherActor->ActorHasTag("Test"))
+	{	
+		//UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
+	}
+	BulletFXComponent->Deactivate();
+	Destroy();
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +48,13 @@ void AAISquadBullet::BeginPlay()
 	Super::BeginPlay();
 	BulletFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BulletFXSystem,MeshComp,"", FVector::ZeroVector, FRotator::ZeroRotator, FVector(1, 1, 1), EAttachLocation::SnapToTarget, true, ENCPoolMethod::AutoRelease);
 
+}
+
+void AAISquadBullet::InitMovement(FVector Direction)
+{
+	GetMovementComp()->InitialSpeed = 5000;
+	GetMovementComp()->MaxSpeed = 5000;
+	GetMovementComp()->Velocity = GetMovementComp()->InitialSpeed * Direction;
 }
 
 // Called every frame

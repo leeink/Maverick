@@ -9,6 +9,8 @@
 #include "NiagaraComponent.h" 
 #include "XR_LSJ/AISquadBullet.h"
 #include "Engine/World.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 AAISquad::AAISquad()
@@ -25,9 +27,9 @@ AAISquad::AAISquad()
 		GunMeshComp->SetSkeletalMesh(GunMeshFinder.Object);
 	}
 	GunMeshComp->SetupAttachment(GetMesh(),FName("RightHandThumb4"));
-	GunMeshComp->SetRelativeLocation(FVector(-3.300448,1.447269,2.664125));
-	GunMeshComp->SetRelativeRotation(FRotator(47.178474,38.000000,190.163415));
-	
+	GunMeshComp->SetRelativeLocation(FVector(-3.612750,1.138105,3.562393));
+	GunMeshComp->SetRelativeRotation(FRotator(23.987173,20.151969,-190.523942));
+
 	AIControllerClass = AAISquadController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
@@ -42,8 +44,11 @@ void AAISquad::AttackFire()
 	//muzzle 이펙트 
 	GunMuzzleFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(GunMuzzleFXSystem,GunMeshComp,TEXT("Muzzle"),FVector::ZeroVector,FRotator::ZeroRotator,FVector(1,1,1),EAttachLocation::SnapToTarget,true,ENCPoolMethod::AutoRelease);
 	//총알 소환
-	GetWorld()->SpawnActor<AAISquadBullet>(BulletFactory,GunMeshComp->GetSocketLocation(TEXT("Muzzle")),GunMeshComp->GetSocketRotation(TEXT("Muzzle")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"),*GunMeshComp->GetSocketLocation(TEXT("Muzzle")).ToString());
+	AAISquadBullet* Bullet = GetWorld()->SpawnActor<AAISquadBullet>(BulletFactory,GunMeshComp->GetSocketLocation(TEXT("Muzzle")),GunMeshComp->GetSocketRotation(TEXT("Muzzle")));
+	if (Bullet)
+	{
+		Bullet->InitMovement(GunMeshComp->GetRightVector());
+	}
 }
 
 // Called when the game starts or when spawned
@@ -59,7 +64,36 @@ void AAISquad::TestMove()
 	TestMovePoint*=(-1);
 	FSMComp->SetState(EEnemyState::MOVE);
 }
+float AAISquad::LookTarget(FVector TargetLocation)
+{
+	//	 //회전된 방향 계산
+	//FVector Forward = AISquadBody()->GetActorForwardVector();
+	//Forward.Z = 0;
+	//Forward.Normalize();
+	//FVector LeftDirection = Forward.RotateAngleAxis(-30.0f, FVector::UpVector);
+	//FVector RightDirection = Forward.RotateAngleAxis(30.0f, FVector::UpVector);
 
+	////두 벡터 사이의 각도
+	//float Dot = FVector::DotProduct(Forward, Target->GetActorLocation().Normalize());
+	//float AcosAngle = FMath::Acos(Dot);
+	//float AngleDegree = FMath::RadiansToDegrees(AcosAngle);
+
+	//Center에서 Target을 바라보는 Vector
+	FVector ToTargetVec = (TargetLocation - GunMeshComp->GetSocketLocation(TEXT("Muzzle")));
+
+	ToTargetVec.Z = 0;
+	ToTargetVec.Normalize();
+
+	//내적 후 아크 코사인을 통해 각을 구함(0~180)
+	float InnerProduct = FVector::DotProduct(GetActorForwardVector(),ToTargetVec);
+	float Degree = UKismetMathLibrary::DegAcos(InnerProduct);
+    
+	//외적으로 표면 벡터를 구해 Z의 값으로 부호를 구함
+	FVector OutProduct = FVector::CrossProduct(GetActorForwardVector(),ToTargetVec);
+	float Sign = UKismetMathLibrary::SignOfFloat(OutProduct.Z);
+
+	return Degree*Sign;
+}
 
 // Called every frame
 void AAISquad::Tick(float DeltaTime)

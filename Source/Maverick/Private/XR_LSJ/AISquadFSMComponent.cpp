@@ -34,7 +34,7 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	{
 		AISquadController->StopMovement();
 	}
-	AISquadBody->PlayAnimMontage(AISquadAnimInstance->GetAttackAM());
+	
 	//AISquadBody->StopAnimMontage(AISquadAnimInstance->GetAttackAM());
 	// 상태가 바뀔때 무엇인가 초기화 하고싶다면 여기서 하세요.
 	switch ( GetCurrentState() )
@@ -73,11 +73,11 @@ void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 
 void UAISquadFSMComponent::StartAttack()
 {
-	AISquadBody->PlayAnimMontage(AISquadAnimInstance->GetAttackAM());
+	AISquadAnimInstance->PlayFireMontage();
 }
 void UAISquadFSMComponent::EndAttack()
 {
-	AISquadBody->StopAnimMontage(AISquadAnimInstance->GetAttackAM());
+	AISquadAnimInstance->StopFireMontage();
 }
 void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 {
@@ -104,13 +104,13 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 		else
 		{
 			SetState(EEnemyState::IDLE);
-			UE_LOG(LogTemp, Warning, TEXT("Reached final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT("Reached final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
 		}
 	}
 	else
 	{
 		SetState(EEnemyState::IDLE);
-		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
 	}
 }
 
@@ -143,7 +143,7 @@ void UAISquadFSMComponent::MovePathAsync(TArray<FVector>& NavPathArray)
     else
     {
 		SetState(EEnemyState::IDLE);
-        UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+        //UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
 
@@ -192,7 +192,7 @@ void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 void UAISquadFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	Target = GetWorld()->GetFirstPlayerController()->GetPawn();
 	// ...
 	AISquadBody = Cast<AAISquad>(GetOwner());
 	if (AISquadBody)
@@ -200,7 +200,7 @@ void UAISquadFSMComponent::BeginPlay()
 		AISquadController = Cast<AAISquadController>(AISquadBody->GetController());
 		AISquadAnimInstance = Cast<UAISquadAnimInstance>(AISquadBody->GetMesh()->GetAnimInstance());
 	}
-		
+	StartAttack();
 }
 
 
@@ -210,6 +210,23 @@ void UAISquadFSMComponent::BeginPlay()
 void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (nullptr != Target )
+	{
+		float LookRotator = AISquadBody->LookTarget(Target->GetActorLocation())+ 17;
+		if (LookRotator >= -90 && LookRotator <= 90)
+		{
+			AISquadAnimInstance->SetAimYaw(LookRotator>40?LookRotator+6:LookRotator);
+			//if (LookRotator.Pitch >= -90 && LookRotator.Pitch <= 90)
+				//AISquadAnimInstance->SetAimPitch(LookRotator.Pitch);
+		}
+		else
+		{
+			Target = nullptr;
+			//LookRotator = AISquadBody->LookTarget(AISquadBody->GetActorForwardVector()*1000);
+			//AISquadAnimInstance->SetAimYaw(LookRotator+ 17);
+		}
+	}
 
 	FString myState = UEnum::GetValueAsString(GetCurrentState());
 	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);

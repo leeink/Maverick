@@ -20,10 +20,18 @@ void UAISquadAnimInstance::NativeBeginPlay()
 	AISquadBody = Cast<AAISquad>(TryGetPawnOwner());
 	
 }
-
+void UAISquadAnimInstance::PlayFireMontage()
+{
+	IsAttacking = true;
+	Montage_Play(AttackAM);
+}
+void UAISquadAnimInstance::StopFireMontage()
+{
+	IsAttacking = false;
+	Montage_Stop(.5f,AttackAM);
+}
 void UAISquadAnimInstance::AnimNotify_Fire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("1"));
 	if(AISquadBody)
 		AISquadBody->AttackFire();
 }

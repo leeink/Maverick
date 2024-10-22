@@ -23,6 +23,9 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 	GENERATED_BODY()
 
 	UPROPERTY()
+	//공격 타겟
+	AActor* Target;
+	UPROPERTY()
 	TArray<FVector> PathVectorArray;
 	int32 CurrentPathPointIndex;
 	FVector SquadPosition;
@@ -54,9 +57,7 @@ protected:
 	//이동 위치
 	UPROPERTY()
 	FVector ArrivalPoint=FVector::ZeroVector;
-	//공격 타겟
-	UPROPERTY()
-	class ACharacter* Target;
+
 	//공격 사정거리
 	float AttackDistance = 100.0f;
 	// 네비게이션을 이용해서 길찾기를 하고싶다.
