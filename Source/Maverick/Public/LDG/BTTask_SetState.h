@@ -4,19 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_Idle.generated.h"
+#include "BTTask_SetState.generated.h"
 
+enum class EState : uint8;
 /**
  * 
  */
 UCLASS()
-class MAVERICK_API UBTTask_Idle : public UBTTaskNode
+class MAVERICK_API UBTTask_SetState : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-	UBTTask_Idle();
+	UBTTask_SetState();
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	EState NewState;
+	
 public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	

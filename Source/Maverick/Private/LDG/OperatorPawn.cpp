@@ -12,6 +12,7 @@
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/OperatorSpectatorPawn.h"
 #include "LDG/RifleSoldier.h"
+#include "LDG/SoldierAIController.h"
 #include "LDG/UnitControlHUD.h"
 
 // Sets default values
@@ -131,20 +132,34 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
+		EnhancedInputComponent->BindAction(IA_AttackReady , ETriggerEvent::Started , this , &AOperatorPawn::OnAttackReady);
 	}
 }
 
 void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 {
-	/*if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
 	{
-		FHitResult HitResult;
-		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
-		if(HitResult.bBlockingHit)
+		if(bAttackReady)
 		{
-			PreMousePosition = HitResult.Location;
+			FHitResult HitResult;
+			PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
+			if(HitResult.bBlockingHit)
+			{
+				CurrentMousePosition = HitResult.Location;
+			}
+
+			for(auto* Unit: SelectedUnits)
+			{
+				if(ASoldierAIController* SoldierController = Cast<ASoldierAIController>(Unit -> GetController()))
+				{
+					SoldierController -> ChaseCommand(HitResult.Location);
+				}
+			}
+
+			bAttackReady = false;
 		}
-	}*/
+	}
 
 	bIsLeftMouseClick = true;
 	UnitControlHUD -> MarqueePressed();
@@ -165,11 +180,8 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
 		if(HitResult.bBlockingHit)
 		{
-			GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MouseRightClick"));
-			UE_LOG(LogTemp, Warning, TEXT("Array Size: %d"), SelectedUnits.Num());
 			for(auto* Unit: SelectedUnits)
 			{
-				GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Move"));
 				if(ASoldier* Soldier = Cast<ASoldier>(Unit))
 				{
 					Soldier -> Move(HitResult.Location);
@@ -196,7 +208,7 @@ void AOperatorPawn::OnMouseWheelDown(const FInputActionValue& Value)
 
 void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
 {
-	AOperatorSpectatorPawn* spawn = GetWorld() -> SpawnActor<AOperatorSpectatorPawn>(SpectatorClass, PreMousePosition, FRotator::ZeroRotator);
+	AOperatorSpectatorPawn* spawn = GetWorld() -> SpawnActor<AOperatorSpectatorPawn>(SpectatorClass, CurrentMousePosition, FRotator::ZeroRotator);
 	if(SpectatorPawnArray.Num() == 3)
 	{
 		SpectatorPawnArray.RemoveAt(0);
@@ -232,4 +244,9 @@ void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 	{
 		PlayerController -> Possess(SpectatorPawnArray[2]);
 	}
+}
+
+void AOperatorPawn::OnAttackReady(const FInputActionValue& Value)
+{
+	bAttackReady = true;
 }

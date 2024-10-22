@@ -63,10 +63,7 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UInputAction* IA_SwitchSlot3;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IA_Unit1;
-
-	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IA_Unit2;
+	UInputAction* IA_AttackReady;
 
 	// Spectator Pawn Queue
 	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
@@ -86,11 +83,14 @@ class MAVERICK_API AOperatorPawn : public APawn
 	int ViewPortX;
 	int ViewPortY;
 
-	// Pre Mouse Clicked Position
-	FVector PreMousePosition;
+	// Current Mouse Clicked Position
+	FVector CurrentMousePosition;
 
 	// LeftMouseClicking?
 	bool bIsLeftMouseClick;
+
+	// Attack Ready? (A - Clicked)
+	bool bAttackReady;
 	
 	// Controlled Units
 	UPROPERTY()
@@ -118,6 +118,7 @@ protected:
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
+	void OnAttackReady(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
