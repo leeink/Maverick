@@ -6,7 +6,6 @@
 #include "AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/DecalComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ASoldier::ASoldier()
@@ -44,9 +43,11 @@ void ASoldier::Wait()
 
 void ASoldier::Move(FVector GoalLocation)
 {
-	GetCharacterMovement() -> MaxWalkSpeed = 500.f;
-	UAIBlueprintHelperLibrary::GetAIController(this) -> StopMovement();
-	UAIBlueprintHelperLibrary::GetAIController(this) -> MoveToLocation(GoalLocation);
+	if(IsSelected())
+	{
+		UAIBlueprintHelperLibrary::GetAIController(this) -> StopMovement();
+		UAIBlueprintHelperLibrary::GetAIController(this) -> MoveToLocation(GoalLocation);
+	}
 }
 
 void ASoldier::Attack()

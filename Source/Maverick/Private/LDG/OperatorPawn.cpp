@@ -3,18 +3,16 @@
 
 #include "LDG/OperatorPawn.h"
 
-#include "AIController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/OperatorSpectatorPawn.h"
 #include "LDG/RifleSoldier.h"
-#include "LDG/Soldier.h"
+#include "LDG/UnitControlHUD.h"
 
 // Sets default values
 AOperatorPawn::AOperatorPawn()
@@ -37,7 +35,8 @@ void AOperatorPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ControlledSoldiers1 = Cast<ARifleSoldier>(UGameplayStatics::GetActorOfClass(GetWorld(), ARifleSoldier::StaticClass()));
+	
+	UnitControlHUD = Cast<AUnitControlHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0) -> GetHUD());
 }
 
 void AOperatorPawn::PossessedBy(AController* NewController)
@@ -46,8 +45,11 @@ void AOperatorPawn::PossessedBy(AController* NewController)
 
 	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(NewController))
 	{
-		PlayerController -> SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways));
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+		InputMode.SetHideCursorDuringCapture(false);
 		PlayerController -> SetShowMouseCursor(true);
+		PlayerController -> SetInputMode(InputMode);
 		
 		if ( UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()) )
 		{
@@ -81,6 +83,11 @@ void AOperatorPawn::Tick(float DeltaTime)
 
 	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
 	{
+		if(bIsLeftMouseClick)
+		{
+			UnitControlHUD -> MarqueeHeld();
+		}
+		
 		PlayerController -> GetMousePosition(MouseX, MouseY);
 		PlayerController -> GetViewportSize(ViewPortX, ViewPortY);
 
@@ -115,7 +122,8 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeft);
+		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseLeftStarted);
+		EnhancedInputComponent->BindAction(IA_MouseLeft , ETriggerEvent::Completed , this , &AOperatorPawn::OnMouseLeftCompleted);
 		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
 		EnhancedInputComponent->BindAction(IA_MouseWheelUp , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelUp);
 		EnhancedInputComponent->BindAction(IA_MouseWheelDown , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelDown);
@@ -123,14 +131,12 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
-		EnhancedInputComponent->BindAction(IA_Unit1, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit1);
-		EnhancedInputComponent->BindAction(IA_Unit2, ETriggerEvent::Started, this, &AOperatorPawn::OnUnit2);
 	}
 }
 
-void AOperatorPawn::OnMouseLeft(const FInputActionValue& Value)
+void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 {
-	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	/*if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
 	{
 		FHitResult HitResult;
 		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
@@ -138,8 +144,18 @@ void AOperatorPawn::OnMouseLeft(const FInputActionValue& Value)
 		{
 			PreMousePosition = HitResult.Location;
 		}
-	}
+	}*/
+
+	bIsLeftMouseClick = true;
+	UnitControlHUD -> MarqueePressed();
 }
+
+void AOperatorPawn::OnMouseLeftCompleted(const FInputActionValue& Value)
+{
+	bIsLeftMouseClick = false;
+	UnitControlHUD -> MarqueeReleased();
+}
+
 
 void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 {
@@ -149,9 +165,15 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		PlayerController -> GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult);
 		if(HitResult.bBlockingHit)
 		{
-			if(ControlledSoldiers1 -> IsSelected())
+			GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MouseRightClick"));
+			UE_LOG(LogTemp, Warning, TEXT("Array Size: %d"), SelectedUnits.Num());
+			for(auto* Unit: SelectedUnits)
 			{
-				ControlledSoldiers1 -> Move(HitResult.Location);
+				GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Move"));
+				if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+				{
+					Soldier -> Move(HitResult.Location);
+				}
 			}
 		}
 		
@@ -210,14 +232,4 @@ void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 	{
 		PlayerController -> Possess(SpectatorPawnArray[2]);
 	}
-}
-
-void AOperatorPawn::OnUnit1(const FInputActionValue& Value)
-{
-	ControlledSoldiers1 -> Selected();
-}
-
-void AOperatorPawn::OnUnit2(const FInputActionValue& Value)
-{
-	ControlledSoldiers1 -> Deselected();
 }
