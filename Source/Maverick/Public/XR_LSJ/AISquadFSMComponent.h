@@ -7,6 +7,8 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "AISquadFSMComponent.generated.h"
 
+#define BaseAttackRotatorYaw 17;
+
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
@@ -17,6 +19,8 @@ enum class EEnemyState : uint8
 	DIE UMETA(DisplayName = "죽음") ,
 };
 
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 {
@@ -25,13 +29,22 @@ class MAVERICK_API UAISquadFSMComponent : public UActorComponent
 	UPROPERTY()
 	//공격 타겟
 	AActor* Target;
+	//공격 중인가?
+	bool IsAttacking = false;
+	//공격 쿨타임
+	float AttackCoolTime = 2.0f;
+	float AttackCurrentTime = 2.0f;
+	
+	//목표 지점을 도착하기 위한 구간 경로 위치 배열
 	UPROPERTY()
 	TArray<FVector> PathVectorArray;
+	//현재 경로 인덱스
 	int32 CurrentPathPointIndex;
+	//진형 위치
 	FVector SquadPosition;
 	EEnemyState CurrentState = EEnemyState::IDLE;
 	class UAISquadAnimInstance* AISquadAnimInstance;
-	bool IsAttacking = false;
+
 public:	
 	// Sets default values for this component's properties
 	UAISquadFSMComponent();
@@ -43,6 +56,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void LookTarget(const float& DeltaTime);
 	void TickIdle(const float& DeltaTime);
 	void TickMove(const float& DeltaTime);
 	void TickAttack(const float& DeltaTime);
@@ -77,4 +91,10 @@ public:
 	void SetSquadPosition(FVector val) { SquadPosition = val; }
 	EEnemyState GetCurrentState() const { return CurrentState; }
 	void SetCurrentState(EEnemyState val) { CurrentState = val; }
+	AActor* GetTarget() const { return Target; }
+	void SetTarget(AActor* val) { Target = val; }
+	float GetAttackCurrentTime() const { return AttackCurrentTime; }
+	void SetAttackCurrentTime(float val) { AttackCurrentTime = val; }
+	bool GetIsAttacking() const { return IsAttacking; }
+	void SetIsAttacking(bool val, AActor* TargetActor);
 };

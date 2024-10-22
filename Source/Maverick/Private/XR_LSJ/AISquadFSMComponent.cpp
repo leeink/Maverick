@@ -47,6 +47,7 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	//AISquadAnimInstance->SetIsAttacking(true);
 		break;
 	case EEnemyState::ATTACK:
+		
 		break;
 	case EEnemyState::DAMAGE:
 		break;
@@ -56,24 +57,41 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 		break;
 	}
 }
-
+void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
+{
+	if (GetIsAttacking())
+	{
+		LookTarget(DeltaTime);
+	}
+}
 void UAISquadFSMComponent::TickMove(const float& DeltaTime)
 {
-
+	if (GetIsAttacking())
+	{
+		LookTarget(DeltaTime);
+	}
 }
 void UAISquadFSMComponent::TickAttack(const float& DeltaTime)
 {
+	
 }
 void UAISquadFSMComponent::TickDamage(const float& DeltaTime)
 {
 }
 void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 {
+	if (GetIsAttacking())
+	{
+		LookTarget(DeltaTime);
+	}
 }
 
 void UAISquadFSMComponent::StartAttack()
 {
+	SetAttackCurrentTime(0.f);
 	AISquadAnimInstance->PlayFireMontage();
+	FTimerHandle StopAttackHandle;
+	GetWorld()->GetTimerManager().SetTimer(StopAttackHandle, this, &UAISquadFSMComponent::EndAttack, 2.0f, false);
 }
 void UAISquadFSMComponent::EndAttack()
 {
@@ -150,11 +168,11 @@ void UAISquadFSMComponent::MovePathAsync(TArray<FVector>& NavPathArray)
 
 void UAISquadFSMComponent::MoveToTarget()
 {
-	FVector dir = Target->GetActorLocation() - AISquadBody->GetActorLocation();
+	FVector dir = GetTarget()->GetActorLocation() - AISquadBody->GetActorLocation();
 	float dist = dir.Size();
 	//Me->AddMovementInput(dir.GetSafeNormal());
 
-	FVector destinataion = Target->GetActorLocation();
+	FVector destinataion = GetTarget()->GetActorLocation();
 
 	auto* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
 	
@@ -172,7 +190,7 @@ void UAISquadFSMComponent::MoveToTarget()
 		// 목적지를 향해서 이동하고싶다.
 		AISquadController->MoveToLocation(destinataion);
 		// 만약 목적지와의 거리가 공격 가능거리라면
-		if (nullptr != Target && dist < AttackDistance )
+		if (nullptr != GetTarget() && dist < AttackDistance )
 		{
 			// 공격상태로 전이하고싶다.
 			SetState(EEnemyState::ATTACK);
@@ -185,49 +203,78 @@ void UAISquadFSMComponent::MoveToTarget()
 	}
 }
 
-void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
-{
-}
+
 // Called when the game starts
 void UAISquadFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	Target = GetWorld()->GetFirstPlayerController()->GetPawn();
+	SetTarget(GetWorld()->GetFirstPlayerController()->GetPawn());
+
 	// ...
 	AISquadBody = Cast<AAISquad>(GetOwner());
 	if (AISquadBody)
 	{
 		AISquadController = Cast<AAISquadController>(AISquadBody->GetController());
 		AISquadAnimInstance = Cast<UAISquadAnimInstance>(AISquadBody->GetMesh()->GetAnimInstance());
+
+		//공격 시작
+		//SetIsAttacking(true);
+		//AISquadAnimInstance->SetIsAttacking(true);
 	}
-	StartAttack();
 }
 
-
+void UAISquadFSMComponent::LookTarget(const float& DeltaTime)
+{
+	if (nullptr != GetTarget())
+	{
+		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation())+ BaseAttackRotatorYaw;
+		
+		if (LookRotator >= -90 && LookRotator <= 90)
+		{
+			//상체 애니메이션 타겟을 향하게 회전
+			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),LookRotator, DeltaTime*5.0f);
+			AISquadAnimInstance->SetAimYaw(newYaw);
+			//공격한 뒤 2초가 지나야 다시 공격이 가능하다.
+			//적을 조준하고 있는 상태여야 공격이 가능하다.
+			if (GetAttackCurrentTime() >= AttackCoolTime && fabs(LookRotator - newYaw)< 0.2)
+			{
+				StartAttack();	
+			}
+			//if (LookRotator.Pitch >= -90 && LookRotator.Pitch <= 90)
+				//AISquadAnimInstance->SetAimPitch(LookRotator.Pitch);
+		}
+		else
+		{
+			  
+			if (GetAttackCurrentTime() < AttackCoolTime)
+			{
+				EndAttack();	
+			}
+			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),0,DeltaTime*10.0f);
+			AISquadAnimInstance->SetAimYaw(newYaw);
+		}
+		/*	FHitResult OutHit;
+			FVector Start = AISquadBody->GetGunMeshComp()->GetSocketLocation(TEXT("Muzzle"));
+			FVector End = Target->GetActorLocation();
+			ECollisionChannel TraceChannel = ECC_Camera;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(AISquadBody);
+			Params.AddIgnoredComponent(AISquadBody->GetGunMeshComp());
+			bool Result = GetWorld()->LineTraceSingleByChannel(OutHit,Start,End,TraceChannel,Params);
+			if (Result)
+			{
+				DrawDebugLine(GetWorld(),Start,End,FColor::Red);
+			}*/
+	}
+}
 
 
 // Called every frame
 void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (nullptr != Target )
-	{
-		float LookRotator = AISquadBody->LookTarget(Target->GetActorLocation())+ 17;
-		if (LookRotator >= -90 && LookRotator <= 90)
-		{
-			AISquadAnimInstance->SetAimYaw(LookRotator>40?LookRotator+6:LookRotator);
-			//if (LookRotator.Pitch >= -90 && LookRotator.Pitch <= 90)
-				//AISquadAnimInstance->SetAimPitch(LookRotator.Pitch);
-		}
-		else
-		{
-			Target = nullptr;
-			//LookRotator = AISquadBody->LookTarget(AISquadBody->GetActorForwardVector()*1000);
-			//AISquadAnimInstance->SetAimYaw(LookRotator+ 17);
-		}
-	}
-
+	//공격 쿨타임
+	SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
 	FString myState = UEnum::GetValueAsString(GetCurrentState());
 	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
 
@@ -240,5 +287,13 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 	case EEnemyState::DIE:		TickDie(DeltaTime);			break;
 	}
 	// ...
+}
+
+void UAISquadFSMComponent::SetIsAttacking(bool val, AActor* TargetActor)
+{
+	IsAttacking = val;
+	Target = TargetActor;
+	AISquadAnimInstance->SetIsAttacking(true);
+	
 }
 

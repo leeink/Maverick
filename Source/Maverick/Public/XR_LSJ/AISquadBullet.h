@@ -6,11 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "AISquadBullet.generated.h"
 
+
 UCLASS()
 class MAVERICK_API AAISquadBullet : public AActor
 {
 	GENERATED_BODY()
-	
+
 	class UStaticMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* MovementComp;
@@ -29,6 +30,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	void DestroyBullet();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
