@@ -38,8 +38,7 @@ void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	{	
 		//UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
 	}
-	BulletFXComponent->Deactivate();
-	Destroy();
+	DestroyBullet();
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +46,14 @@ void AAISquadBullet::BeginPlay()
 {
 	Super::BeginPlay();
 	BulletFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BulletFXSystem,MeshComp,"", FVector::ZeroVector, FRotator::ZeroRotator, FVector(1, 1, 1), EAttachLocation::SnapToTarget, true, ENCPoolMethod::AutoRelease);
+	FTimerHandle DestroyHandle;
+	GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &AAISquadBullet::DestroyBullet, 3.0f, true);
 
+}
+void AAISquadBullet::DestroyBullet()
+{
+	BulletFXComponent->Deactivate();
+	Destroy();
 }
 
 void AAISquadBullet::InitMovement(FVector Direction)

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+              // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "XR_LSJ/AISquadAnimInstance.h"
@@ -27,12 +27,14 @@ void UAISquadAnimInstance::PlayFireMontage()
 }
 void UAISquadAnimInstance::StopFireMontage()
 {
-	IsAttacking = false;
-	Montage_Stop(.5f,AttackAM);
+	Montage_Stop(0.5f,AttackAM);
 }
 void UAISquadAnimInstance::AnimNotify_Fire()
 {
-	if(AISquadBody)
+	if (AISquadBody)
+	{
+		AISquadBody->FSMComp->SetAttackCurrentTime(0.f);
 		AISquadBody->AttackFire();
+	}	
 }
 
