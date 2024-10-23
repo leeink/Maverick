@@ -17,6 +17,8 @@ class MAVERICK_API UAISquadAnimInstance : public UAnimInstance
 	class AAISquad* AISquadBody;
 	UPROPERTY(EditDefaultsOnly)
 	class UAnimMontage* AttackAM;
+	UPROPERTY(EditDefaultsOnly)
+	class UAnimMontage* DieAM;
 protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	bool IsAttacking;
@@ -33,6 +35,7 @@ protected:
 	virtual void AnimNotify_Fire();
 public:
 	void PlayFireMontage();
+	void PlayDieMontage();
 	void StopFireMontage();
 	class UAnimMontage* GetAttackAM() const { return AttackAM; }
 	void SetAttackAM(class UAnimMontage* val) { AttackAM = val; }

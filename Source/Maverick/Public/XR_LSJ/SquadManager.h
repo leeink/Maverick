@@ -36,6 +36,7 @@ class MAVERICK_API ASquadManager : public AActor
 	//최대 분대원 수
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	int32 MaxSpawnCount = 6;
+	//현재 살아있는 분대원 수
 	int32 CurrentSquadCount = 6;
 	//이동 테스트
 	FVector ArrivalPoint = FVector(1500,0,0);
@@ -60,8 +61,17 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	void FindTarget();
-	void AttackTarget(AActor* TargetActor);
+	// PointA와 어느지점이 가까운지 비교하는 함수
+	bool IsCloserThan(const FVector& PointA, const FVector& PointB, const FVector& PointC);
+	// SquadManagerAbility.FindTargetRange 만큼 적을 탐색하고 가까운 적 유닛을 공격
+	UFUNCTION()
+	void FindCloseTargetUnit();
+	// SquadManagerAbility.FindTargetRange 만큼 적을 탐색하고 적 분대를 공격
+	void FindTargetSquad();
+	// 각 분대원에게 유닛 타겟 공격 지시
+	void AttackTargetUnit();
+	// 각 분대원에게 분대 타겟 공격 지시
+	void AttackTargetSquad(AActor* TargetActor);
 	//목표지점에서 충돌된 Actor 의 경계값 위치 가져오기 
 	TArray<FVector> GetSurfacePointsOnRotatedBoundingBox(AActor* TargetActor, float Interval /*= 50.0f*/);
 	//TargetLocation로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
@@ -77,8 +87,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	
+	//엄폐할 위치가 분대원 수보다 부족한 경우 위치를 생성
 	void MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum);
+	//엄폐할 위치 생성
 	void GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints);
 	
 };
