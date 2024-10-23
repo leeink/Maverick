@@ -29,18 +29,40 @@ AAISquad::AAISquad()
 	GetGunMeshComp()->SetupAttachment(GetMesh(),FName("RightHandThumb4"));
 	GetGunMeshComp()->SetRelativeLocation(FVector(-3.612750,1.138105,3.562393));
 	GetGunMeshComp()->SetRelativeRotation(FRotator(23.987173,20.151969,-190.523942));
+	
+	Tags.Add("Enemy");
 
 	AIControllerClass = AAISquadController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-void AAISquad::SpawnBullet()
+float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-
+	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
+	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+	if (Damage > 0)
+	{
+		SquadAbility.Hp -= Damage;
+		if (SquadAbility.Hp <= 0)
+		{
+			FSMComp->SetState(EEnemyState::DIE);
+			if(FDelSquadUnitDie.IsBound())
+				FDelSquadUnitDie.Execute();
+		}
+	}
+	return Damage;
 }
 
 void AAISquad::AttackFire()
 {
+	//적이 죽었다면
+	AAISquad* TargetUnit = Cast<AAISquad>(FSMComp->GetTarget());
+	if (TargetUnit && TargetUnit->FSMComp->GetCurrentState() == EEnemyState::DIE || nullptr == FSMComp->GetTarget())
+	{
+		if(FDelTargetDie.IsBound())
+			FDelTargetDie.Execute();
+		return;
+	}
 	//muzzle 이펙트 
 	GunMuzzleFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(GunMuzzleFXSystem,GetGunMeshComp(),TEXT("Muzzle"),FVector::ZeroVector,FRotator::ZeroRotator,FVector(1,1,1),EAttachLocation::SnapToTarget,true,ENCPoolMethod::AutoRelease);
 	
@@ -50,10 +72,17 @@ void AAISquad::AttackFire()
 	AAISquadBullet* Bullet = GetWorld()->SpawnActor<AAISquadBullet>(BulletFactory,GetGunMeshComp()->GetSocketLocation(TEXT("Muzzle")),GetGunMeshComp()->GetSocketRotation(TEXT("Muzzle")));
 	if (Bullet)
 	{
+		Bullet->SetOwner(this);
 		Bullet->InitMovement(LaunchDirection);
 	}
 }
-
+void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	//델리게이트 해제
+	FDelTargetDie.Unbind();
+	FDelSquadUnitDie.Unbind();
+}
 // Called when the game starts or when spawned
 void AAISquad::BeginPlay()
 {

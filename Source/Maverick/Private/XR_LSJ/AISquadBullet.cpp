@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAISquadBullet::AAISquadBullet()
@@ -38,6 +39,10 @@ void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	{	
 		//UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
 	}
+	else if (OtherActor && OtherActor->ActorHasTag("Enemy"))
+	{	
+		UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(), this, NULL);
+	}
 	DestroyBullet();
 }
 
@@ -52,7 +57,8 @@ void AAISquadBullet::BeginPlay()
 }
 void AAISquadBullet::DestroyBullet()
 {
-	BulletFXComponent->Deactivate();
+	if(BulletFXComponent)
+		BulletFXComponent->Deactivate();
 	Destroy();
 }
 

@@ -9,6 +9,7 @@
 #include "NavigationPath.h"
 #include "XR_LSJ/AISquadController.h"
 #include "XR_LSJ/AISquadAnimInstance.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values for this component's properties
 UAISquadFSMComponent::UAISquadFSMComponent()
@@ -28,23 +29,19 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	//Anim->EnemyState = NextState;
 
 	//CurrentTime = 0;
-
-	// 다음 상태가 이동상태가 아니라면 Ai한테 멈추라고 하고싶다.
 	if (NextState != EEnemyState::MOVE)
 	{
 		AISquadController->StopMovement();
 	}
 	
-	//AISquadBody->StopAnimMontage(AISquadAnimInstance->GetAttackAM());
-	// 상태가 바뀔때 무엇인가 초기화 하고싶다면 여기서 하세요.
 	switch ( GetCurrentState() )
 	{
 	case EEnemyState::IDLE:
-		//AISquadAnimInstance->SetIsAttacking(true);
+
 		break;
 	case EEnemyState::MOVE:
 		
-	//AISquadAnimInstance->SetIsAttacking(true);
+
 		break;
 	case EEnemyState::ATTACK:
 		
@@ -52,6 +49,9 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	case EEnemyState::DAMAGE:
 		break;
 	case EEnemyState::DIE:
+		AISquadBody->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
+		AISquadAnimInstance->PlayDieMontage();
 		break;
 	default:
 		break;
@@ -61,14 +61,23 @@ void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 {
 	if (GetIsAttacking())
 	{
-		LookTarget(DeltaTime);
+		//Idle 상태에서 공격시 상대를 바라보게 회전 후 공격 
+		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation())+ BaseAttackRotatorYaw;
+		if (fabs(AISquadAnimInstance->GetAimYaw()- LookRotator) < 40)
+		{
+			RotateUpperbodyToTarget(DeltaTime);
+		}
+		else
+		{
+			TurnCanLookTarget(DeltaTime);
+		}
 	}
 }
 void UAISquadFSMComponent::TickMove(const float& DeltaTime)
 {
 	if (GetIsAttacking())
 	{
-		LookTarget(DeltaTime);
+		RotateUpperbodyToTarget(DeltaTime);
 	}
 }
 void UAISquadFSMComponent::TickAttack(const float& DeltaTime)
@@ -80,10 +89,7 @@ void UAISquadFSMComponent::TickDamage(const float& DeltaTime)
 }
 void UAISquadFSMComponent::TickDie(const float& DeltaTime)
 {
-	if (GetIsAttacking())
-	{
-		LookTarget(DeltaTime);
-	}
+
 }
 
 void UAISquadFSMComponent::StartAttack()
@@ -222,8 +228,13 @@ void UAISquadFSMComponent::BeginPlay()
 		//AISquadAnimInstance->SetIsAttacking(true);
 	}
 }
-
-void UAISquadFSMComponent::LookTarget(const float& DeltaTime)
+void UAISquadFSMComponent::TurnCanLookTarget(const float& DeltaTime)
+{
+	FRotator PlayerRot = UKismetMathLibrary::FindLookAtRotation(AISquadBody->GetActorLocation(),GetTarget()->GetActorLocation());
+	FRotator NewRot = FMath::RInterpTo(AISquadBody->GetActorRotation(), PlayerRot, DeltaTime, 4.0f);
+	AISquadBody->SetActorRotation(NewRot);
+}
+void UAISquadFSMComponent::RotateUpperbodyToTarget(const float& DeltaTime)
 {
 	if (nullptr != GetTarget())
 	{
@@ -245,11 +256,11 @@ void UAISquadFSMComponent::LookTarget(const float& DeltaTime)
 		}
 		else
 		{
-			  
 			if (GetAttackCurrentTime() < AttackCoolTime)
 			{
 				EndAttack();	
 			}
+
 			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),0,DeltaTime*10.0f);
 			AISquadAnimInstance->SetAimYaw(newYaw);
 		}
