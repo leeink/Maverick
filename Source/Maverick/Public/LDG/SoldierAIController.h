@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "SoldierAIController.generated.h"
 
+class URifleSoliderAnimInstance;
 class ASoldier;
 class UBehaviorTree;
 /**
@@ -19,6 +20,7 @@ enum class EState : uint8
 	Move = 1	UMETA(DisplayName = "Move"),
 	Chase = 2	UMETA(DisplayName = "Chase"),
 	Attack = 3	UMETA(DisplayName = "Attack"),
+	Die = 4		UMETA(DisplayName = "Die"),
 };
 
 UCLASS()
@@ -32,7 +34,17 @@ class MAVERICK_API ASoldierAIController : public AAIController
 	UPROPERTY()
 	ASoldier* PossessedPawn;
 
+	UPROPERTY()
+	URifleSoliderAnimInstance* RifleAnimInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
+	float MaxHealth;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
+	float Health;
+
 	FTimerHandle DetectionTimerHandle;
+	FTimerHandle ForgetTimerHandle;
 
 public:
 	EState CurrentState;
@@ -46,6 +58,10 @@ public:
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand(AActor* TargetActor);
+	void Die();
 	void StartDetectionTimer();
 	void EnemyDetection();
+	void EnemyForget();
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };

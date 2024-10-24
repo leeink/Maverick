@@ -4,15 +4,19 @@
 #include "LDG/SoldierAIController.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/Soldier.h"
 
 void ASoldierAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	PossessedPawn = Cast<ASoldier>(InPawn);
+	Health = MaxHealth;
 
+	PossessedPawn = Cast<ASoldier>(InPawn);
+	RifleAnimInstance = Cast<URifleSoliderAnimInstance>(PossessedPawn -> GetMesh() -> GetAnimInstance());
 	RunBehaviorTree(BehaviourTree);
 	StartDetectionTimer();
 }
@@ -35,9 +39,9 @@ void ASoldierAIController::MoveCommand(FVector GoalLocation)
 	if(PossessedPawn -> IsSelected())
 	{
 		SetState(EState::Move);
-
-		GetBlackboardComponent() -> SetValueAsVector(TEXT("TargetLocation"), GoalLocation);
-		GetBlackboardComponent() -> SetValueAsEnum(TEXT("State"), static_cast<uint8>(EState::Move));
+		
+		GetBlackboardComponent() -> SetValueAsVector(FName(TEXT("TargetLocation")), GoalLocation);
+		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Move));
 	}
 }
 
@@ -47,14 +51,30 @@ void ASoldierAIController::ChaseCommand(FVector GoalLocation)
 	{
 		SetState(EState::Chase);
 
-		GetBlackboardComponent() -> SetValueAsVector(TEXT("TargetLocation"), GoalLocation);
-		GetBlackboardComponent() -> SetValueAsEnum(TEXT("State"), static_cast<uint8>(EState::Chase));
+		GetBlackboardComponent() -> SetValueAsVector(FName(TEXT("TargetLocation")), GoalLocation);
+		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Chase));
 	}
 }
 
 void ASoldierAIController::AttackCommand(AActor* TargetActor)
 {
-	UGameplayStatics::ApplyDamage(TargetActor, 25.f, this, GetOwner(), UDamageType::StaticClass());
+	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Attack"));
+	UGameplayStatics::ApplyDamage(TargetActor, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
+	RifleAnimInstance -> PlayAttackMontage();
+}
+
+void ASoldierAIController::Die()
+{
+	RifleAnimInstance -> PlayDeathMontage();
+	
+	PossessedPawn -> GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PossessedPawn -> GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	FTimerHandle DieTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
+	{
+		PossessedPawn -> Destroy();
+	}, 3.0f, false);
 }
 
 void ASoldierAIController::StartDetectionTimer()
@@ -77,7 +97,7 @@ void ASoldierAIController::EnemyDetection()
 		1000.f,
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
-		TArray<AActor*>(),
+		{PossessedPawn},
 		EDrawDebugTrace::ForDuration,
 		HitResult,
 		true,
@@ -88,13 +108,36 @@ void ASoldierAIController::EnemyDetection()
 
 	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
-		if(HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
-		{
-			GetBlackboardComponent() -> SetValueAsObject(TEXT("TargetActor"), HitResult.GetActor());
-		}
-		else
-		{
-			GetBlackboardComponent() -> SetValueAsObject(TEXT("TargetActor"), nullptr);
-		}
+		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
+		GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
 	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(
+		ForgetTimerHandle,
+		this,
+		&ASoldierAIController::EnemyForget,
+		2.f,
+		false
+		);
+	}
+}
+
+void ASoldierAIController::EnemyForget()
+{
+	GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), nullptr);
+}
+
+float ASoldierAIController::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                                       AController* EventInstigator, AActor* DamageCauser)
+{
+	Health -= DamageAmount;
+	
+	if(Health <= 0)
+	{
+		SetState(EState::Die);
+		Die();
+	}
+	
+	return DamageAmount;
 }

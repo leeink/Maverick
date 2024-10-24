@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/OperatorSpectatorPawn.h"
@@ -182,9 +183,9 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		{
 			for(auto* Unit: SelectedUnits)
 			{
-				if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+				if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
 				{
-					Soldier -> Move(HitResult.Location);
+					RifleController -> MoveCommand(HitResult.Location);
 				}
 			}
 		}
