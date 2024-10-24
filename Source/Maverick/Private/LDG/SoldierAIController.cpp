@@ -13,8 +13,6 @@ void ASoldierAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	Health = MaxHealth;
-
 	PossessedPawn = Cast<ASoldier>(InPawn);
 	RifleAnimInstance = Cast<URifleSoliderAnimInstance>(PossessedPawn -> GetMesh() -> GetAnimInstance());
 	RunBehaviorTree(BehaviourTree);
@@ -58,23 +56,9 @@ void ASoldierAIController::ChaseCommand(FVector GoalLocation)
 
 void ASoldierAIController::AttackCommand(AActor* TargetActor)
 {
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Attack"));
-	UGameplayStatics::ApplyDamage(TargetActor, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
+	AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
+	UGameplayStatics::ApplyDamage(Target, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
 	RifleAnimInstance -> PlayAttackMontage();
-}
-
-void ASoldierAIController::Die()
-{
-	RifleAnimInstance -> PlayDeathMontage();
-	
-	PossessedPawn -> GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	PossessedPawn -> GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	FTimerHandle DieTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
-	{
-		PossessedPawn -> Destroy();
-	}, 3.0f, false);
 }
 
 void ASoldierAIController::StartDetectionTimer()
@@ -109,6 +93,8 @@ void ASoldierAIController::EnemyDetection()
 	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
+		//FString TargetActorName = FString::Printf(TEXT("%s"), *HitResult.GetActor() -> GetName());
+		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TargetActorName);
 		GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
 	}
 	else
@@ -126,18 +112,4 @@ void ASoldierAIController::EnemyDetection()
 void ASoldierAIController::EnemyForget()
 {
 	GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), nullptr);
-}
-
-float ASoldierAIController::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
-                                       AController* EventInstigator, AActor* DamageCauser)
-{
-	Health -= DamageAmount;
-	
-	if(Health <= 0)
-	{
-		SetState(EState::Die);
-		Die();
-	}
-	
-	return DamageAmount;
 }

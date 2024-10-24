@@ -26,6 +26,12 @@ class MAVERICK_API ASoldier : public ACharacter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	float AttackRate;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
+	float MaxHealth;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
+	float Health;
+
 public:
 	// Sets default values for this character's properties
 	ASoldier();
@@ -37,12 +43,12 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	virtual void Wait();
-	virtual void Move(FVector GoalLocation);
-	virtual void Attack();
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	void Selected();
 	void Deselected();
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
 };

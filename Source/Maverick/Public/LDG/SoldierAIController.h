@@ -37,12 +37,6 @@ class MAVERICK_API ASoldierAIController : public AAIController
 	UPROPERTY()
 	URifleSoliderAnimInstance* RifleAnimInstance;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
-	float MaxHealth;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
-	float Health;
-
 	FTimerHandle DetectionTimerHandle;
 	FTimerHandle ForgetTimerHandle;
 
@@ -58,10 +52,10 @@ public:
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand(AActor* TargetActor);
-	void Die();
+	
 	void StartDetectionTimer();
 	void EnemyDetection();
 	void EnemyForget();
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	FORCEINLINE URifleSoliderAnimInstance* GetRifleAnimInstance() const { return RifleAnimInstance; }
 };
