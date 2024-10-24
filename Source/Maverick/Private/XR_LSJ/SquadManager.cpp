@@ -2,7 +2,6 @@
 
 
 #include "XR_LSJ/SquadManager.h"
-#include "XR_LSJ/AISquad.h"
 #include "XR_LSJ/AISquadFSMComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
@@ -12,6 +11,7 @@
 #include "PhysicsEngine/ConvexElem.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMesh.h"
+#include "Components/BoxComponent.h"
 // Sets default values
 ASquadManager::ASquadManager()
 {
@@ -23,43 +23,259 @@ ASquadManager::ASquadManager()
 	SquadPositionArray.Add(FVector(-150, 150, 0));
 	SquadPositionArray.Add(FVector(250, 0, 0));
 	SquadPositionArray.Add(FVector(150, 200, 0));
+
+    BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
+    BoxComp->SetCollisionProfileName(TEXT("FindTarget"));
+    SetRootComponent(BoxComp);
+
 }
 
 // Called when the game starts or when spawned
 void ASquadManager::BeginPlay()
 {
 	Super::BeginPlay();
+   
+    SquadManagerAbility.Hp = 100.f;
+    SquadManagerAbility.FindTargetRange = 2000.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
 		SquadArray[SpawnCount]->SetMySquadNumber(SpawnCount + 1);
+        SquadArray[SpawnCount]->SetSquadAbility(SquadManagerAbility);
+        SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetUnit"));
+        SquadArray[SpawnCount]->FDelSquadUnitDie.BindLambda([&]()
+        {
+            CurrentSquadCount--;
+        });
 	}
-    AttachToComponent(SquadArray[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+    AttachToComponent(GetSquadArray()[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+    FTimerHandle FindEnemy;
+	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetUnit, 10.0f, true);
 
-    CurrentSquadCount = MaxSpawnCount;
+
+
+    SetCurrentSquadCount(MaxSpawnCount);
 }
+// 효율적인 거리 비교 함수 (제곱근 연산 없이)
+bool ASquadManager::IsCloserThan(const FVector& PointA, const FVector& PointB, const FVector& PointC)
+{
+    float DistSquaredOrign = (PointB-PointA).SizeSquared();
+    float DistSquaredNew = (PointC-PointA).SizeSquared();
 
+    return DistSquaredNew < DistSquaredOrign;
+}
+//가까운 적 탐색
+void ASquadManager::FindCloseTargetUnit()
+{
+    FVector Start = GetActorLocation();
+    FVector End = GetActorLocation();
+    float Radius = SquadManagerAbility.FindTargetRange;
+    ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4);
+    bool bTraceComplex = false;
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+	for (AActor* SquadActor : GetSquadArray())
+		ActorsToIgnore.Add(SquadActor);
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    TArray<FHitResult> OutHits;
+    bool bIgnoreSelf = true;
+    FLinearColor TraceColor = FLinearColor::Gray;
+    FLinearColor TraceHitColor = FLinearColor::Blue;
+    float DrawTime = 1.0f;
+    //SquadManagerAbility.FindTargetRange 범위 탐색
+    const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
+    if (Hit)
+    {
+        Target.Empty();
+        Target.Init(OutHits.Last().GetActor(),MaxSpawnCount);
+        
+        bool CanAttackEnemy = false;
+        int SquadLastIdx = 0;
+        for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
+		{
+            if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+               continue;
+            SquadLastIdx = SquadCount;
+        }
+        
+        for (const FHitResult& HitResult : OutHits)
+        {
+            AAISquad* FoundEnemy = Cast<AAISquad>(HitResult.GetActor());
+            if(nullptr == FoundEnemy)
+                continue;
+            if(FoundEnemy && FoundEnemy->FSMComp->GetCurrentState() == EEnemyState::DIE)
+                continue;
+            if(false == FoundEnemy->ActorHasTag("Enemy"))
+                continue;
+            
+             //각 분대원에게 찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
+            //타겟에게 공격 지시
+		    for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
+		    {
+
+                if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+                    continue;
+                //중간에 장애물이 없다면
+                //각 분대원마다 머리를 기준으로 적 사이에 방해물이 없고
+				FHitResult OutHit;
+				FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
+				FVector EndLocation = FoundEnemy->GetMesh()->GetSocketLocation(TEXT("Head"));
+				ECollisionChannel TraceChannelHit = ECC_Visibility;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
+				Params.AddIgnoredActor(FoundEnemy);
+				bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
+				if (CanHit)
+				{
+					DrawDebugLine(GetWorld(), StartLocation, FoundEnemy->GetActorLocation() , FColor::Blue,false,10.0f);
+				}
+				else
+				{
+                    CanAttackEnemy = true;
+                    if (IsCloserThan(StartLocation, Target[SquadCount]->GetActorLocation(), FoundEnemy->GetActorLocation()))
+                    {
+                        Target[SquadCount] = FoundEnemy;
+                        DrawDebugLine(GetWorld(), StartLocation, FoundEnemy->GetActorLocation() , FColor::Red,false,10.0f);
+                        continue;
+                    }
+				}
+		    }
+
+            if(Target[SquadLastIdx] != OutHits.Last().GetActor())
+                break;
+        }
+        //탐색 범위 안에 적을 공격한다.
+        if (CanAttackEnemy)
+            AttackTargetUnit();
+        else //탐색 범위 안에 적 존재하지만 방해물이 있다면 공격을 중단한다.
+        { 
+            for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
+			{
+				if (SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+					continue;
+				if (SquadArray[SquadCount]->FSMComp->GetIsAttacking())
+					SquadArray[SquadCount]->FSMComp->SetIsAttacking(false, nullptr);
+			}
+        }
+    }
+    else //탐색 범위 안에서 적을 찾을 수 없다면
+    {
+         for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
+		 {
+			if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+				 continue;
+            if(SquadArray[SquadCount]->FSMComp->GetIsAttacking())
+                SquadArray[SquadCount]->FSMComp->SetIsAttacking(false,nullptr);
+		 }
+    }
+}
+void ASquadManager::FindTargetSquad()
+{
+    FVector Start = GetActorLocation();
+    FVector End = GetActorLocation();
+    float Radius = SquadManagerAbility.FindTargetRange;
+    ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel3);
+    bool bTraceComplex = false;
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+    for(AActor* SquadActor : GetSquadArray())
+        ActorsToIgnore.Add(SquadActor);
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    TArray<FHitResult> OutHits;
+    bool bIgnoreSelf = true;
+    FLinearColor TraceColor = FLinearColor::Gray;
+    FLinearColor TraceHitColor = FLinearColor::Blue;
+    float DrawTime = 1.0f;
+
+    const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
+    if (Hit)
+    {
+        Target.Empty();
+        for (const FHitResult& HitResult : OutHits)
+        {
+            if (HitResult.GetActor()->ActorHasTag(TEXT("SquadManager")))
+            {
+                FHitResult OutHit;
+				FVector StartLocation = GetActorLocation();
+				FVector EndLocation = HitResult.GetActor()->GetActorLocation();
+				ECollisionChannel TraceChannelHit = ECC_Visibility;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
+             	Params.AddIgnoredActor(HitResult.GetActor());
+				bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
+				if (CanHit)
+				{
+                    UE_LOG(LogTemp, Warning, TEXT("%s"),*HitResult.GetActor()->GetName());
+                    DrawDebugLine(GetWorld(), StartLocation, EndLocation , FColor::Red,false,10.0f);
+				}
+                else
+                {
+                    Target.Add(HitResult.GetActor());
+                }
+                DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Blue);
+            }
+        }
+    }
+    if (Target.IsEmpty() == false)
+    {
+        
+            FTimerHandle AttackEnemy;
+			FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ASquadManager::AttackTargetSquad, Target[0]);
+			GetWorldTimerManager().SetTimer(AttackEnemy, RespawnDelegate, 10.0f, true);
+    }
+}
+void ASquadManager::AttackTargetUnit()
+{
+    if(Target.Num() < CurrentSquadCount)
+       return;
+     for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
+    {
+        if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+            continue;
+		if (Target[SquadCount] == nullptr)
+			continue;
+        //UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
+        SquadArray[SquadCount]->FSMComp->SetIsAttacking(true, Target[SquadCount]);
+    }
+}
+void ASquadManager::AttackTargetSquad(AActor* TargetActor)
+{
+    if(nullptr == TargetActor)
+        return;
+    ASquadManager* TargetSquadManager =Cast<ASquadManager>(TargetActor);
+    for (AAISquad* SquadPawn : GetSquadArray())
+    {
+        if(SquadPawn->FSMComp->GetCurrentState() == EEnemyState::DIE)
+            continue;
+        //사정거리 안에 있고 //정면에서 가깝고
+        //임시로 랜덤
+        int RandomIdx = FMath::RandRange(0, TargetSquadManager->GetCurrentSquadCount()-1);
+        SquadPawn->FSMComp->SetIsAttacking(true, TargetSquadManager->GetSquadArray()[RandomIdx]);
+    }
+}
 void ASquadManager::FindPath(const FVector& TargetLocation)
 {
     UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
     if(nullptr == NavSystem)
         return;
-    FVector StartLocation = SquadArray[0]->GetActorLocation();
+    FVector StartLocation = GetSquadArray()[0]->GetActorLocation();
     UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation);
     if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
     {
         TArray<FVector> ArrayLocation;
         ArrayLocation = NavPath->PathPoints;
-       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
+       for (int SquadCount = 0; SquadCount < GetSquadArray().Num(); SquadCount++)
 	   {
+           if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+            continue;
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
            DirectionPosition.Z = 0;
            ArrayLocation.Last()+=DirectionPosition;
-           SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
-		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
+           GetSquadArray()[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
+		   GetSquadArray()[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
     else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
@@ -75,25 +291,27 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
     UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
     if(nullptr == NavSystem)
         return;
-    FVector StartLocation = SquadArray[0]->GetActorLocation();
+    FVector StartLocation = GetSquadArray()[0]->GetActorLocation();
    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation[0]);
     
     if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
     {
         TArray<FVector> ArrayLocation;
         ArrayLocation = NavPath->PathPoints;
-       for (int SquadCount = 0; SquadCount < SquadArray.Num(); SquadCount++)
+       for (int SquadCount = 0; SquadCount < GetSquadArray().Num(); SquadCount++)
 	   {
+           if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+            continue;
            ArrayLocation.Last() = TargetLocation[SquadCount];
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
            DirectionPosition.Z = 0;
-           SquadArray[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
-		   SquadArray[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
+           GetSquadArray()[SquadCount]->FSMComp->SetSquadPosition(DirectionPosition);
+		   GetSquadArray()[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
     else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-         UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+         //UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
     }
 }
 
@@ -130,7 +348,7 @@ void ASquadManager::CheckLocationForObject()
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
-        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
+        //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
@@ -177,7 +395,7 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
     if (bHit) //목표지점에 오브젝트 존재 시 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
-        UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
+        //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
         // 디버그용 박스 트레이스 시각화 (충돌 시 빨간색)
@@ -200,7 +418,7 @@ void ASquadManager::Tick(float DeltaTime)
 // 분대원 수만큼 FVector 만들기
 void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum)
 {
-    if (OutPoints.Num() == 1 || OutPoints.Num()<CurrentSquadCount) //임시 조치로 분대원보다 OutPoints.Num()이 작으면 위치를 추가한다.
+    if (OutPoints.Num() == 1 || (OutPoints.Num()<GetCurrentSquadCount() && OutPoints.Num() >= 1)) //임시 조치로 분대원보다 OutPoints.Num()이 작으면 위치를 추가한다.
     {
         FVector Temp = OutPoints[0];
         FVector BaseForwardVector;
@@ -229,12 +447,12 @@ void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& O
         OutPoints[5]= Temp;
         OutPoints[0] = OutPoints[5] + (-1) *BaseForwardVector*SquadPositionArray[5].X;
         DrawDebugSphere(TargetActor->GetWorld(), OutPoints[0], 10.0f, 12, FColor::Black, false, 5.0f);
-        for (int SquadCount = 1; SquadCount < SquadArray.Num(); SquadCount++)
+        for (int SquadCount = 1; SquadCount < GetSquadArray().Num(); SquadCount++)
 	    {
 			FVector DirectionPosition = BaseForwardVector * SquadPositionArray[SquadCount].X + BaseRightVector * SquadPositionArray[SquadCount].Y;
 			DirectionPosition.Z = 0;
 			OutPoints[SquadCount]=(OutPoints[0]+DirectionPosition);// += SquadPositionArray[SquadCount]);
-            UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
+            //UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
 		    DrawDebugSphere(TargetActor->GetWorld(), OutPoints[SquadCount], 10.0f, 12, FColor::Blue, false, 5.0f);
         }
     }
@@ -253,7 +471,7 @@ void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVe
     {
         float t = i / static_cast<float>(NumPoints);  // t는 0에서 1 사이를 일정하게 증가
 		FVector Point = FMath::Lerp(P1, P2, t);       // P(t) = (1 - t) * P1 + t * P2
-        Point.Z = SquadArray[0]->GetActorLocation().Z;
+        Point.Z = GetSquadArray()[0]->GetActorLocation().Z;
         OutPoints.Add(Point);                         // 점을 결과 배열에 추가
     }
 }
@@ -291,10 +509,6 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
 			 if (EachVector1.Y < MinY.Y) MinY = EachVector1;
 			 if (EachVector1.Y > MaxY.Y) MaxY = EachVector1;
 
-			 if (Index == 1)
-				 UE_LOG(LogTemp, Log, TEXT("Index(%d) : (%s)"), Index, *EachVector1.ToString());
-			 //if (Index == 1)
-				// DrawDebugSphere(TargetActor->GetWorld(), EachVector, 10.0f, 12, FColor::Green, false, 5.0f);
 		 }
           // 월드 변환 (위치, 회전, 스케일 적용)
          FTransform ActorTransform = TargetActor->GetActorTransform();
@@ -347,7 +561,7 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
              break;
          }
              //엄폐 위치가 분대원 수보다 적다면 분대원 위치를 지정해준다.
-		 if (NewVertexArray.Num() < CurrentSquadCount)
+		 if (NewVertexArray.Num() < GetCurrentSquadCount())
 			 MakeObstructionPoint(TargetActor, NewVertexArray, ObstructionDirection);
          //내적을 한 후 가까운 방향의 꼭지점을 구한다.
          //VertexArray[4] : 좌측 방향
