@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPawn.h"
 #include "LDG/Soldier.h"
+#include "LDG/TankBase.h"
 
 AUnitControlHUD::AUnitControlHUD()
 {
@@ -29,15 +30,29 @@ void AUnitControlHUD::DrawHUD()
 		DrawRect(Color, StartMousePosition.X, StartMousePosition.Y, CurrentMousePosition.X - StartMousePosition.X, CurrentMousePosition.Y - StartMousePosition.Y);
 
 		GetActorsInSelectionRectangle(ASoldier::StaticClass(), StartMousePosition, CurrentMousePosition, InRectangleUnits, false, false);
+		GetActorsInSelectionRectangle(ATankBase::StaticClass(), StartMousePosition, CurrentMousePosition, InRectangleTanks, false, false);
 
+		// Unit Selection -----------------------------------------------
 		for(auto* Unit: InRectangleUnits)
 		{
-			auto* InnerUnit = Cast<ASoldier>(Unit);
-			InnerUnit -> Selected();
-
-			OperatorPawn -> GetSelectedUnits().AddUnique(InnerUnit);
+			if(auto* SoldierUnit = Cast<ASoldier>(Unit))
+			{
+				SoldierUnit -> Selected();
+				OperatorPawn -> GetSelectedUnits().AddUnique(SoldierUnit);
+			}
 		}
 
+		for(auto* Unit: InRectangleTanks)
+		{
+			if(auto* TankUnit = Cast<ATankBase>(Unit))
+			{
+				TankUnit -> Selected();
+				OperatorPawn -> GetSelectedTanks().AddUnique(TankUnit);
+			}
+		}
+		// Unit Selection -----------------------------------------------
+
+		// Unit DeSelection -----------------------------------------------
 		for(auto* Unit: OperatorPawn -> GetSelectedUnits())
 		{
 			if(InRectangleUnits.Find(Unit) == -1)
@@ -46,6 +61,16 @@ void AUnitControlHUD::DrawHUD()
 				OperatorPawn -> GetSelectedUnits().Remove(Unit);
 			}
 		}
+
+		for(auto* Unit: OperatorPawn -> GetSelectedTanks())
+		{
+			if(InRectangleTanks.Find(Unit) == -1)
+			{
+				Unit -> Deselected();
+				OperatorPawn -> GetSelectedTanks().Remove(Unit);
+			}
+		}
+		// Unit DeSelection -----------------------------------------------
 	}
 }
 

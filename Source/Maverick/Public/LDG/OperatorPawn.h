@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class ATankBase;
 class ARifleSoldier;
 class ASoldier;
 class AOperatorSpectatorPawn;
@@ -98,6 +99,9 @@ class MAVERICK_API AOperatorPawn : public APawn
 	
 	UPROPERTY()
 	TArray<ASoldier*> SelectedUnits;
+
+	UPROPERTY()
+	TArray<ATankBase*> SelectedTanks;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -128,4 +132,5 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	FORCEINLINE TArray<ASoldier*>& GetSelectedUnits() { return SelectedUnits; }
+	FORCEINLINE TArray<ATankBase*>& GetSelectedTanks() { return SelectedTanks; }
 };

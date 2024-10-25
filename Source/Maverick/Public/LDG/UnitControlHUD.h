@@ -29,9 +29,11 @@ class MAVERICK_API AUnitControlHUD : public AHUD
 	UPROPERTY()
 	TArray<AActor*> InRectangleUnits;
 
-	// Selected Units
 	UPROPERTY()
-	TArray<AActor*> SelectedUnits;
+	TArray<AActor*> InRectangleTanks;
+
+	// Selected Units
+	
 
 public:
 	AUnitControlHUD();
@@ -42,6 +44,4 @@ public:
 	void MarqueePressed();
 	void MarqueeHeld();
 	void MarqueeReleased();
-
-	FORCEINLINE TArray<AActor*> GetSelectedUnits() const { return SelectedUnits; }
 };

@@ -14,8 +14,11 @@
 #include "LDG/OperatorSpectatorPawn.h"
 #include "LDG/RifleSoldier.h"
 #include "LDG/SoldierAIController.h"
+#include "LDG/TankAIController.h"
+#include "LDG/TankBase.h"
 #include "LDG/UnitControlHUD.h"
 
+class ATankAIController;
 // Sets default values
 AOperatorPawn::AOperatorPawn()
 {
@@ -158,6 +161,15 @@ void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 				}
 			}
 
+			for(auto* Tank: SelectedTanks)
+			{
+				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+				{
+					GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Chase Command"));
+					TankAIController -> ChaseCommand(HitResult.Location);
+				}
+			}
+
 			bAttackReady = false;
 		}
 	}
@@ -186,6 +198,14 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 				if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
 				{
 					RifleController -> MoveCommand(HitResult.Location);
+				}
+			}
+
+			for(auto* Tank: SelectedTanks)
+			{
+				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+				{
+					TankAIController -> MoveCommand(HitResult.Location);
 				}
 			}
 		}
