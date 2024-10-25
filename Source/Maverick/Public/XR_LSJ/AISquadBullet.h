@@ -31,6 +31,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	void DestroyBullet();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

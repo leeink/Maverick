@@ -304,7 +304,7 @@ void UAISquadFSMComponent::SetIsAttacking(bool val, AActor* TargetActor)
 {
 	IsAttacking = val;
 	Target = TargetActor;
-	AISquadAnimInstance->SetIsAttacking(true);
+	AISquadAnimInstance->SetIsAttacking(val);
 	
 }
 

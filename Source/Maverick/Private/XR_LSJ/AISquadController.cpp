@@ -11,5 +11,5 @@ void AAISquadController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	{
 		FCallback_AIController_MoveCompleted.Broadcast(Result.Code); 
 	}
-		
+	
 };
