@@ -7,8 +7,8 @@
 #include "AISquad.generated.h" 
 
 DECLARE_DELEGATE(FDel_TargetDie);
-DECLARE_DELEGATE(FDel_SquadUnitDie);
-
+DECLARE_DELEGATE_OneParam(FDel_SquadUnitDie, int32);
+DECLARE_DELEGATE_OneParam(FDel_SquadUnitDamaged,float);
 USTRUCT(Atomic,BlueprintType)
 struct FSquadData
 {
@@ -83,4 +83,6 @@ public:
 	FDel_TargetDie FDelTargetDie;
 	//분대원이 죽었을때 SquadManager에 알려주는 델리게이트
 	FDel_SquadUnitDie FDelSquadUnitDie;
+	//분대원이 데미지 받았을 때 SquadManager에 알려주는 델리게이트
+	FDel_SquadUnitDamaged FDelSquadUnitDamaged;
 };

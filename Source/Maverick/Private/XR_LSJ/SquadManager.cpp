@@ -12,6 +12,8 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMesh.h"
 #include "Components/BoxComponent.h"
+#include "XR_LSJ/AIUnitHpBar.h"
+#include "Components/WidgetComponent.h"
 // Sets default values
 ASquadManager::ASquadManager()
 {
@@ -27,7 +29,13 @@ ASquadManager::ASquadManager()
     BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
     BoxComp->SetCollisionProfileName(TEXT("FindTarget"));
     SetRootComponent(BoxComp);
-
+    
+    HpWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HpWidgetComp"));
+    HpWidgetComp->SetupAttachment(BoxComp);
+    HpWidgetComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    HpWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+    HpWidgetComp->SetDrawSize(FVector2D(100,100));
+    HpWidgetComp->SetRelativeLocation(FVector(0,0.f,400.0f));
 }
 
 // Called when the game starts or when spawned
@@ -36,27 +44,29 @@ void ASquadManager::BeginPlay()
 	Super::BeginPlay();
    
     SquadManagerAbility.Hp = 100.f;
+    MaxSquadHp = SquadManagerAbility.Hp*MaxSpawnCount;
+    CurrentSquadHp = MaxSquadHp;
     SquadManagerAbility.FindTargetRange = 2000.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
-		SquadArray[SpawnCount]->SetMySquadNumber(SpawnCount + 1);
+		SquadArray[SpawnCount]->SetMySquadNumber(SpawnCount);
         SquadArray[SpawnCount]->SetSquadAbility(SquadManagerAbility);
         SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetUnit"));
-        SquadArray[SpawnCount]->FDelSquadUnitDie.BindLambda([&]()
-        {
-            CurrentSquadCount--;
-        });
+        SquadArray[SpawnCount]->FDelSquadUnitDamaged.BindUFunction(this, FName("DamagedSquadUnit"));
+        SquadArray[SpawnCount]->FDelSquadUnitDie.BindUFunction(this, FName("DieSquadUnit"));
 	}
-    AttachToComponent(GetSquadArray()[0]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+    CurrentAttachedSquadNumber = 0;
+    AttachToComponent(GetSquadArray()[CurrentAttachedSquadNumber]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
     FTimerHandle FindEnemy;
-	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetUnit, 10.0f, true);
+	//GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetUnit, 10.0f, true);
 
-
-
+    //HpBar
+    if(HpWidgetComp&&HpBarClass)
+        HpWidgetComp->SetWidgetClass(HpBarClass);
     SetCurrentSquadCount(MaxSpawnCount);
 }
 // 효율적인 거리 비교 함수 (제곱근 연산 없이)
@@ -147,6 +157,28 @@ void ASquadManager::FindCloseTargetUnit()
             if(Target[SquadLastIdx] != OutHits.Last().GetActor())
                 break;
         }
+        //마지막 적을 벽과 상관없이 공격하므로 한번 더 사이에 장애물이 있는지 검사해야한다.
+		//for (int SquadCount = 0; SquadCount < MaxSpawnCount; SquadCount++)
+		//{
+		//	if (SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+		//		continue;
+		//	if(Target[SquadCount] != OutHits.Last().GetActor())
+		//		continue;
+		//	AAISquad* FoundEnemy = Cast<AAISquad>(OutHits.Last().GetActor()); 
+		//	FHitResult OutHit;
+		//	FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
+		//	FVector EndLocation = FoundEnemy->GetMesh()->GetSocketLocation(TEXT("Head"));
+		//	ECollisionChannel TraceChannelHit = ECC_Visibility;
+		//	FCollisionQueryParams Params;
+		//	Params.AddIgnoredActor(this);
+		//	Params.AddIgnoredActor(FoundEnemy);
+		//	bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
+		//	if (CanHit)
+		//	{
+		//		DrawDebugLine(GetWorld(), StartLocation, FoundEnemy->GetActorLocation() , FColor::Blue,false,10.0f);
+		//	}
+
+		//}
         //탐색 범위 안에 적을 공격한다.
         if (CanAttackEnemy)
             AttackTargetUnit();
@@ -406,6 +438,35 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
        FindPath(TargetLocation);
         // 디버그용 박스 트레이스 시각화 (충돌 없을 시 초록색)
         DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
+    }
+}
+
+void ASquadManager::DamagedSquadUnit(float Damage)
+{
+    UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
+    if (HpBarUI)
+    {
+        HpBarUI->SetHpBar((float)(CurrentSquadHp-=Damage)/MaxSquadHp);
+        if (CurrentSquadHp <= 0)
+        {
+            HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
+            HpWidgetComp->Deactivate();
+        }
+    }
+}
+
+void ASquadManager::DieSquadUnit(int32 SquadNumber)
+{
+    CurrentSquadCount--;
+    if (CurrentAttachedSquadNumber == SquadNumber)
+    {
+		for (int SpawnCount = CurrentAttachedSquadNumber; SpawnCount < MaxSpawnCount; SpawnCount++)
+		{
+            if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() != EEnemyState::DIE)
+            {
+                AttachToComponent(GetSquadArray()[SpawnCount]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+            }
+        }
     }
 }
 

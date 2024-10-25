@@ -21,7 +21,7 @@ class MAVERICK_API ASquadManager : public AActor
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	class UBoxComponent* BoxComp;
 
 	//공격 타겟
@@ -29,6 +29,10 @@ class MAVERICK_API ASquadManager : public AActor
 	//분대 능력치
 	UPROPERTY()
 	struct FSquadData SquadManagerAbility;
+	//분대 현재 HP
+	float CurrentSquadHp;
+	//분대 최대 HP
+	float MaxSquadHp; 
 	//분대의 분대원들
 	TArray<class AAISquad*> SquadArray;
 	//분대원 포지션 목록
@@ -42,8 +46,18 @@ class MAVERICK_API ASquadManager : public AActor
 	FVector ArrivalPoint = FVector(1500,0,0);
 	//엄폐 위치 목록
 	TArray<FVector> ObstructionPoints;
+	//현재 부착하고 있는 SquadNumber
+	int32 CurrentAttachedSquadNumber;
+	//체력바 UI Component
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* HpWidgetComp;
 
+	
 public:
+	
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UAIUnitHpBar> HpBarClass;
 	//목표지점 최대 거리
 	UPROPERTY(EditDefaultsOnly)
 	float MaxMoveLength = 10000.0f;
@@ -82,7 +96,12 @@ protected:
 	void CheckLocationForObject(const FVector& TargetLocation);
 	//CheckLocationForObject 테스트
 	void CheckLocationForObject();
-
+	//분대원이 데미지를 받으면 체력바에 동기화
+	UFUNCTION()
+	void DamagedSquadUnit(float Damage);
+	//체력바 표시하는 분대원이 죽었다면 살아있는 다른 분대원에게 부착
+	UFUNCTION()
+	void DieSquadUnit(int32 SquadNumber);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
