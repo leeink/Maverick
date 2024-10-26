@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "IAICommand.h"
 #include "AISquad.generated.h" 
 
 DECLARE_DELEGATE(FDel_TargetDie);
@@ -26,7 +27,7 @@ public:
 
 
 UCLASS()
-class MAVERICK_API AAISquad : public ACharacter
+class MAVERICK_API AAISquad : public ACharacter, public IIAICommand
 {
 	GENERATED_BODY()
 	UPROPERTY()
@@ -40,7 +41,7 @@ class MAVERICK_API AAISquad : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AAISquad();
-
+	virtual FVector GetTargetLocation();
 	//Bullet
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> BulletFactory; 
@@ -56,6 +57,8 @@ public:
 	//공격시 총알과 이펙트 소환
 	void AttackFire();
 
+	virtual EAIUnitCommandState GetCurrentCommandState() override;
+	virtual void SetCommandState(EAIUnitCommandState Command) override;
 	int32 GetMySquadNumber() const { return MySquadNumber; }
 	void SetMySquadNumber(int32 val) { MySquadNumber = val; }
 	class USkeletalMeshComponent* GetGunMeshComp() const { return GunMeshComp; }

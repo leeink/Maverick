@@ -31,8 +31,7 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	class UBoxComponent* BoxComp;
 	class AAITankController* AITankController;
 	struct FTankData TankAbility;
-	int32 CurrentHp;
-	int32 MaxHp;
+
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	class UFloatingPawnMovement* MovementComponent;
 	TArray<FVector> PathVectorArray;
@@ -44,6 +43,8 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	float TurretRotAlpha;
 	float FireCoolTime;
 	float FireTotalTime;
+	int32 CurrentTankHp;
+	int32 MaxTankHp;
 public:
 	// Sets default values for this pawn's properties
 	AAITankPawn();
@@ -67,19 +68,35 @@ public:
 protected:
 	void FireCannon();
 	float GetLookTargetAngle(FVector TargetLocation);
+	UFUNCTION()
+	void StopAttack();
 	void AttackTargetUnit(AActor* TargetActor);
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	
 	UFUNCTION()
 	virtual void OnMoveCompleted(EPathFollowingResult::Type Result);
 	virtual void MovePathAsync(TArray<FVector>& NavPathArray);
+	bool CalculateBallisticVelocity(const FVector& StartLocation, 
+    const FVector& EndLocation, 
+    float DesiredTime, // 목표 도달 시간
+    FVector& OutVelocity);
 	virtual void FindCloseTargetUnit();
 	virtual void FindPath(const FVector& TargetLocation);
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* HpWidgetComp;
+
 public:
+	virtual FVector GetTargetLocation();
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UAIUnitHpBar> HpBarClass;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 };

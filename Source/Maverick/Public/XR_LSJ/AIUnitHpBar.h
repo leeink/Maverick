@@ -15,9 +15,16 @@ class MAVERICK_API UAIUnitHpBar : public UUserWidget
 	GENERATED_BODY()
 	UPROPERTY(meta = (BindWidget))
 	class UImage* MOS;
+	UPROPERTY()
+	class UTexture2D* SquadTexture;
+	UPROPERTY()
+	class UTexture2D* TankTexture;
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HpBar;
 public:
+	UAIUnitHpBar(const FObjectInitializer& ObjectInitializer);
+	void SetUISquadImage();
+	void SetUITankImage();
 	void SetHpBar(float Percent);
 
 };

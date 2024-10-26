@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "IAICommand.generated.h"
+
+DECLARE_DELEGATE(FDel_UnitDie);
+
 UENUM(BlueprintType)
 enum class EAIUnitCommandState : uint8
 {
@@ -40,6 +43,9 @@ protected:
 public:
 	virtual EAIUnitCommandState GetCurrentCommandState(){ return EAIUnitCommandState();}
 	virtual void SetCommandState(EAIUnitCommandState Command){}
-	EAIUnitCategory GetAIUnitCategory() const { return AIUnitCategory; }
-	void SetAIUnitCategory(EAIUnitCategory val) { AIUnitCategory = val; }
+	virtual EAIUnitCategory GetAIUnitCategory() const { return AIUnitCategory; }
+	virtual void SetAIUnitCategory(EAIUnitCategory val) { AIUnitCategory = val; }
+	virtual FVector GetTargetLocation() { return FVector::ZeroVector; }
+	//죽었을때 알려주는 델리게이트
+	FDel_UnitDie FDelUnitDie;
 };

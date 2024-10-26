@@ -26,6 +26,8 @@ AAITankBullet::AAITankBullet()
 }
 void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 {
+	if(OtherActor==GetOwner())
+		return;
 	if (OtherActor && OtherActor->ActorHasTag("Test"))
 	{	
 		//UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
@@ -57,9 +59,9 @@ void AAITankBullet::DestroyBullet()
 }
 void AAITankBullet::InitMovement(FVector Direction)
 {
-	MovementComp->InitialSpeed = 5000;
-	MovementComp->MaxSpeed = 5000;
-	MovementComp->Velocity = MovementComp->InitialSpeed * Direction;
+	MovementComp->InitialSpeed = 10000;
+	MovementComp->MaxSpeed = 10000;
+	MovementComp->Velocity = Direction;//MovementComp->InitialSpeed * Direction;
 }
 // Called every frame
 void AAITankBullet::Tick(float DeltaTime)

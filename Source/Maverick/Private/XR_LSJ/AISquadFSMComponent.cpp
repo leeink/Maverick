@@ -29,7 +29,7 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	//Anim->EnemyState = NextState;
 
 	//CurrentTime = 0;
-	if (NextState != EEnemyState::MOVE)
+	if (NextState != EEnemyState::MOVE && NextState != EEnemyState::ATTACK)
 	{
 		AISquadController->StopMovement();
 	}
@@ -37,18 +37,20 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 	switch ( GetCurrentState() )
 	{
 	case EEnemyState::IDLE:
-
+		AISquadBody->SetCommandState(EAIUnitCommandState::IDLE);
 		break;
 	case EEnemyState::MOVE:
-		
+		AISquadBody->SetCommandState(EAIUnitCommandState::MOVE);
 
 		break;
 	case EEnemyState::ATTACK:
-		
+		AISquadBody->SetCommandState(EAIUnitCommandState::ATTACK);
 		break;
 	case EEnemyState::DAMAGE:
+		AISquadBody->SetCommandState(EAIUnitCommandState::DAMAGE);
 		break;
 	case EEnemyState::DIE:
+		AISquadBody->SetCommandState(EAIUnitCommandState::DIE);
 		AISquadBody->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
 		AISquadAnimInstance->PlayDieMontage();
