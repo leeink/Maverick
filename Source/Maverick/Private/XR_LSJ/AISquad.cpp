@@ -52,9 +52,12 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			FDelSquadUnitDamaged.Execute(Damage);
 		if (SquadAbility.Hp <= 0)
 		{
+			SetCommandState(EAIUnitCommandState::DIE);
+			FSMComp->SetState(EEnemyState::DIE);
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
-			FSMComp->SetState(EEnemyState::DIE);
+			if(FDelUnitDie.IsBound())
+				FDelUnitDie.Execute();
 		}
 	}
 	return Damage;

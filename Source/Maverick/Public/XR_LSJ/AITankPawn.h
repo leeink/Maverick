@@ -17,9 +17,13 @@ public:
 	UPROPERTY()
 	float AttackSpeed;
 	UPROPERTY()
+	float AttackDamage;
+	UPROPERTY()
 	float MoveSpeed;
 	UPROPERTY()
 	float FindTargetRange;
+	UPROPERTY()
+	float ExplosiveRange;
 };
 UCLASS()
 class MAVERICK_API AAITankPawn : public APawn , public IIAICommand

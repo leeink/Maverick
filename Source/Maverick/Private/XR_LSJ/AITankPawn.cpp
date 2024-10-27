@@ -41,6 +41,8 @@ AAITankPawn::AAITankPawn()
 	MaxTankHp = TankAbility.Hp;
 	CurrentTankHp = MaxTankHp;
     TankAbility.FindTargetRange = 10000.f;
+	TankAbility.ExplosiveRange = 400.f;
+	TankAbility.AttackDamage = 30.f;
 	TurretRotSpeed = 50.0f;
 	FireCoolTime = 2.0f;
 
@@ -120,6 +122,7 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 void AAITankPawn::StopAttack()
 {
 	SetCommandState(EAIUnitCommandState::IDLE);
+	FindCloseTargetUnit();
 }
 
 void AAITankPawn::AttackTargetUnit(AActor* TargetActor)
@@ -318,14 +321,21 @@ bool AAITankPawn::CalculateBallisticVelocity(
 
     return true;
 }
+
 void AAITankPawn::FireCannon()
 {
+	//목표에 도달하기 위해 총알 Velocity 구하기
 	FVector OutVelocity;
-	float LaunchDirection = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.00002f);
-	CalculateBallisticVelocity(MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), Target->GetActorLocation(),LaunchDirection,OutVelocity);
+	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
+	FVector TargetLocation = Target->GetActorLocation();
+	TargetLocation.Z/=2;
+	//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,0,0.5f);
+		//GetWorld()->GetGravityZ(),.9f);
+
+	CalculateBallisticVelocity(MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,ArrivalTime,OutVelocity);
 
 	
-	float LaunchSpeed = 13300.f; // 초기 발사 속도 설정
+	//float LaunchSpeed = 13300.f; // 초기 발사 속도 설정
 	
 	//muzzle 이펙트 
 	FireFx(true);
@@ -340,7 +350,8 @@ void AAITankPawn::FireCannon()
 		
 		//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), Target->GetActorLocation(),
 		//GetWorld()->GetGravityZ(),.9f);
-
+		Bullet->SetExplosiveRange(TankAbility.ExplosiveRange);
+		Bullet->SetExplosiveDamage(TankAbility.AttackDamage);
 		Bullet->InitMovement(OutVelocity);
 	}
 }

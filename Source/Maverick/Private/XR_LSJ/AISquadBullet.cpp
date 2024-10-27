@@ -41,7 +41,7 @@ void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 	else if (OtherActor && OtherActor->ActorHasTag("Enemy"))
 	{	
-		UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(), this, NULL);
+		UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
 	}
 	DestroyBullet();
 }
