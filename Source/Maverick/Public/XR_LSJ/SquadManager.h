@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "XR_LSJ/AISquad.h"
+#include "IAICommand.h"
 #include "SquadManager.generated.h"
 
 UENUM(BlueprintType)
@@ -17,7 +18,7 @@ enum class EObstructionDirection : uint8
 };
 
 UCLASS()
-class MAVERICK_API ASquadManager : public AActor
+class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 {
 	GENERATED_BODY()
 
@@ -54,7 +55,7 @@ class MAVERICK_API ASquadManager : public AActor
 
 	
 public:
-	
+	virtual FVector GetTargetLocation();
 	//Ã¼·Â¹Ù UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
@@ -67,7 +68,8 @@ public:
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")
 	TSubclassOf<class AAISquad> SpawnSquadPactory;
 
-	
+	virtual EAIUnitCommandState GetCurrentCommandState() override;
+	virtual void SetCommandState(EAIUnitCommandState Command) override;
 	TArray<class AAISquad*> GetSquadArray() const { return SquadArray; }
 	void SetSquadArray(TArray<class AAISquad*> val) { SquadArray = val; }
 	int32 GetCurrentSquadCount() const { return CurrentSquadCount; }

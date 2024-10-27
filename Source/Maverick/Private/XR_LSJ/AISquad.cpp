@@ -36,6 +36,11 @@ AAISquad::AAISquad()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
+FVector AAISquad::GetTargetLocation()
+{
+	return GetMesh()->GetSocketLocation(TEXT("Head"));
+}
+
 float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
@@ -47,9 +52,12 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			FDelSquadUnitDamaged.Execute(Damage);
 		if (SquadAbility.Hp <= 0)
 		{
+			SetCommandState(EAIUnitCommandState::DIE);
+			FSMComp->SetState(EEnemyState::DIE);
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
-			FSMComp->SetState(EEnemyState::DIE);
+			if(FDelUnitDie.IsBound())
+				FDelUnitDie.Execute();
 		}
 	}
 	return Damage;
@@ -78,10 +86,18 @@ void AAISquad::AttackFire()
 		Bullet->InitMovement(LaunchDirection);
 	}
 }
+EAIUnitCommandState AAISquad::GetCurrentCommandState()
+{
+	return CurrentCommandState;
+}
+void AAISquad::SetCommandState(EAIUnitCommandState Command)
+{
+}
 void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	//델리게이트 해제
+	FDelUnitDie.Unbind();
 	FDelTargetDie.Unbind();
 	FDelSquadUnitDie.Unbind();
 }

@@ -16,6 +16,9 @@
 #include "NavMesh/RecastNavMesh.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "XR_LSJ/AITankBullet.h"
+#include "XR_LSJ/AIUnitHpBar.h"
+#include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -35,12 +38,22 @@ AAITankPawn::AAITankPawn()
 	AIUnitCategory = EAIUnitCategory::TANK;
 
 	TankAbility.Hp = 100.f;
-    MaxHp = TankAbility.Hp;
-    CurrentHp = MaxHp;
-    TankAbility.FindTargetRange = 2000.f;
+	MaxTankHp = TankAbility.Hp;
+	CurrentTankHp = MaxTankHp;
+    TankAbility.FindTargetRange = 10000.f;
+	TankAbility.ExplosiveRange = 400.f;
+	TankAbility.AttackDamage = 30.f;
 	TurretRotSpeed = 50.0f;
 	FireCoolTime = 2.0f;
+
 	Tags.Add(TEXT("Enemy"));
+
+	HpWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HpWidgetComp"));
+    HpWidgetComp->SetupAttachment(BoxComp);
+    HpWidgetComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    HpWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+    HpWidgetComp->SetDrawSize(FVector2D(100,100));
+    HpWidgetComp->SetRelativeLocation(FVector(0,0.f,400.0f));
 
 	AIControllerClass = AAITankController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -54,7 +67,7 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
 
-	if (Command != EAIUnitCommandState::MOVE)
+	if (Command != EAIUnitCommandState::MOVE && Command != EAIUnitCommandState::ATTACK)
 	{
 		GetController()->StopMovement();
 	}
@@ -74,7 +87,10 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		
 		break;
 	case EAIUnitCommandState::DIE:
-		
+		if(FDelUnitDie.IsBound())
+			FDelUnitDie.Execute();
+		DieAnimation(true);
+
 		break;
 	default:
 		
@@ -102,6 +118,13 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 
 	return Degree*Sign;
 }
+
+void AAITankPawn::StopAttack()
+{
+	SetCommandState(EAIUnitCommandState::IDLE);
+	FindCloseTargetUnit();
+}
+
 void AAITankPawn::AttackTargetUnit(AActor* TargetActor)
 {
 	Target = TargetActor;
@@ -119,10 +142,27 @@ void AAITankPawn::BeginPlay()
 	if (AITankController)
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
-		FindPath(FVector(1025.958464,1622.088644,118.775006));
+		//FindPath(FVector(1025.958464,1622.088644,118.775006));
 		FindCloseTargetUnit();
 	}
-	
+	//HpBar
+    if (HpWidgetComp && HpBarClass)
+    {
+        HpWidgetComp->SetWidgetClass(HpBarClass);
+        UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
+		if (HpBarUI)
+		    HpBarUI->SetUITankImage();
+    }
+}
+void AAITankPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	//델리게이트 해제
+	FDelUnitDie.Unbind();
+}
+FVector AAITankPawn::GetTargetLocation()
+{
+	return GetActorLocation();
 }
 
 //가까운 적 탐색
@@ -159,14 +199,7 @@ void AAITankPawn::FindCloseTargetUnit()
             //타겟에게 공격 지시
 			FHitResult OutHit;
 			FVector StartLocation = MeshComp->GetSocketLocation(TEXT("gun_jntSocket"));
-			FVector EndLocation;
-			if (FoundEnemy->GetAIUnitCategory() == EAIUnitCategory::SQUAD)
-			{
-				AAISquad* AISquad = Cast<AAISquad>(HitResult.GetActor());
-				AISquad->GetMesh()->GetSocketLocation(TEXT("Head"));
-			}
-			else
-				EndLocation = HitResult.GetActor()->GetActorLocation();
+			FVector EndLocation = FoundEnemy->GetTargetLocation();
 
 			ECollisionChannel TraceChannelHit = ECC_Visibility;
 			FCollisionQueryParams Params;
@@ -179,6 +212,8 @@ void AAITankPawn::FindCloseTargetUnit()
 			}
 			else
 			{
+				FoundEnemy->FDelUnitDie.Unbind();
+				FoundEnemy->FDelUnitDie.BindUFunction(this,FName("StopAttack"));
 				AttackTargetUnit(HitResult.GetActor());
 				DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
 				return;
@@ -264,20 +299,60 @@ void AAITankPawn::MovePathAsync(TArray<FVector>& NavPathArray)
 			UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
 		}
 }
+bool AAITankPawn::CalculateBallisticVelocity(
+    const FVector& StartLocation, 
+    const FVector& EndLocation, 
+    float DesiredTime, // 목표 도달 시간
+    FVector& OutVelocity)
+{
+    FVector Delta = EndLocation - StartLocation;
+    float DistXZ = FVector(Delta.X, Delta.Y, 0.f).Size();
+    float DistY = Delta.Z;
+    float Gravity = FMath::Abs(GetWorld()->GetGravityZ()); // 중력 가속도
+    
+    // 필요한 초기 속도를 계산
+    float InitialVelocityZ = (DistY + 0.5f * Gravity * DesiredTime * DesiredTime) / DesiredTime;
+    float InitialVelocityXZ = DistXZ / DesiredTime;
+
+    // 속도 벡터 생성
+    FVector Direction = FVector(Delta.X, Delta.Y, 0.f).GetSafeNormal();
+    OutVelocity = Direction * InitialVelocityXZ;
+    OutVelocity.Z = InitialVelocityZ;
+
+    return true;
+}
+
 void AAITankPawn::FireCannon()
 {
+	//목표에 도달하기 위해 총알 Velocity 구하기
+	FVector OutVelocity;
+	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
+	FVector TargetLocation = Target->GetActorLocation();
+	TargetLocation.Z/=2;
+	//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,0,0.5f);
+		//GetWorld()->GetGravityZ(),.9f);
+
+	CalculateBallisticVelocity(MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,ArrivalTime,OutVelocity);
+
+	
+	//float LaunchSpeed = 13300.f; // 초기 발사 속도 설정
 	
 	//muzzle 이펙트 
 	FireFx(true);
 	//총알 방향
-	FVector LaunchDirection = (Target->GetActorLocation() - MeshComp->GetSocketLocation(TEXT("gun_jntSocket"))).GetSafeNormal();
+	//FVector LaunchDirection = (Target->GetActorLocation() - MeshComp->GetSocketLocation(TEXT("gun_jntSocket"))).GetSafeNormal();
 	//총알 소환
 	AAITankBullet* Bullet = GetWorld()->SpawnActor<AAITankBullet>(BulletFactory,MeshComp->GetSocketLocation(TEXT("gun_jntSocket")),MeshComp->GetSocketRotation(TEXT("gun_jntSocket")));
 	if (Bullet)
 	{
 		Bullet->SetOwner(this);
 		//FVector BulletScale = FVector(100,100,100);
-		Bullet->InitMovement(LaunchDirection);
+		
+		//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), Target->GetActorLocation(),
+		//GetWorld()->GetGravityZ(),.9f);
+		Bullet->SetExplosiveRange(TankAbility.ExplosiveRange);
+		Bullet->SetExplosiveDamage(TankAbility.AttackDamage);
+		Bullet->InitMovement(OutVelocity);
 	}
 }
 // Called every frame
@@ -286,6 +361,7 @@ void AAITankPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (GetCurrentCommandState() == EAIUnitCommandState::ATTACK)
 	{
+		FireTotalTime+=DeltaTime;
 		if ( GetLookTargetAngle(FVector::ZeroVector) - TurretRotation > 1.f)
 		{
 			TurretRotation += DeltaTime * TurretRotSpeed;
@@ -295,8 +371,7 @@ void AAITankPawn::Tick(float DeltaTime)
 			TurretRotation -= DeltaTime * TurretRotSpeed;
 		}
 		else
-		{
-			FireTotalTime+=DeltaTime;
+		{ 
 			if (FireTotalTime >= FireCoolTime)
 			{	
 				FireTotalTime=0;
@@ -316,3 +391,23 @@ void AAITankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 }
 
+float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
+	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+	if (Damage > 0)
+	{
+		CurrentTankHp -= Damage;
+		UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
+		if(nullptr==HpBarUI)
+			return Damage;
+		HpBarUI->SetHpBar((float)(CurrentTankHp -= Damage) / MaxTankHp);
+		if (CurrentTankHp <= 0)
+		{
+			SetCommandState(EAIUnitCommandState::DIE);
+			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
+			HpWidgetComp->Deactivate();
+		}
+	}
+	return Damage;
+}
