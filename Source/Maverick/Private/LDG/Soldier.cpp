@@ -64,10 +64,7 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 	{
 		if(auto* con = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(this)))
 		{
-			con -> SetState(EState::Die);
-			con -> GetRifleAnimInstance() -> PlayDeathMontage();
-			GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			con -> Die();
 
 			FTimerHandle DieTimerHandle;
 			GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()

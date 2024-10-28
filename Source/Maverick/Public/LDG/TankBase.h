@@ -6,16 +6,31 @@
 #include "WheeledVehiclePawn.h"
 #include "TankBase.generated.h"
 
+class UFloatingPawnMovement;
+class UNavigationInvokerComponent;
+class UBoxComponent;
 /**
  * 
  */
 UCLASS()
-class MAVERICK_API ATankBase : public AWheeledVehiclePawn
+class MAVERICK_API ATankBase : public APawn
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* Collision;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* Mesh;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Decal, meta = (AllowPrivateAccess = "true"))
 	UDecalComponent* SelectedDecal;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Invoker, meta = (AllowPrivateAccess = "true"))
+	UNavigationInvokerComponent* NavigationInvoker;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = FloatingMovement, meta = (AllowPrivateAccess = "true"))
+	UFloatingPawnMovement* FloatingMovement;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	bool bSelected;
@@ -53,4 +68,5 @@ public:
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 };
