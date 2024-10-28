@@ -35,13 +35,13 @@ AAISquadBullet::AAISquadBullet()
 
 void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-	if (OtherActor && OtherActor->ActorHasTag("Test"))
+	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{	
-		//UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
+		UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
 	}
 	else if (OtherActor && OtherActor->ActorHasTag("Enemy"))
 	{	
-		UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
+		//UGameplayStatics::ApplyDamage(OtherActor, 30.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
 	}
 	DestroyBullet();
 }

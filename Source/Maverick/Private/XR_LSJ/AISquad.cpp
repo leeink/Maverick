@@ -78,7 +78,7 @@ void AAISquad::AttackFire()
 	if (TargetPlayerUnit)
 	{
 		ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
-		if (controller->IsDead())
+		if (controller&&controller->IsDead())
 		{
 			if(FDelTargetDie.IsBound())
 				FDelTargetDie.Execute();
