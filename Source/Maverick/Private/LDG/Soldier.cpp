@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/FlockingComponent.h"
 #include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/SoldierAIController.h"
 
@@ -24,6 +25,8 @@ ASoldier::ASoldier()
 	SelectedDecal -> SetVisibility(false);
 	
 	GetMesh() -> SetReceivesDecals(false);
+
+	FlockingComponent = CreateDefaultSubobject<UFlockingComponent>(TEXT("FlockingComponent"));
 }
 
 // Called when the game starts or when spawned
