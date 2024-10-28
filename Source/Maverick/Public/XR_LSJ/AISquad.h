@@ -56,7 +56,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	//공격시 총알과 이펙트 소환
 	void AttackFire();
-
+	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
 	int32 GetMySquadNumber() const { return MySquadNumber; }

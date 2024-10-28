@@ -65,6 +65,7 @@ public:
     void DieAnimation(bool Active);
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")
     void FireFx(bool Active);
+	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
 	//Bullet

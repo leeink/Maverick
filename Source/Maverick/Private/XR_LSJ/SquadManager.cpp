@@ -132,6 +132,8 @@ void ASquadManager::FindCloseTargetUnit()
         int SquadLastIdx = 0;
         for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		{
+            if(SquadArray[SquadCount]==nullptr)
+                continue;
             if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                continue;
             SquadLastIdx = SquadCount;
@@ -151,7 +153,8 @@ void ASquadManager::FindCloseTargetUnit()
             //타겟에게 공격 지시
 		    for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		    {
-
+                if(SquadArray[SquadCount]==nullptr)
+                    continue;
                 if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                     continue;
                 //중간에 장애물이 없다면
@@ -186,6 +189,8 @@ void ASquadManager::FindCloseTargetUnit()
 		//마지막 적을 벽과 상관없이 공격하므로 한번 더 사이에 장애물이 있는지 검사해야한다.
 		for (int SquadCount = 0; SquadCount < MaxSpawnCount; SquadCount++)
 		{
+            if(SquadArray[SquadCount]==nullptr)
+                continue;
             if (SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
 				continue;
             if (Target[SquadCount] == OutHits.Last().GetActor())
@@ -212,6 +217,8 @@ void ASquadManager::FindCloseTargetUnit()
         { 
             for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 			{
+                if(SquadArray[SquadCount]==nullptr)
+                    continue;
 				if (SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
 					continue;
 				if (SquadArray[SquadCount]->FSMComp->GetIsAttacking())
@@ -223,6 +230,8 @@ void ASquadManager::FindCloseTargetUnit()
     {
          for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		 {
+            if(SquadArray[SquadCount]==nullptr)
+                continue;
 			if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
 				 continue;
             if(SquadArray[SquadCount]->FSMComp->GetIsAttacking())
@@ -291,6 +300,8 @@ void ASquadManager::AttackTargetUnit()
        return;
      for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
     {
+        if(SquadArray[SquadCount]==nullptr)
+            continue;
         if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
             continue;
 		if (Target[SquadCount] == nullptr)
@@ -306,6 +317,8 @@ void ASquadManager::AttackTargetSquad(AActor* TargetActor)
     ASquadManager* TargetSquadManager =Cast<ASquadManager>(TargetActor);
     for (AAISquad* SquadPawn : GetSquadArray())
     {
+        if(SquadPawn==nullptr)
+            continue;
         if(SquadPawn->FSMComp->GetCurrentState() == EEnemyState::DIE)
             continue;
         //사정거리 안에 있고 //정면에서 가깝고
@@ -327,6 +340,8 @@ void ASquadManager::FindPath(const FVector& TargetLocation)
         ArrayLocation = NavPath->PathPoints;
        for (int SquadCount = 0; SquadCount < GetSquadArray().Num(); SquadCount++)
 	   {
+           if(SquadArray[SquadCount]==nullptr)
+            continue;
            if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
             continue;
            FVector DirectionPosition = GetActorForwardVector()*SquadPositionArray[SquadCount].X+GetActorRightVector()*SquadPositionArray[SquadCount].Y;
@@ -358,6 +373,8 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
         ArrayLocation = NavPath->PathPoints;
        for (int SquadCount = 0; SquadCount < GetSquadArray().Num(); SquadCount++)
 	   {
+           if(SquadArray[SquadCount]==nullptr)
+            continue;
            if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
             continue;
            ArrayLocation.Last() = TargetLocation[SquadCount];
@@ -485,10 +502,15 @@ void ASquadManager::DamagedSquadUnit(float Damage)
 void ASquadManager::DieSquadUnit(int32 SquadNumber)
 {
     CurrentSquadCount--;
+    		SquadArray[SquadNumber]->FDelTargetDie.Unbind();
+			SquadArray[SquadNumber]->FDelSquadUnitDamaged.Unbind();
+			SquadArray[SquadNumber]->FDelSquadUnitDie.Unbind();
     if (CurrentAttachedSquadNumber == SquadNumber)
     {
 		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 		{
+            if(SquadArray[SpawnCount]==nullptr)
+                continue;
             if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() != EEnemyState::DIE)
             {
                 AttachToComponent(SquadArray[SpawnCount]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -496,6 +518,14 @@ void ASquadManager::DieSquadUnit(int32 SquadNumber)
             }
         }
     }
+    FTimerHandle DestroyUnitHandle;
+	GetWorld()->GetTimerManager().SetTimer(DestroyUnitHandle, [&]()
+		{
+			SquadArray[SquadNumber]->Destroy();
+            SquadArray[SquadNumber]=nullptr;
+            UE_LOG(LogTemp, Log, TEXT("SquadNumber (%d)"), SquadNumber);
+            UE_LOG(LogTemp, Log, TEXT("CurrentSquadCount (%d)"), CurrentSquadCount);
+		}, 2.0f, false);
 }
 
 // Called every frame
