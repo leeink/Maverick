@@ -36,6 +36,7 @@ AAITankBullet::AAITankBullet()
 	MovementComp = (CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp")));
 	MovementComp->bRotationFollowsVelocity = true;
 }
+
 void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -83,7 +84,7 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		for(FHitResult& HitResult :OutHits)
 		{
-			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Enemy"))
+			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Player"))
 			{			
 				Start.Z = 0;
 				FVector TargetLocation = HitResult.GetActor()->GetActorLocation();

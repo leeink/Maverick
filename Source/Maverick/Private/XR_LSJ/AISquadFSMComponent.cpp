@@ -61,11 +61,11 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 }
 void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 {
-	if (GetIsAttacking())
+	if (GetIsAttacking()&&GetTarget())
 	{
 		//Idle 상태에서 공격시 상대를 바라보게 회전 후 공격 
-		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation())+ BaseAttackRotatorYaw;
-		if (fabs(AISquadAnimInstance->GetAimYaw()- LookRotator) < 40)
+		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation()) + BaseAttackRotatorYaw;
+		if (fabs(AISquadAnimInstance->GetAimYaw() - LookRotator) <= 20)
 		{
 			RotateUpperbodyToTarget(DeltaTime);
 		}
@@ -98,8 +98,8 @@ void UAISquadFSMComponent::StartAttack()
 {
 	SetAttackCurrentTime(0.f);
 	AISquadAnimInstance->PlayFireMontage();
-	FTimerHandle StopAttackHandle;
-	GetWorld()->GetTimerManager().SetTimer(StopAttackHandle, this, &UAISquadFSMComponent::EndAttack, 2.0f, false);
+	/*FTimerHandle StopAttackHandle;
+	GetWorld()->GetTimerManager().SetTimer(StopAttackHandle, this, &UAISquadFSMComponent::EndAttack, 2.0f, false);*/
 }
 void UAISquadFSMComponent::EndAttack()
 {
@@ -287,7 +287,9 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	//공격 쿨타임
-	SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
+	if(AISquadAnimInstance->GetIsAttacking())
+		SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
+
 	FString myState = UEnum::GetValueAsString(GetCurrentState());
 	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
 

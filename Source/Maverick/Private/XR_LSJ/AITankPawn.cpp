@@ -19,6 +19,8 @@
 #include "XR_LSJ/AIUnitHpBar.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/Soldier.h"
+#include "LDG/SoldierAIController.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -59,8 +61,12 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
-	if(nullptr!=Target && Command == EAIUnitCommandState::IDLE)
+	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
+	{
+		MoveWheelAnimation(0);
 		return;
+	}
+		
 	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
 		PreState = CurrentCommandState;
 
@@ -89,7 +95,7 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		DieAnimation(true);
-
+		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
 	default:
 		
@@ -102,6 +108,7 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 	FVector ToTargetVec;
 	if (Target != nullptr)
 	{
+		UE_LOG(LogTemp,Error,TEXT("%s"),*Target->GetName());
 		TargetLocation = Target->GetActorLocation();
 		ToTargetVec = (TargetLocation - GetActorLocation());
 	}
@@ -161,7 +168,7 @@ void AAITankPawn::BeginPlay()
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
 		FindPath(FVector(1025.958464,1622.088644,118.775006));
-		FindCloseTargetUnit();
+		FindCloseTargetPlayerUnit();
 	}
 	//HpBar
     if (HpWidgetComp && HpBarClass)
@@ -182,7 +189,72 @@ FVector AAITankPawn::GetTargetLocation()
 {
 	return GetActorLocation();
 }
+//가까운 적 탐색
+void AAITankPawn::FindCloseTargetPlayerUnit()
+{
+    FVector Start = GetActorLocation();
+    FVector End = GetActorLocation();
+    float Radius = TankAbility.FindTargetRange;
+    ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4);
+    bool bTraceComplex = false;
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    TArray<FHitResult> OutHits;
+    bool bIgnoreSelf = true;
+    FLinearColor TraceColor = FLinearColor::Gray;
+    FLinearColor TraceHitColor = FLinearColor::Blue;
+    float DrawTime = 1.0f;
+    //SquadManagerAbility.FindTargetRange 범위 탐색
+    const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
+    if (Hit)
+    {
+        for (const FHitResult& HitResult : OutHits)
+        {
+			if(false ==HitResult.GetActor()->ActorHasTag("Player"))
+                continue;
+			    //적이 죽었다면
+            ASoldier* TargetPlayerUnit = Cast<ASoldier>(HitResult.GetActor());
+            if (TargetPlayerUnit)
+            {
+	            ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+	            if (controller&&controller->GetCurrentState()==EState::Die)
+	            {
+		            //FSMComp->SetIsAttacking(false,nullptr);
+                    UE_LOG(LogTemp,Error,TEXT("Target Die"));
+		            continue;
+	            }	
+            }
+            
+            //찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
+            //타겟에게 공격 지시
+			FHitResult OutHit;
+			FVector StartLocation = MeshComp->GetSocketLocation(TEXT("gun_jntSocket"));
+			FVector EndLocation = HitResult.GetActor()->GetActorLocation();
 
+			ECollisionChannel TraceChannelHit = ECC_GameTraceChannel5;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+			Params.AddIgnoredActor(HitResult.GetActor());
+			bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
+			if (CanHit)
+			{
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation() , FColor::Blue,false,10.0f);
+			}
+			else
+			{
+				AttackTargetUnit(HitResult.GetActor());
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
+				return;
+			}
+        }
+    }
+    else //탐색 범위 안에서 적을 찾을 수 없다면
+    {
+		Target = nullptr;
+		SetCommandState(PreState);
+    }
+}
 //가까운 적 탐색
 void AAITankPawn::FindCloseTargetUnit()
 {
@@ -345,6 +417,23 @@ void AAITankPawn::FireCannon()
 {
 	if(nullptr == Target)
 		return;
+	 ASoldier* TargetPlayerUnit = Cast<ASoldier>(Target);
+    if (TargetPlayerUnit)
+    {
+	    ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+	    if (controller&&controller->GetCurrentState()==EState::Die)
+	    {      
+				UE_LOG(LogTemp, Warning, TEXT("%d"),(int)controller->GetCurrentState());
+			Target = nullptr;
+			
+			FindCloseTargetPlayerUnit();
+		    return;
+	    }
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%d"),(int)controller->GetCurrentState());
+		}
+    }
 	//목표에 도달하기 위해 총알 Velocity 구하기
 	FVector OutVelocity;
 	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
@@ -381,6 +470,8 @@ void AAITankPawn::FireCannon()
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if(GetCurrentCommandState() == EAIUnitCommandState::DIE)
+		return;
 	if (GetCurrentCommandState() == EAIUnitCommandState::ATTACK)
 	{
 		FireTotalTime+=DeltaTime;

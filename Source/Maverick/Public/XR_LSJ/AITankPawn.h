@@ -95,6 +95,7 @@ protected:
 
 public:
 	virtual FVector GetTargetLocation();
+	void FindCloseTargetPlayerUnit();
 	//Ã¼·Â¹Ù UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
