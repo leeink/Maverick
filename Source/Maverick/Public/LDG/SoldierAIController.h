@@ -61,4 +61,6 @@ public:
 	void EnemyForget();
 
 	FORCEINLINE URifleSoliderAnimInstance* GetRifleAnimInstance() const { return RifleAnimInstance; }
+	FORCEINLINE EState GetCurrentState() const { return CurrentState; }
+	FORCEINLINE bool IsDead() const {return CurrentState == EState::Die;}
 };
