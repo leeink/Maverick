@@ -79,6 +79,7 @@ protected:
 	virtual void BeginPlay() override;
 	// PointA와 어느지점이 가까운지 비교하는 함수
 	bool IsCloserThan(const FVector& PointA, const FVector& PointB, const FVector& PointC);
+	UFUNCTION()
 	void FindCloseTargetPlayerUnit();
 	// SquadManagerAbility.FindTargetRange 만큼 적을 탐색하고 가까운 적 유닛을 공격
 	UFUNCTION()

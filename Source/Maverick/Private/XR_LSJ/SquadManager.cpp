@@ -69,20 +69,20 @@ void ASquadManager::BeginPlay()
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
 		SquadArray[SpawnCount]->SetMySquadNumber(SpawnCount);
         SquadArray[SpawnCount]->SetSquadAbility(SquadManagerAbility);
-        SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetUnit"));
+        SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetPlayerUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDamaged.BindUFunction(this, FName("DamagedSquadUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDie.BindUFunction(this, FName("DieSquadUnit"));
         MaxSquadHp += SquadManagerAbility.Hp;
         CurrentSquadHp = MaxSquadHp;
 	}
-    UE_LOG(LogTemp, Warning, TEXT("MaxSquadHp %d"),MaxSquadHp);
+ 
     CurrentAttachedSquadNumber = 0;
     AttachToComponent(GetSquadArray()[CurrentAttachedSquadNumber]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
 	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
     FTimerHandle FindEnemy;
-	//GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetPlayerUnit, 3.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetPlayerUnit, 2.0f, true);
     
     //HpBar
     if (HpWidgetComp && HpBarClass)
@@ -126,7 +126,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     {
         Target.Empty();
         Target.Init(OutHits.Last().GetActor(),MaxSpawnCount);
-        
+
         bool CanAttackEnemy = false;
         int SquadLastIdx = 0;
         for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
@@ -137,12 +137,12 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                continue;
             SquadLastIdx = SquadCount;
         }
-
+       
         for (const FHitResult& HitResult : OutHits)
         {
             if(false ==HitResult.GetActor()->ActorHasTag("Player"))
                 continue;
-            
+
              //각 분대원에게 찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
             //타겟에게 공격 지시
 		    for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
@@ -156,14 +156,16 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 				FHitResult OutHit;
 				FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
 				FVector EndLocation = HitResult.GetActor()->GetActorLocation();
-				ECollisionChannel TraceChannelHit = ECC_Visibility;
+				ECollisionChannel TraceChannelHit = ECC_GameTraceChannel5;
 				FCollisionQueryParams Params;
 				Params.AddIgnoredActor(this);
+                for (AActor* SquadActor : GetSquadArray())
+		            Params.AddIgnoredActor(SquadActor);
 				Params.AddIgnoredActor(HitResult.GetActor());
 				bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
 				if (CanHit)
 				{
-					DrawDebugLine(GetWorld(), StartLocation, OutHit.ImpactPoint , FColor::Blue,false,10.0f);
+
 				}
 				else
 				{
@@ -171,7 +173,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                     if (IsCloserThan(StartLocation, Target[SquadCount]->GetActorLocation(), HitResult.GetActor()->GetTargetLocation()))
                     {
                         Target[SquadCount] = HitResult.GetActor();
-                        DrawDebugLine(GetWorld(), StartLocation, EndLocation , FColor::Red,false,10.0f);
+
                     }
 				}
 		    }
@@ -180,6 +182,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                 break;
             
         }
+      
 		//마지막 적을 벽과 상관없이 공격하므로 한번 더 사이에 장애물이 있는지 검사해야한다.
 		for (int SquadCount = 0; SquadCount < MaxSpawnCount; SquadCount++)
 		{
@@ -192,7 +195,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                 FHitResult OutHit;
 				FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
 				FVector EndLocation = Target[SquadCount]->GetTargetLocation();
-				ECollisionChannel TraceChannelHit = ECC_Visibility;
+				ECollisionChannel TraceChannelHit = ECC_GameTraceChannel5;
 				FCollisionQueryParams Params;
 				Params.AddIgnoredActor(this);
 				Params.AddIgnoredActor(OutHits.Last().GetActor());
@@ -203,6 +206,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 				}
             }
 		}
+         
         //탐색 범위 안에 적을 공격한다.
         if (CanAttackEnemy)
             AttackTargetUnit();
@@ -221,6 +225,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     }
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
+        
          for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		 {
             if(SquadArray[SquadCount]==nullptr)
@@ -404,7 +409,7 @@ void ASquadManager::FindTargetSquad()
 				bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
 				if (CanHit)
 				{
-                    UE_LOG(LogTemp, Warning, TEXT("%s"),*HitResult.GetActor()->GetName());
+         
                     //DrawDebugLine(GetWorld(), StartLocation, EndLocation , FColor::Red,false,10.0f);
 				}
                 else
@@ -435,6 +440,7 @@ void ASquadManager::AttackTargetUnit()
             continue;
 		if (Target[SquadCount] == nullptr)
 			continue;
+
         //UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
         SquadArray[SquadCount]->FSMComp->SetIsAttacking(true, Target[SquadCount]);
     }
@@ -619,7 +625,7 @@ void ASquadManager::DamagedSquadUnit(float Damage)
     if (HpBarUI)
     {
         HpBarUI->SetHpBar((float)(CurrentSquadHp-=Damage)/MaxSquadHp);
-        UE_LOG(LogTemp, Warning, TEXT("CurrentSquadHp %d"),CurrentSquadHp);
+
         if (CurrentSquadHp <= 0)
         {
             HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
