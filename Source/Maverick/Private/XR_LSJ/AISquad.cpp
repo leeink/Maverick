@@ -61,6 +61,7 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			FSMComp->SetState(EEnemyState::DIE);
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
+			UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
 			if(FDelUnitDie.IsBound())
 				FDelUnitDie.Execute();
 		}
@@ -98,6 +99,22 @@ EAIUnitCommandState AAISquad::GetCurrentCommandState()
 void AAISquad::SetCommandState(EAIUnitCommandState Command)
 {
 	CurrentCommandState = Command;
+	switch (CurrentCommandState)
+	{
+	case EAIUnitCommandState::IDLE:
+		break;
+	case EAIUnitCommandState::MOVE:
+		break;
+	case EAIUnitCommandState::ATTACK:
+		break;
+	case EAIUnitCommandState::DAMAGE:
+		break;
+	case EAIUnitCommandState::DIE:
+		
+		break;
+	default:
+		break;
+	}
 }
 void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

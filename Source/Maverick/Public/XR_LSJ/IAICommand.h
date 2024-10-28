@@ -11,11 +11,11 @@ DECLARE_DELEGATE(FDel_UnitDie);
 UENUM(BlueprintType)
 enum class EAIUnitCommandState : uint8
 {
-	IDLE UMETA(DisplayName = "대기") ,
-	MOVE  UMETA(DisplayName = "이동") ,
-	ATTACK  UMETA(DisplayName = "공격") ,
-	DAMAGE UMETA(DisplayName = "데미지") ,
-	DIE UMETA(DisplayName = "죽음") ,
+	IDLE  ,
+	MOVE   ,
+	ATTACK  ,
+	DAMAGE  ,
+	DIE  ,
 };
 UENUM(BlueprintType)
 enum class EAIUnitCategory : uint8
@@ -24,7 +24,7 @@ enum class EAIUnitCategory : uint8
 	TANK  UMETA(DisplayName = "탱크") ,
 };
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI,Blueprintable)
 class UIAICommand : public UInterface
 {
 	GENERATED_BODY()
@@ -37,11 +37,12 @@ class MAVERICK_API IIAICommand
 {
 	GENERATED_BODY()
 protected:
+	
 	EAIUnitCommandState CurrentCommandState;
 	EAIUnitCategory AIUnitCategory;
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual EAIUnitCommandState GetCurrentCommandState(){ return EAIUnitCommandState();}
+	virtual EAIUnitCommandState GetCurrentCommandState()=0;
 	virtual void SetCommandState(EAIUnitCommandState Command){}
 	virtual EAIUnitCategory GetAIUnitCategory() const { return AIUnitCategory; }
 	virtual void SetAIUnitCategory(EAIUnitCategory val) { AIUnitCategory = val; }
