@@ -5,8 +5,11 @@
 
 #include "AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "LDG/RifleSoliderAnimInstance.h"
+#include "LDG/SoldierAIController.h"
 
 // Sets default values
 ASoldier::ASoldier()
@@ -28,6 +31,7 @@ void ASoldier::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Health = MaxHealth;
 }
 
 // Called every frame
@@ -35,23 +39,7 @@ void ASoldier::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
-
-void ASoldier::Wait()
-{
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Wait"));
-}
-
-void ASoldier::Move(FVector GoalLocation)
-{
-	GetCharacterMovement() -> MaxWalkSpeed = 500.f;
-	UAIBlueprintHelperLibrary::GetAIController(this) -> StopMovement();
-	UAIBlueprintHelperLibrary::GetAIController(this) -> MoveToLocation(GoalLocation);
-}
-
-void ASoldier::Attack()
-{
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Attack"));
+	//UGameplayStatics::ApplyDamage(this, 1.f, GetInstigator() -> GetController(), this, UDamageType::StaticClass());
 }
 
 void ASoldier::Selected()
@@ -66,3 +54,28 @@ void ASoldier::Deselected()
 	SelectedDecal -> SetVisibility(false);
 }
 
+float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+									   AController* EventInstigator, AActor* DamageCauser)
+{
+	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
+	Health -= DamageAmount;
+	
+	if(Health <= 0)	// Die
+	{
+		if(auto* con = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(this)))
+		{
+			con -> SetState(EState::Die);
+			con -> GetRifleAnimInstance() -> PlayDeathMontage();
+			GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			FTimerHandle DieTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
+			{
+				Destroy();
+			}, 3.0f, false, 3.0f);
+		}
+	}
+	
+	return DamageAmount;
+}

@@ -16,9 +16,4 @@ class MAVERICK_API ARifleSoldier : public ASoldier
 	
 public:
 	ARifleSoldier();
-	
-public:
-	virtual void Wait() override;
-	virtual void Move(FVector GoalLocation) override;
-	virtual void Attack() override;
 };

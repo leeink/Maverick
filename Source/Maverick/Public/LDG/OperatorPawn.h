@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class ATankBase;
 class ARifleSoldier;
 class ASoldier;
 class AOperatorSpectatorPawn;
@@ -18,6 +19,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class AUnitControlHUD;
 
 struct FInputActionValue;
 
@@ -62,10 +64,7 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UInputAction* IA_SwitchSlot3;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IA_Unit1;
-
-	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IA_Unit2;
+	UInputAction* IA_AttackReady;
 
 	// Spectator Pawn Queue
 	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
@@ -85,12 +84,24 @@ class MAVERICK_API AOperatorPawn : public APawn
 	int ViewPortX;
 	int ViewPortY;
 
-	// Pre Mouse Clicked Position
-	FVector PreMousePosition;
+	// Current Mouse Clicked Position
+	FVector CurrentMousePosition;
 
-	// Controlled Pawns
+	// LeftMouseClicking?
+	bool bIsLeftMouseClick;
+
+	// Attack Ready? (A - Clicked)
+	bool bAttackReady;
+	
+	// Controlled Units
 	UPROPERTY()
-	ARifleSoldier* ControlledSoldiers1;
+	AUnitControlHUD* UnitControlHUD;
+	
+	UPROPERTY()
+	TArray<ASoldier*> SelectedUnits;
+
+	UPROPERTY()
+	TArray<ATankBase*> SelectedTanks;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -102,7 +113,8 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 
-	void OnMouseLeft(const FInputActionValue& Value);
+	void OnMouseLeftStarted(const FInputActionValue& Value);
+	void OnMouseLeftCompleted(const FInputActionValue& Value);
 	void OnMouseRight(const FInputActionValue& Value);
 	void OnMouseWheelUp(const FInputActionValue& Value);
 	void OnMouseWheelDown(const FInputActionValue& Value);
@@ -110,8 +122,7 @@ protected:
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
-	void OnUnit1(const FInputActionValue& Value);
-	void OnUnit2(const FInputActionValue& Value);
+	void OnAttackReady(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
@@ -120,4 +131,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	FORCEINLINE TArray<ASoldier*>& GetSelectedUnits() { return SelectedUnits; }
+	FORCEINLINE TArray<ATankBase*>& GetSelectedTanks() { return SelectedTanks; }
 };
