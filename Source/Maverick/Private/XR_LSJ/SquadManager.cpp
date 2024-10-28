@@ -61,8 +61,8 @@ void ASquadManager::BeginPlay()
 	Super::BeginPlay();
    
     SquadManagerAbility.Hp = 100.f;
-    MaxSquadHp = SquadManagerAbility.Hp*MaxSpawnCount;
-    CurrentSquadHp = MaxSquadHp;
+    
+    
     SquadManagerAbility.FindTargetRange = 2000.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
@@ -72,7 +72,10 @@ void ASquadManager::BeginPlay()
         SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDamaged.BindUFunction(this, FName("DamagedSquadUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDie.BindUFunction(this, FName("DieSquadUnit"));
+        MaxSquadHp += SquadManagerAbility.Hp;
+        CurrentSquadHp = MaxSquadHp;
 	}
+    UE_LOG(LogTemp, Warning, TEXT("MaxSquadHp %d"),MaxSquadHp);
     CurrentAttachedSquadNumber = 0;
     AttachToComponent(GetSquadArray()[CurrentAttachedSquadNumber]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -80,7 +83,7 @@ void ASquadManager::BeginPlay()
 	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
     FTimerHandle FindEnemy;
 	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetUnit, 10.0f, true);
-
+    
     //HpBar
     if (HpWidgetComp && HpBarClass)
     {
@@ -470,6 +473,7 @@ void ASquadManager::DamagedSquadUnit(float Damage)
     if (HpBarUI)
     {
         HpBarUI->SetHpBar((float)(CurrentSquadHp-=Damage)/MaxSquadHp);
+        UE_LOG(LogTemp, Warning, TEXT("CurrentSquadHp %d"),CurrentSquadHp);
         if (CurrentSquadHp <= 0)
         {
             HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
@@ -483,11 +487,12 @@ void ASquadManager::DieSquadUnit(int32 SquadNumber)
     CurrentSquadCount--;
     if (CurrentAttachedSquadNumber == SquadNumber)
     {
-		for (int SpawnCount = CurrentAttachedSquadNumber; SpawnCount < MaxSpawnCount; SpawnCount++)
+		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 		{
             if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() != EEnemyState::DIE)
             {
-                AttachToComponent(GetSquadArray()[SpawnCount]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+                AttachToComponent(SquadArray[SpawnCount]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
+                break;
             }
         }
     }

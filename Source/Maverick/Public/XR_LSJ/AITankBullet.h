@@ -24,8 +24,10 @@ class MAVERICK_API AAITankBullet : public AActor
 	class UNiagaraSystem* BulletFXSystem;
 	UPROPERTY(EditDefaultsOnly)
 	class UNiagaraComponent* BulletFXComponent;
-	float ExplosiveDamage;
+	float ExplosiveMaxDamage;
+	float ExplosiveMinDamage;
 	float ExplosiveRange;
+
 public:	
 	// Sets default values for this actor's properties
 	AAITankBullet();
@@ -39,15 +41,17 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void DestroyBullet();
+	UFUNCTION()
 	void OnParticleSystemFinished(UParticleSystemComponent* FinishedComponent);
 public:
 	// Called every frame
 	void InitMovement(FVector Direction);
 	virtual void Tick(float DeltaTime) override;
 
-public:
+	float GetExplosiveMinDamage() const { return ExplosiveMinDamage; }
+	void SetExplosiveMinDamage(float val) { ExplosiveMinDamage = val; }
 	float GetExplosiveRange() const { return ExplosiveRange; }
 	void SetExplosiveRange(float val) { ExplosiveRange = val; }
-	float GetExplosiveDamage() const { return ExplosiveDamage; }
-	void SetExplosiveDamage(float val) { ExplosiveDamage = val; }
+	float GetExplosiveMaxDamage() const { return ExplosiveMaxDamage; }
+	void SetExplosiveMaxDamage(float val) { ExplosiveMaxDamage = val; }
 };

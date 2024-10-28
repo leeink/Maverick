@@ -31,9 +31,9 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	UPROPERTY()
 	struct FSquadData SquadManagerAbility;
 	//분대 현재 HP
-	float CurrentSquadHp;
+	int32 CurrentSquadHp;
 	//분대 최대 HP
-	float MaxSquadHp; 
+	int32 MaxSquadHp; 
 	//분대의 분대원들
 	TArray<class AAISquad*> SquadArray;
 	//분대원 포지션 목록

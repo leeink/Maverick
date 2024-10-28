@@ -28,7 +28,7 @@ void UAISquadAnimInstance::PlayFireMontage()
 void UAISquadAnimInstance::PlayDieMontage()
 {
 	IsAttacking = false;
-	Montage_Play(DieAM);
+	Montage_Play(DieAM,2.0f);
 }
 void UAISquadAnimInstance::StopFireMontage()
 {
