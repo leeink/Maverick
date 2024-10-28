@@ -61,6 +61,13 @@ void ASoldierAIController::AttackCommand(AActor* TargetActor)
 	RifleAnimInstance -> PlayAttackMontage();
 }
 
+void ASoldierAIController::Die()
+{
+	SetState(EState::Die);
+	PossessedPawn -> GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RifleAnimInstance -> PlayDeathMontage();
+}
+
 void ASoldierAIController::StartDetectionTimer()
 {
 	GetWorld() -> GetTimerManager().SetTimer(DetectionTimerHandle,

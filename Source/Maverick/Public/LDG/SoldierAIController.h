@@ -52,6 +52,7 @@ public:
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand(AActor* TargetActor);
+	void Die();
 	
 	void StartDetectionTimer();
 	void EnemyDetection();

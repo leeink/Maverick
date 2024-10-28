@@ -3,21 +3,33 @@
 
 #include "LDG/TankBase.h"
 
+#include "NavigationInvokerComponent.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/BoxComponent.h"
 #include "Components/DecalComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "LDG/TankAIController.h"
 
 ATankBase::ATankBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	Collision = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
+	SetRootComponent(Collision);
+
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	Mesh -> SetupAttachment(Collision);
+	
 	SelectedDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectedDecal"));
-	SelectedDecal -> SetupAttachment(RootComponent);
+	SelectedDecal -> SetupAttachment(Mesh);
 	SelectedDecal -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 	SelectedDecal -> DecalSize = FVector(400.f);
 	SelectedDecal -> SetVisibility(false);
 	
 	GetMesh() -> SetReceivesDecals(false);
+
+	NavigationInvoker = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavigationInvoker"));
+	FloatingMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingMovement"));
 }
 
 void ATankBase::BeginPlay()
