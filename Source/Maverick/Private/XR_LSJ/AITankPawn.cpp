@@ -37,14 +37,7 @@ AAITankPawn::AAITankPawn()
 	CurrentCommandState = EAIUnitCommandState::IDLE;
 	AIUnitCategory = EAIUnitCategory::TANK;
 
-	TankAbility.Hp = 100.f;
-	MaxTankHp = TankAbility.Hp;
-	CurrentTankHp = MaxTankHp;
-    TankAbility.FindTargetRange = 10000.f;
-	TankAbility.ExplosiveRange = 400.f;
-	TankAbility.AttackDamage = 30.f;
-	TurretRotSpeed = 50.0f;
-	FireCoolTime = 2.0f;
+	
 
 	Tags.Add(TEXT("Enemy"));
 
@@ -66,19 +59,25 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
+	if(nullptr!=Target && Command == EAIUnitCommandState::IDLE)
+		return;
+	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
+		PreState = CurrentCommandState;
 
-	if (Command != EAIUnitCommandState::MOVE && Command != EAIUnitCommandState::ATTACK)
-	{
-		GetController()->StopMovement();
-	}
 	CurrentCommandState = Command;
+
+	UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
+	UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
+
 	switch ( CurrentCommandState )
 	{
 	case EAIUnitCommandState::IDLE:
-		
+
+		GetController()->StopMovement();
+		MoveWheelAnimation(0);
 		break;
 	case EAIUnitCommandState::MOVE:
-		
+		MoveWheelAnimation(MovementComponent->GetMaxSpeed());
 		break;
 	case EAIUnitCommandState::ATTACK:
 		
@@ -99,11 +98,18 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 }
 float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 {
-	if(Target == nullptr)
-		return 0.0f;
-	TargetLocation = Target->GetActorLocation();
 	//Center에서 Target을 바라보는 Vector
-	FVector ToTargetVec = (TargetLocation - GetActorLocation());
+	FVector ToTargetVec;
+	if (Target != nullptr)
+	{
+		TargetLocation = Target->GetActorLocation();
+		ToTargetVec = (TargetLocation - GetActorLocation());
+	}
+	else
+	{
+		TargetLocation = MeshComp->GetForwardVector()* -1000.f;
+		ToTargetVec = (GetActorLocation() - TargetLocation);
+	}
 
 	ToTargetVec.Z = 0;
 	ToTargetVec.Normalize();
@@ -138,11 +144,23 @@ void AAITankPawn::AttackTargetUnit(AActor* TargetActor)
 void AAITankPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TankAbility.Hp = 100.f;
+	MaxTankHp = TankAbility.Hp;
+	CurrentTankHp = MaxTankHp;
+    TankAbility.FindTargetRange = 10000.f;
+	TankAbility.ExplosiveRange = 600.f;
+	TankAbility.ExplosiveMaxDamage = 105.f;
+	TankAbility.ExplosiveMinDamage = 5.f;
+
+	TurretRotSpeed = 50.0f;
+	FireCoolTime = 2.0f;
+
 	AITankController = Cast<AAITankController>(GetController());
 	if (AITankController)
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
-		//FindPath(FVector(1025.958464,1622.088644,118.775006));
+		FindPath(FVector(1025.958464,1622.088644,118.775006));
 		FindCloseTargetUnit();
 	}
 	//HpBar
@@ -208,21 +226,22 @@ void AAITankPawn::FindCloseTargetUnit()
 			bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
 			if (CanHit)
 			{
-				DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation() , FColor::Blue,false,10.0f);
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation() , FColor::Blue,false,10.0f);
 			}
 			else
 			{
 				FoundEnemy->FDelUnitDie.Unbind();
 				FoundEnemy->FDelUnitDie.BindUFunction(this,FName("StopAttack"));
 				AttackTargetUnit(HitResult.GetActor());
-				DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
 				return;
 			}
         }
     }
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
-
+		Target = nullptr;
+		SetCommandState(PreState);
     }
 }
 
@@ -324,11 +343,13 @@ bool AAITankPawn::CalculateBallisticVelocity(
 
 void AAITankPawn::FireCannon()
 {
+	if(nullptr == Target)
+		return;
 	//목표에 도달하기 위해 총알 Velocity 구하기
 	FVector OutVelocity;
 	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
 	FVector TargetLocation = Target->GetActorLocation();
-	TargetLocation.Z/=2;
+	TargetLocation.Z /= 2;
 	//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,0,0.5f);
 		//GetWorld()->GetGravityZ(),.9f);
 
@@ -351,7 +372,8 @@ void AAITankPawn::FireCannon()
 		//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), Target->GetActorLocation(),
 		//GetWorld()->GetGravityZ(),.9f);
 		Bullet->SetExplosiveRange(TankAbility.ExplosiveRange);
-		Bullet->SetExplosiveDamage(TankAbility.AttackDamage);
+		Bullet->SetExplosiveMaxDamage(TankAbility.ExplosiveMaxDamage);
+		Bullet->SetExplosiveMinDamage(TankAbility.ExplosiveMinDamage);
 		Bullet->InitMovement(OutVelocity);
 	}
 }
@@ -365,10 +387,12 @@ void AAITankPawn::Tick(float DeltaTime)
 		if ( GetLookTargetAngle(FVector::ZeroVector) - TurretRotation > 1.f)
 		{
 			TurretRotation += DeltaTime * TurretRotSpeed;
+			RotateYawurret(TurretRotation);
 		}
 		else if ( GetLookTargetAngle(FVector::ZeroVector) - TurretRotation < -1.f)
 		{
 			TurretRotation -= DeltaTime * TurretRotSpeed;
+			RotateYawurret(TurretRotation);
 		}
 		else
 		{ 
@@ -379,9 +403,23 @@ void AAITankPawn::Tick(float DeltaTime)
 			}
 			
 		}
-		RotateYawurret(TurretRotation);
-	}
 		
+	}
+	else
+	{
+		if (GetLookTargetAngle(FVector::ZeroVector) - TurretRotation > 1.f)
+		{
+			TurretRotation += DeltaTime * TurretRotSpeed;
+			RotateYawurret(TurretRotation);
+		}
+		else if (GetLookTargetAngle(FVector::ZeroVector) -TurretRotation < -1.f)
+		{
+			TurretRotation -= DeltaTime * TurretRotSpeed;
+			RotateYawurret(TurretRotation);
+		}
+
+	}
+
 }
 
 // Called to bind functionality to input

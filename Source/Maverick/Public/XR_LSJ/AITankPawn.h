@@ -17,7 +17,9 @@ public:
 	UPROPERTY()
 	float AttackSpeed;
 	UPROPERTY()
-	float AttackDamage;
+	float ExplosiveMaxDamage;
+	UPROPERTY()
+	float ExplosiveMinDamage;
 	UPROPERTY()
 	float MoveSpeed;
 	UPROPERTY()
@@ -35,7 +37,7 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	class UBoxComponent* BoxComp;
 	class AAITankController* AITankController;
 	struct FTankData TankAbility;
-
+	EAIUnitCommandState PreState;
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	class UFloatingPawnMovement* MovementComponent;
 	TArray<FVector> PathVectorArray;
@@ -58,8 +60,7 @@ public:
     void RotatePitchTurret(float Angle);
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")
     void MoveWheelAnimation(float Speed);
-	UFUNCTION(BlueprintImplementableEvent, Category="Custom")
-    void MoveWheelFX(float Intensity);
+
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")
     void DieAnimation(bool Active);
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")

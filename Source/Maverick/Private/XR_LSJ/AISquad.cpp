@@ -44,12 +44,17 @@ FVector AAISquad::GetTargetLocation()
 float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
+	if(SquadAbility.Hp<=0)
+		return Damage;
 	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
 	if (Damage > 0)
 	{
-		SquadAbility.Hp -= Damage;
-		if(FDelSquadUnitDamaged.IsBound())
-			FDelSquadUnitDamaged.Execute(Damage);
+		int32 BeforeHp = SquadAbility.Hp;
+		SquadAbility.Hp=FMath::Max(SquadAbility.Hp - Damage,0);
+		int32 HpLost = BeforeHp-SquadAbility.Hp;
+		
+		if (FDelSquadUnitDamaged.IsBound())
+			FDelSquadUnitDamaged.Execute(HpLost);
 		if (SquadAbility.Hp <= 0)
 		{
 			SetCommandState(EAIUnitCommandState::DIE);
@@ -66,8 +71,8 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 void AAISquad::AttackFire()
 {
 	//적이 죽었다면
-	AAISquad* TargetUnit = Cast<AAISquad>(FSMComp->GetTarget());
-	if (TargetUnit && TargetUnit->FSMComp->GetCurrentState() == EEnemyState::DIE || nullptr == FSMComp->GetTarget())
+	IIAICommand* TargetUnit = Cast<IIAICommand>(FSMComp->GetTarget());
+	if (TargetUnit && TargetUnit->GetCurrentCommandState() == EAIUnitCommandState::DIE || nullptr == FSMComp->GetTarget())
 	{
 		if(FDelTargetDie.IsBound())
 			FDelTargetDie.Execute();
@@ -92,6 +97,7 @@ EAIUnitCommandState AAISquad::GetCurrentCommandState()
 }
 void AAISquad::SetCommandState(EAIUnitCommandState Command)
 {
+	CurrentCommandState = Command;
 }
 void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

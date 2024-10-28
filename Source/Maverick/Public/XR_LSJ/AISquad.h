@@ -16,7 +16,7 @@ struct FSquadData
 	GENERATED_BODY()
 public:
 	UPROPERTY()
-	float Hp;
+	int32 Hp;
 	UPROPERTY()
 	float AttackSpeed;
 	UPROPERTY()
