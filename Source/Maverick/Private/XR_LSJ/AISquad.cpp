@@ -11,6 +11,8 @@
 #include "Engine/World.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
+#include "LDG/Soldier.h"
+#include "LDG/SoldierAIController.h"
 
 // Sets default values
 AAISquad::AAISquad()
@@ -72,6 +74,17 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 void AAISquad::AttackFire()
 {
 	//적이 죽었다면
+	ASoldier* TargetPlayerUnit = Cast<ASoldier>(FSMComp->GetTarget());
+	if (TargetPlayerUnit)
+	{
+		ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+		if (controller->IsDead())
+		{
+			if(FDelTargetDie.IsBound())
+				FDelTargetDie.Execute();
+			return;
+		}	
+	}
 	IIAICommand* TargetUnit = Cast<IIAICommand>(FSMComp->GetTarget());
 	if (TargetUnit && TargetUnit->GetCurrentCommandState() == EAIUnitCommandState::DIE || nullptr == FSMComp->GetTarget())
 	{
