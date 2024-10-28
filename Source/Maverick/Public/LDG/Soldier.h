@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Soldier.generated.h"
 
+class UFlockingComponent;
+
 UCLASS()
 class MAVERICK_API ASoldier : public ACharacter
 {
@@ -13,6 +15,9 @@ class MAVERICK_API ASoldier : public ACharacter
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Decal, meta = (AllowPrivateAccess = "true"))
 	UDecalComponent* SelectedDecal;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Flocking, meta = (AllowPrivateAccess = "true"))
+	UFlockingComponent* FlockingComponent;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	bool bSelected;
@@ -51,4 +56,5 @@ public:
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
+	FORCEINLINE UFlockingComponent* GetFlockingComponent() const { return FlockingComponent; }
 };

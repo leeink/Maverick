@@ -6,6 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/FlockingComponent.h"
 #include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/Soldier.h"
 
@@ -17,6 +18,11 @@ void ASoldierAIController::OnPossess(APawn* InPawn)
 	RifleAnimInstance = Cast<URifleSoliderAnimInstance>(PossessedPawn -> GetMesh() -> GetAnimInstance());
 	RunBehaviorTree(BehaviourTree);
 	StartDetectionTimer();
+}
+
+void ASoldierAIController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
 }
 
 void ASoldierAIController::SetState(EState NewState)
@@ -37,7 +43,8 @@ void ASoldierAIController::MoveCommand(FVector GoalLocation)
 	if(PossessedPawn -> IsSelected())
 	{
 		SetState(EState::Move);
-		
+
+		//PossessedPawn -> GetFlockingComponent() -> SetDestination(GoalLocation);
 		GetBlackboardComponent() -> SetValueAsVector(FName(TEXT("TargetLocation")), GoalLocation);
 		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Move));
 	}
@@ -49,6 +56,7 @@ void ASoldierAIController::ChaseCommand(FVector GoalLocation)
 	{
 		SetState(EState::Chase);
 
+		//PossessedPawn -> GetFlockingComponent() -> SetDestination(GoalLocation);
 		GetBlackboardComponent() -> SetValueAsVector(FName(TEXT("TargetLocation")), GoalLocation);
 		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Chase));
 	}
@@ -100,19 +108,19 @@ void ASoldierAIController::EnemyDetection()
 	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
-		//FString TargetActorName = FString::Printf(TEXT("%s"), *HitResult.GetActor() -> GetName());
-		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TargetActorName);
-		GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
+		//GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
 	}
 	else
 	{
-		GetWorldTimerManager().SetTimer(
+		EnemyForget();
+		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Forget"));
+		/*GetWorldTimerManager().SetTimer(
 		ForgetTimerHandle,
 		this,
 		&ASoldierAIController::EnemyForget,
 		2.f,
 		false
-		);
+		);*/
 	}
 }
 
