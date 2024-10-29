@@ -60,7 +60,7 @@ void ASoldier::Deselected()
 float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 									   AController* EventInstigator, AActor* DamageCauser)
 {
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
+	//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;
 	
 	if(Health <= 0)	// Die

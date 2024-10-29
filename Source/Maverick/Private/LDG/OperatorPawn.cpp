@@ -165,7 +165,7 @@ void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 			{
 				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
 				{
-					GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Chase Command"));
+					//GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Chase Command"));
 					TankAIController -> ChaseCommand(HitResult.Location);
 				}
 			}
