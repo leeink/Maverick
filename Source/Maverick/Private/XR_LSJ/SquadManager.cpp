@@ -85,6 +85,16 @@ void ASquadManager::BeginPlay()
 	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 5.0f, true);
     FTimerHandle FindEnemy;
 	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetPlayerUnit, 3.0f, true);
+    if (false == StartGoalLocation.Equals(FVector::ZeroVector))
+    {
+       
+		FTimerHandle DestroyUnitHandle;
+		GetWorld()->GetTimerManager().SetTimer(DestroyUnitHandle, [&]()
+			{
+				 CheckLocationForObject(StartGoalLocation);
+			}, 2.0f, false);
+    }
+		
     
     //HpBar
     if (HpWidgetComp && HpBarClass)
@@ -625,7 +635,7 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
     );
 
      // 결과 처리
-    if (bHit) //목표지점에 오브젝트 존재 시 
+    if (bHit&&nullptr!=HitResult.GetActor()) //목표지점에 오브젝트 존재 시 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
         //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());

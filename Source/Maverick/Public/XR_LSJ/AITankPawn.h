@@ -52,6 +52,10 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	int32 CurrentTankHp;
 	int32 MaxTankHp;
 	FTimerHandle FindEnemy;
+
+	//시작시 이동할 목표 지점
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
+	FVector StartGoalLocation;
 public:
 	// Sets default values for this pawn's properties
 	AAITankPawn();
@@ -72,6 +76,9 @@ public:
 	//Bullet
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> BulletFactory; 
+
+	UFUNCTION(BlueprintCallable)
+	virtual void FindPath(const FVector& TargetLocation);
 protected:
 	void FireCannon();
 	float GetLookTargetAngle(FVector TargetLocation);
@@ -90,7 +97,7 @@ protected:
     float DesiredTime, // 목표 도달 시간
     FVector& OutVelocity);
 	virtual void FindCloseTargetUnit();
-	virtual void FindPath(const FVector& TargetLocation);
+
 	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* HpWidgetComp;
 
