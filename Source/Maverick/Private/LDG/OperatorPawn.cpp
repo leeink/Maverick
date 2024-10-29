@@ -195,17 +195,24 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 		{
 			for(auto* Unit: SelectedUnits)
 			{
-				if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
+				if(Unit != nullptr)
 				{
-					RifleController -> MoveCommand(HitResult.Location);
+					if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
+					{
+						RifleController -> MoveCommand(HitResult.Location);
+					}
 				}
+				
 			}
 
 			for(auto* Tank: SelectedTanks)
 			{
-				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+				if(Tank != nullptr)
 				{
-					TankAIController -> MoveCommand(HitResult.Location);
+					if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+					{
+						TankAIController -> MoveCommand(HitResult.Location);
+					}
 				}
 			}
 		}
