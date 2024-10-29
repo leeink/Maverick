@@ -93,7 +93,7 @@ void ASoldierAIController::EnemyDetection()
 		GetWorld(),
 		PossessedPawn -> GetActorLocation(),
 		PossessedPawn -> GetActorLocation(),
-		1000.f,
+		DetectionRadius,
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
 		{PossessedPawn},
@@ -105,7 +105,7 @@ void ASoldierAIController::EnemyDetection()
 		0.1f
 		);
 
-	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
+	if(HitResult.bBlockingHit && HitResult.GetActor() && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
 		//GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
