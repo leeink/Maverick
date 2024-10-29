@@ -48,7 +48,7 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
 	if(SquadAbility.Hp<=0)
 		return Damage;
-	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+	//GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
 	if (Damage > 0)
 	{
 		int32 BeforeHp = SquadAbility.Hp;
@@ -63,7 +63,7 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			FSMComp->SetState(EEnemyState::DIE);
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
-			UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
+			//UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
 			if(FDelUnitDie.IsBound())
 				FDelUnitDie.Execute();
 		}
@@ -84,7 +84,14 @@ void AAISquad::AttackFire()
 			if(FDelTargetDie.IsBound())
 				FDelTargetDie.Execute();
 			return;
-		}	
+		}
+		else if (controller == nullptr)
+		{
+			FSMComp->SetTarget(nullptr);
+			if(FDelTargetDie.IsBound())
+				FDelTargetDie.Execute();
+			return;
+		}
 	}
 	IIAICommand* TargetUnit = Cast<IIAICommand>(FSMComp->GetTarget());
 	if (TargetUnit && TargetUnit->GetCurrentCommandState() == EAIUnitCommandState::DIE || nullptr == FSMComp->GetTarget())

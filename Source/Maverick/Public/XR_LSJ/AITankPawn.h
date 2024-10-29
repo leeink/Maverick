@@ -51,6 +51,7 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	float FireTotalTime;
 	int32 CurrentTankHp;
 	int32 MaxTankHp;
+	FTimerHandle FindEnemy;
 public:
 	// Sets default values for this pawn's properties
 	AAITankPawn();

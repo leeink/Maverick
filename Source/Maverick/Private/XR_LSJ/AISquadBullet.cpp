@@ -7,6 +7,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/Soldier.h"
+#include "LDG/SoldierAIController.h"
 
 // Sets default values
 AAISquadBullet::AAISquadBullet()
@@ -35,9 +37,22 @@ AAISquadBullet::AAISquadBullet()
 
 void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 {
+	
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{	
-		UGameplayStatics::ApplyDamage(OtherActor, 10.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
+		 ASoldier* TargetPlayerUnit = Cast<ASoldier>(OtherActor);
+		 if (TargetPlayerUnit)
+		 {
+			 ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+			 if (controller && (controller->GetCurrentState() != EState::Die && !controller->IsDead()))
+			 {
+				if(GetOwner()!=nullptr)
+					UGameplayStatics::ApplyDamage(OtherActor, 10.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
+				else
+					UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr,nullptr ,NULL);
+			 }
+		 }
+		
 	}
 	else if (OtherActor && OtherActor->ActorHasTag("Enemy"))
 	{	

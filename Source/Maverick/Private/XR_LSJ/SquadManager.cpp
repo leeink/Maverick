@@ -127,7 +127,8 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     if (Hit)
     {
         Target.Empty();
-        Target.Init(OutHits.Last().GetActor(),MaxSpawnCount);
+        Target.Init(nullptr,6);
+        //Target.Init(OutHits.Last().GetActor(),MaxSpawnCount);
 
         bool CanAttackEnemy = false;
         int SquadLastIdx = 0;
@@ -137,10 +138,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                 continue;
             if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                continue;
-            if(SquadArray[SquadCount]->FSMComp->GetTarget()==nullptr)
-                Target[SquadCount]=OutHits.Last().GetActor();
-            else
-                Target[SquadCount]=SquadArray[SquadCount]->FSMComp->GetTarget();
+
             SquadLastIdx = SquadCount;
         }
        
@@ -153,12 +151,17 @@ void ASquadManager::FindCloseTargetPlayerUnit()
             if (TargetPlayerUnit)
             {
 	            ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
-	            if (controller&&controller->GetCurrentState()==EState::Die)
+	            if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
 	            {
 		            //FSMComp->SetIsAttacking(false,nullptr);
-                    UE_LOG(LogTemp,Error,TEXT("Target Die"));
+                    //UE_LOG(LogTemp,Error,TEXT("Target Die"));
 		            continue;
-	            }	
+	            }
+                else if (controller == nullptr)
+				{
+                    //UE_LOG(LogTemp,Error,TEXT("controller Die"));
+					continue;
+				}
             }
             
              //각 분대원에게 찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
@@ -169,7 +172,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                     continue;
                 if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                     continue;
-                UE_LOG(LogTemp,Error,TEXT("Target find"));
+                //UE_LOG(LogTemp,Error,TEXT("Target find"));
                 //중간에 장애물이 없다면
                 //각 분대원마다 머리를 기준으로 적 사이에 방해물이 없고
 				FHitResult OutHit;
@@ -184,22 +187,22 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 				bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
 				if (CanHit)
 				{
-                    UE_LOG(LogTemp,Error,TEXT("CanHit"));
+                    //UE_LOG(LogTemp,Error,TEXT("CanHit"));
 				}
 				else
 				{
                     CanAttackEnemy = true;
-                    if (IsCloserThan(StartLocation, Target[SquadCount]->GetActorLocation(), HitResult.GetActor()->GetTargetLocation()))
+					if (Target[SquadCount] == nullptr)
+						Target[SquadCount] = HitResult.GetActor();
+                    else
                     {
-                        Target[SquadCount] = HitResult.GetActor();
-
+						if (IsCloserThan(StartLocation, Target[SquadCount]->GetActorLocation(), HitResult.GetActor()->GetTargetLocation()))
+						{
+							Target[SquadCount] = HitResult.GetActor();
+						}
                     }
 				}
 		    }
-
-            if(Target[SquadLastIdx] != OutHits.Last().GetActor())
-                break;
-            
         }
       
 		//마지막 적을 벽과 상관없이 공격하므로 한번 더 사이에 장애물이 있는지 검사해야한다.

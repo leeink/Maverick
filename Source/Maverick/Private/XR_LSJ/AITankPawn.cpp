@@ -94,7 +94,7 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 	case EAIUnitCommandState::DIE:
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
-		DieAnimation(true);
+		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
 		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
 	default:
@@ -108,14 +108,12 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 	FVector ToTargetVec;
 	if (Target != nullptr)
 	{
-		UE_LOG(LogTemp,Error,TEXT("%s"),*Target->GetName());
 		TargetLocation = Target->GetActorLocation();
 		ToTargetVec = (TargetLocation - GetActorLocation());
 	}
 	else
 	{
-		TargetLocation = MeshComp->GetForwardVector()* -1000.f;
-		ToTargetVec = (GetActorLocation() - TargetLocation);
+		return 0;
 	}
 
 	ToTargetVec.Z = 0;
@@ -152,7 +150,7 @@ void AAITankPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TankAbility.Hp = 100.f;
+	TankAbility.Hp = 10000.f;
 	MaxTankHp = TankAbility.Hp;
 	CurrentTankHp = MaxTankHp;
     TankAbility.FindTargetRange = 10000.f;
@@ -178,6 +176,9 @@ void AAITankPawn::BeginPlay()
 		if (HpBarUI)
 		    HpBarUI->SetUITankImage();
     }
+
+	
+	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &AAITankPawn::FindCloseTargetPlayerUnit, 3.0f, true);
 }
 void AAITankPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -221,7 +222,6 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
 	            if (controller&&controller->GetCurrentState()==EState::Die)
 	            {
 		            //FSMComp->SetIsAttacking(false,nullptr);
-                    UE_LOG(LogTemp,Error,TEXT("Target Die"));
 		            continue;
 	            }	
             }
@@ -243,9 +243,10 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
 			}
 			else
 			{
+				
 				AttackTargetUnit(HitResult.GetActor());
-				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
 				return;
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
 			}
         }
     }
@@ -421,17 +422,19 @@ void AAITankPawn::FireCannon()
     if (TargetPlayerUnit)
     {
 	    ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
-	    if (controller&&controller->GetCurrentState()==EState::Die)
+	    if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
 	    {      
-				UE_LOG(LogTemp, Warning, TEXT("%d"),(int)controller->GetCurrentState());
 			Target = nullptr;
 			
 			FindCloseTargetPlayerUnit();
 		    return;
 	    }
-		else
+		else if (controller==nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%d"),(int)controller->GetCurrentState());
+			Target = nullptr;
+			
+			FindCloseTargetPlayerUnit();
+		    return;
 		}
     }
 	//목표에 도달하기 위해 총알 Velocity 구하기
@@ -470,7 +473,7 @@ void AAITankPawn::FireCannon()
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if(GetCurrentCommandState() == EAIUnitCommandState::DIE)
+	if(CurrentCommandState == EAIUnitCommandState::DIE)
 		return;
 	if (GetCurrentCommandState() == EAIUnitCommandState::ATTACK)
 	{
@@ -491,6 +494,7 @@ void AAITankPawn::Tick(float DeltaTime)
 			{	
 				FireTotalTime=0;
 				FireCannon();
+				UE_LOG(LogTemp,Error,TEXT("111"));
 			}
 			
 		}
@@ -523,7 +527,7 @@ void AAITankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
-	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+	//GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
 	if (Damage > 0)
 	{
 		CurrentTankHp -= Damage;
@@ -536,6 +540,7 @@ float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 			SetCommandState(EAIUnitCommandState::DIE);
 			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
 			HpWidgetComp->Deactivate();
+			DieAnimation(true);
 		}
 	}
 	return Damage;

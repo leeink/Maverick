@@ -65,9 +65,23 @@ void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 	{
 		//Idle 상태에서 공격시 상대를 바라보게 회전 후 공격 
 		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation()) + BaseAttackRotatorYaw;
-		if (fabs(AISquadAnimInstance->GetAimYaw() - LookRotator) <= 20)
+		//if (fabs(AISquadAnimInstance->GetAimYaw() - LookRotator) <= 20)
+		//{
+			//RotateUpperbodyToTarget(DeltaTime);
+		//}
+		if (LookRotator >= -30 && LookRotator <= 30)
 		{
-			RotateUpperbodyToTarget(DeltaTime);
+			//상체 애니메이션 타겟을 향하게 회전
+			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),LookRotator, DeltaTime*5.0f);
+			AISquadAnimInstance->SetAimYaw(newYaw);
+			//공격한 뒤 2초가 지나야 다시 공격이 가능하다.
+			//적을 조준하고 있는 상태여야 공격이 가능하다.
+			if (GetAttackCurrentTime() >= AttackCoolTime && fabs(LookRotator - newYaw)< 0.2)
+			{
+				StartAttack();	
+			}
+			//if (LookRotator.Pitch >= -90 && LookRotator.Pitch <= 90)
+				//AISquadAnimInstance->SetAimPitch(LookRotator.Pitch);
 		}
 		else
 		{
@@ -290,8 +304,8 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 	if(AISquadAnimInstance->GetIsAttacking())
 		SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
 
-	FString myState = UEnum::GetValueAsString(GetCurrentState());
-	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
+	//FString myState = UEnum::GetValueAsString(GetCurrentState());
+	//DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
 
 	switch ( GetCurrentState() )
 	{
