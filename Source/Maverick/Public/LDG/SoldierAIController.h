@@ -37,6 +37,9 @@ class MAVERICK_API ASoldierAIController : public AAIController
 	UPROPERTY()
 	URifleSoliderAnimInstance* RifleAnimInstance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Detection, meta = (AllowPrivateAccess = "true"))
+	float DetectionRadius = 1000.f;
+	
 	FTimerHandle DetectionTimerHandle;
 	FTimerHandle ForgetTimerHandle;
 
