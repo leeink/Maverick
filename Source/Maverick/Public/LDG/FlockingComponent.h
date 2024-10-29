@@ -46,9 +46,13 @@ class MAVERICK_API UFlockingComponent : public UActorComponent
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Flocking, meta = (AllowPrivateAccess = "true"))
 	float MinDistanceToTarget = 50.0f;  // 목표 지점까지의 최소 거리
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Flocking, meta = (AllowPrivateAccess = "true"))
+	float MinSpeedForRotation = 10.0f;
+
 	FVector CurrentDestination;
 	bool bHasDestination;
 	FVector CurrentVelocity;
+	FVector LastMovementDirection;
 	
 public:	
 	// Sets default values for this component's properties

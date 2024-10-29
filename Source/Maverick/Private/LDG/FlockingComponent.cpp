@@ -38,42 +38,68 @@ void UFlockingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 
 	AActor* Owner = GetOwner();
-	if (!Owner) return;
+    if (!Owner) return;
 
-	TArray<AActor*> Neighbors = GetNeighbors();
-	FVector SteeringForce = FVector::ZeroVector;
+    TArray<AActor*> Neighbors = GetNeighbors();
+    FVector SteeringForce = FVector::ZeroVector;
     
-	// 분리력 계산
-	FVector SeparationForce = CalculateSeparation(Neighbors) * SeparationWeight;
-	SteeringForce += SeparationForce;
+    // 기존 플로킹 및 이동 로직
+    FVector SeparationForce = CalculateSeparation(Neighbors) * SeparationWeight;
+    SteeringForce += SeparationForce;
 
-	if (Neighbors.Num() > 0)
-	{
-		FVector CohesionForce = CalculateCohesion(Neighbors) * CohesionWeight;
-		FVector AlignmentForce = CalculateAlignment(Neighbors) * AlignmentWeight;
-		SteeringForce += CohesionForce + AlignmentForce;
-	}
+    if (Neighbors.Num() > 0)
+    {
+        FVector CohesionForce = CalculateCohesion(Neighbors) * CohesionWeight;
+        FVector AlignmentForce = CalculateAlignment(Neighbors) * AlignmentWeight;
+        SteeringForce += CohesionForce + AlignmentForce;
+    }
 
-	// 목적지 향한 이동
-	if (bHasDestination && !IsNearDestination())
-	{
-		FVector SeekForce = CalculateSeekForce(CurrentDestination);
-		SteeringForce += SeekForce;
-	}
+    if (bHasDestination && !IsNearDestination())
+    {
+        FVector SeekForce = CalculateSeekForce(CurrentDestination);
+        SteeringForce += SeekForce;
+    }
 
-	// 이동 처리
-	SteeringForce = SteeringForce.GetClampedToMaxSize(SteeringStrength);
-	CurrentVelocity += SteeringForce * DeltaTime;
-	CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(MaxSpeed);
+    SteeringForce = SteeringForce.GetClampedToMaxSize(SteeringStrength);
+    CurrentVelocity += SteeringForce * DeltaTime;
+    CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(MaxSpeed);
 
-	if (!CurrentVelocity.IsNearlyZero())
-	{
-		FVector NewLocation = Owner->GetActorLocation() + CurrentVelocity * DeltaTime;
-		Owner->SetActorLocation(NewLocation);
-	}
+    // 이동 처리
+    if (!CurrentVelocity.IsNearlyZero())
+    {
+        FVector NewLocation = Owner->GetActorLocation() + CurrentVelocity * DeltaTime;
+        Owner->SetActorLocation(NewLocation);
 
-	// 회전 업데이트
-	UpdateRotation(DeltaTime);
+        // 충분한 속도로 움직일 때만 방향 업데이트
+        if (CurrentVelocity.Size() >= MinSpeedForRotation)
+        {
+            // 이동 방향 저장 (Z축 제외)
+            FVector NewDirection = CurrentVelocity;
+            NewDirection.Z = 0.0f;
+            
+            if (!NewDirection.IsNearlyZero())
+            {
+                LastMovementDirection = NewDirection.GetSafeNormal();
+                
+                // 부드러운 회전
+                FRotator TargetRotation = LastMovementDirection.Rotation();
+                FRotator NewRotation = FMath::RInterpTo(
+                    Owner->GetActorRotation(),
+                    FRotator(0.0f, TargetRotation.Yaw, 0.0f),
+                    DeltaTime,
+                    RotationSpeed
+                );
+                
+                Owner->SetActorRotation(NewRotation);
+            }
+        }
+    }
+    // 정지 상태에서는 마지막 이동 방향 유지
+    else if (!LastMovementDirection.IsNearlyZero())
+    {
+        FRotator CurrentRotation = Owner->GetActorRotation();
+        Owner->SetActorRotation(FRotator(0.0f, CurrentRotation.Yaw, 0.0f));
+    }
 }
 
 FVector UFlockingComponent::CalculateCohesion(const TArray<AActor*>& Neighbors)
