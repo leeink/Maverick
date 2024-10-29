@@ -19,6 +19,8 @@
 #include "XR_LSJ/AIUnitHpBar.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/Soldier.h"
+#include "LDG/SoldierAIController.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -59,8 +61,12 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
-	if(nullptr!=Target && Command == EAIUnitCommandState::IDLE)
+	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
+	{
+		MoveWheelAnimation(0);
 		return;
+	}
+		
 	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
 		PreState = CurrentCommandState;
 
@@ -88,8 +94,8 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 	case EAIUnitCommandState::DIE:
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
-		DieAnimation(true);
-
+		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
+		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
 	default:
 		
@@ -107,8 +113,7 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 	}
 	else
 	{
-		TargetLocation = MeshComp->GetForwardVector()* -1000.f;
-		ToTargetVec = (GetActorLocation() - TargetLocation);
+		return 0;
 	}
 
 	ToTargetVec.Z = 0;
@@ -145,7 +150,7 @@ void AAITankPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TankAbility.Hp = 100.f;
+	TankAbility.Hp = 10000.f;
 	MaxTankHp = TankAbility.Hp;
 	CurrentTankHp = MaxTankHp;
     TankAbility.FindTargetRange = 10000.f;
@@ -161,7 +166,7 @@ void AAITankPawn::BeginPlay()
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
 		FindPath(FVector(1025.958464,1622.088644,118.775006));
-		FindCloseTargetUnit();
+		FindCloseTargetPlayerUnit();
 	}
 	//HpBar
     if (HpWidgetComp && HpBarClass)
@@ -171,6 +176,9 @@ void AAITankPawn::BeginPlay()
 		if (HpBarUI)
 		    HpBarUI->SetUITankImage();
     }
+
+	
+	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &AAITankPawn::FindCloseTargetPlayerUnit, 3.0f, true);
 }
 void AAITankPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -182,7 +190,72 @@ FVector AAITankPawn::GetTargetLocation()
 {
 	return GetActorLocation();
 }
+//가까운 적 탐색
+void AAITankPawn::FindCloseTargetPlayerUnit()
+{
+    FVector Start = GetActorLocation();
+    FVector End = GetActorLocation();
+    float Radius = TankAbility.FindTargetRange;
+    ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4);
+    bool bTraceComplex = false;
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    TArray<FHitResult> OutHits;
+    bool bIgnoreSelf = true;
+    FLinearColor TraceColor = FLinearColor::Gray;
+    FLinearColor TraceHitColor = FLinearColor::Blue;
+    float DrawTime = 1.0f;
+    //SquadManagerAbility.FindTargetRange 범위 탐색
+    const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
+    if (Hit)
+    {
+        for (const FHitResult& HitResult : OutHits)
+        {
+			if(false ==HitResult.GetActor()->ActorHasTag("Player"))
+                continue;
+			    //적이 죽었다면
+            ASoldier* TargetPlayerUnit = Cast<ASoldier>(HitResult.GetActor());
+            if (TargetPlayerUnit)
+            {
+	            ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+	            if (controller&&controller->GetCurrentState()==EState::Die)
+	            {
+		            //FSMComp->SetIsAttacking(false,nullptr);
+		            continue;
+	            }	
+            }
+            
+            //찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
+            //타겟에게 공격 지시
+			FHitResult OutHit;
+			FVector StartLocation = MeshComp->GetSocketLocation(TEXT("gun_jntSocket"));
+			FVector EndLocation = HitResult.GetActor()->GetActorLocation();
 
+			ECollisionChannel TraceChannelHit = ECC_GameTraceChannel5;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+			Params.AddIgnoredActor(HitResult.GetActor());
+			bool CanHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartLocation, EndLocation, TraceChannelHit, Params);
+			if (CanHit)
+			{
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation() , FColor::Blue,false,10.0f);
+			}
+			else
+			{
+				
+				AttackTargetUnit(HitResult.GetActor());
+				return;
+				//DrawDebugLine(GetWorld(), StartLocation, HitResult.GetActor()->GetActorLocation(), FColor::Red, false, 10.0f);
+			}
+        }
+    }
+    else //탐색 범위 안에서 적을 찾을 수 없다면
+    {
+		Target = nullptr;
+		SetCommandState(PreState);
+    }
+}
 //가까운 적 탐색
 void AAITankPawn::FindCloseTargetUnit()
 {
@@ -345,6 +418,25 @@ void AAITankPawn::FireCannon()
 {
 	if(nullptr == Target)
 		return;
+	 ASoldier* TargetPlayerUnit = Cast<ASoldier>(Target);
+    if (TargetPlayerUnit)
+    {
+	    ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
+	    if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
+	    {      
+			Target = nullptr;
+			
+			FindCloseTargetPlayerUnit();
+		    return;
+	    }
+		else if (controller==nullptr)
+		{
+			Target = nullptr;
+			
+			FindCloseTargetPlayerUnit();
+		    return;
+		}
+    }
 	//목표에 도달하기 위해 총알 Velocity 구하기
 	FVector OutVelocity;
 	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
@@ -381,6 +473,8 @@ void AAITankPawn::FireCannon()
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if(CurrentCommandState == EAIUnitCommandState::DIE)
+		return;
 	if (GetCurrentCommandState() == EAIUnitCommandState::ATTACK)
 	{
 		FireTotalTime+=DeltaTime;
@@ -400,6 +494,7 @@ void AAITankPawn::Tick(float DeltaTime)
 			{	
 				FireTotalTime=0;
 				FireCannon();
+				UE_LOG(LogTemp,Error,TEXT("111"));
 			}
 			
 		}
@@ -432,7 +527,7 @@ void AAITankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
-	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+	//GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
 	if (Damage > 0)
 	{
 		CurrentTankHp -= Damage;
@@ -445,6 +540,7 @@ float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 			SetCommandState(EAIUnitCommandState::DIE);
 			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
 			HpWidgetComp->Deactivate();
+			DieAnimation(true);
 		}
 	}
 	return Damage;

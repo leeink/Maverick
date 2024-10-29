@@ -61,13 +61,27 @@ void UAISquadFSMComponent::SetState(EEnemyState NextState)
 }
 void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 {
-	if (GetIsAttacking())
+	if (GetIsAttacking()&&GetTarget())
 	{
 		//Idle 상태에서 공격시 상대를 바라보게 회전 후 공격 
-		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation())+ BaseAttackRotatorYaw;
-		if (fabs(AISquadAnimInstance->GetAimYaw()- LookRotator) < 40)
+		float LookRotator = AISquadBody->GetLookTargetAngle(GetTarget()->GetActorLocation()) + BaseAttackRotatorYaw;
+		//if (fabs(AISquadAnimInstance->GetAimYaw() - LookRotator) <= 20)
+		//{
+			//RotateUpperbodyToTarget(DeltaTime);
+		//}
+		if (LookRotator >= -30 && LookRotator <= 30)
 		{
-			RotateUpperbodyToTarget(DeltaTime);
+			//상체 애니메이션 타겟을 향하게 회전
+			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),LookRotator, DeltaTime*5.0f);
+			AISquadAnimInstance->SetAimYaw(newYaw);
+			//공격한 뒤 2초가 지나야 다시 공격이 가능하다.
+			//적을 조준하고 있는 상태여야 공격이 가능하다.
+			if (GetAttackCurrentTime() >= AttackCoolTime && fabs(LookRotator - newYaw)< 0.2)
+			{
+				StartAttack();	
+			}
+			//if (LookRotator.Pitch >= -90 && LookRotator.Pitch <= 90)
+				//AISquadAnimInstance->SetAimPitch(LookRotator.Pitch);
 		}
 		else
 		{
@@ -98,8 +112,8 @@ void UAISquadFSMComponent::StartAttack()
 {
 	SetAttackCurrentTime(0.f);
 	AISquadAnimInstance->PlayFireMontage();
-	FTimerHandle StopAttackHandle;
-	GetWorld()->GetTimerManager().SetTimer(StopAttackHandle, this, &UAISquadFSMComponent::EndAttack, 2.0f, false);
+	/*FTimerHandle StopAttackHandle;
+	GetWorld()->GetTimerManager().SetTimer(StopAttackHandle, this, &UAISquadFSMComponent::EndAttack, 2.0f, false);*/
 }
 void UAISquadFSMComponent::EndAttack()
 {
@@ -287,9 +301,11 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	//공격 쿨타임
-	SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
-	FString myState = UEnum::GetValueAsString(GetCurrentState());
-	DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
+	if(AISquadAnimInstance->GetIsAttacking())
+		SetAttackCurrentTime(GetAttackCurrentTime() + DeltaTime);
+
+	//FString myState = UEnum::GetValueAsString(GetCurrentState());
+	//DrawDebugString(GetWorld() , GetOwner()->GetActorLocation() , myState , nullptr , FColor::Yellow , 0 , true , 1);
 
 	switch ( GetCurrentState() )
 	{

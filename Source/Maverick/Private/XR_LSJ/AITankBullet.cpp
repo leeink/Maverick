@@ -36,6 +36,7 @@ AAITankBullet::AAITankBullet()
 	MovementComp = (CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp")));
 	MovementComp->bRotationFollowsVelocity = true;
 }
+
 void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -76,23 +77,26 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	FLinearColor TraceColor = FLinearColor::Gray;
 	FLinearColor TraceHitColor = FLinearColor::Blue;
 	float DrawTime = 1.0f;
-	DrawDebugSphere(GetWorld(), Start, 10.0f, 12, FColor::Red, false, 5.0f);
+	//DrawDebugSphere(GetWorld(), Start, 10.0f, 12, FColor::Red, false, 5.0f);
 
 	const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,ExplosiveRange,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
 	if (Hit)
 	{
 		for(FHitResult& HitResult :OutHits)
 		{
-			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Enemy"))
+			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Player"))
 			{			
 				Start.Z = 0;
 				FVector TargetLocation = HitResult.GetActor()->GetActorLocation();
 				TargetLocation.Z=0;
 				float Distance = FVector::Distance(Start,TargetLocation );
 				float Damage = FMath::Lerp(ExplosiveMinDamage, ExplosiveMaxDamage, (ExplosiveRange-Distance) / ExplosiveRange);
-
-				DrawDebugSphere(GetWorld(), HitResult.GetActor()->GetActorLocation(), 10.0f, 12, FColor::Black, false, 5.0f);
-				UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, GetOwner()->GetInstigatorController(), GetOwner(),NULL);
+				if(GetOwner()!=nullptr)
+					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, GetOwner()->GetInstigatorController(), GetOwner(),NULL);
+				else
+					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, nullptr,nullptr ,NULL);
+				//DrawDebugSphere(GetWorld(), HitResult.GetActor()->GetActorLocation(), 10.0f, 12, FColor::Black, false, 5.0f);
+				
 			}
 		}
 	}
