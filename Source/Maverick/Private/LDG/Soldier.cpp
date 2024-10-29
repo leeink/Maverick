@@ -7,7 +7,9 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "LDG/FlockingComponent.h"
 #include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/SoldierAIController.h"
@@ -23,6 +25,14 @@ ASoldier::ASoldier()
 	SelectedDecal -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 	SelectedDecal -> DecalSize = FVector(128.f);
 	SelectedDecal -> SetVisibility(false);
+
+	ArmyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ArmyWidget"));
+	ArmyWidget -> SetupAttachment(RootComponent);
+
+	ArmyWidget -> SetWidgetSpace(EWidgetSpace::World);
+	ArmyWidget -> SetDrawSize(FVector2D(100.f, 100.f));
+	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,155.f));
+	ArmyWidget -> SetVisibility(false);
 	
 	GetMesh() -> SetReceivesDecals(false);
 
@@ -43,6 +53,7 @@ void ASoldier::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//UGameplayStatics::ApplyDamage(this, 1.f, GetInstigator() -> GetController(), this, UDamageType::StaticClass());
+	ArmyWidgetBilboard();
 }
 
 void ASoldier::Selected()
@@ -57,8 +68,21 @@ void ASoldier::Deselected()
 	SelectedDecal -> SetVisibility(false);
 }
 
+void ASoldier::ToggleWidget(bool bShow)
+{
+	bShow ? ArmyWidget -> SetVisibility(true) : ArmyWidget -> SetVisibility(false);
+}
+
+void ASoldier::ArmyWidgetBilboard()
+{
+	FRotator NewRotation = UKismetMathLibrary::FindLookAtRotation(this -> GetActorLocation(),
+		GetWorld() -> GetFirstPlayerController() -> GetPawn() -> GetActorLocation());
+
+	ArmyWidget -> SetWorldRotation(NewRotation);
+}
+
 float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
-									   AController* EventInstigator, AActor* DamageCauser)
+                           AController* EventInstigator, AActor* DamageCauser)
 {
 	//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;

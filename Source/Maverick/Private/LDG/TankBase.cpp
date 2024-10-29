@@ -7,7 +7,9 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/BoxComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "LDG/TankAIController.h"
 
 ATankBase::ATankBase()
@@ -25,6 +27,13 @@ ATankBase::ATankBase()
 	SelectedDecal -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 	SelectedDecal -> DecalSize = FVector(400.f);
 	SelectedDecal -> SetVisibility(false);
+
+	ArmyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ArmyWidget"));
+	ArmyWidget -> SetupAttachment(RootComponent);
+	ArmyWidget -> SetWidgetSpace(EWidgetSpace::World);
+	ArmyWidget -> SetDrawSize(FVector2D(200.f, 200.f));
+	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,500.f));
+	ArmyWidget -> SetVisibility(true);
 	
 	GetMesh() -> SetReceivesDecals(false);
 
@@ -40,6 +49,8 @@ void ATankBase::BeginPlay()
 void ATankBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	ArmyWidgetBilboard();
 }
 
 void ATankBase::Selected()
@@ -54,8 +65,16 @@ void ATankBase::Deselected()
 	SelectedDecal -> SetVisibility(false);
 }
 
+void ATankBase::ArmyWidgetBilboard()
+{
+	FRotator NewRotation = UKismetMathLibrary::FindLookAtRotation(this -> GetActorLocation(),
+		GetWorld() -> GetFirstPlayerController() -> GetPawn() -> GetActorLocation());
+
+	ArmyWidget -> SetWorldRotation(NewRotation);
+}
+
 float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
+                            AActor* DamageCauser)
 {
 	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;

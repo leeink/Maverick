@@ -6,6 +6,7 @@
 #include "WheeledVehiclePawn.h"
 #include "TankBase.generated.h"
 
+class UWidgetComponent;
 class UFloatingPawnMovement;
 class UNavigationInvokerComponent;
 class UBoxComponent;
@@ -50,6 +51,9 @@ class MAVERICK_API ATankBase : public APawn
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	float Health;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* ArmyWidget;
+
 public:
 	ATankBase();
 
@@ -64,6 +68,7 @@ public:
 	
 	void Selected();
 	void Deselected();
+	void ArmyWidgetBilboard();
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }
