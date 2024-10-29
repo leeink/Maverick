@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Soldier.generated.h"
 
+class UWidgetComponent;
 class UFlockingComponent;
 
 UCLASS()
@@ -36,6 +37,9 @@ class MAVERICK_API ASoldier : public ACharacter
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Stat, meta = (AllowPrivateAccess = "true"))
 	float Health;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* ArmyWidget;
 
 public:
 	// Sets default values for this character's properties
@@ -52,6 +56,8 @@ public:
 	
 	void Selected();
 	void Deselected();
+	void ToggleWidget(bool bShow);
+	void ArmyWidgetBilboard();
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }

@@ -4,6 +4,7 @@
 #include "LDG/UnitControlHUD.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "LDG/OperatorPawn.h"
 #include "LDG/Soldier.h"
 #include "LDG/TankBase.h"
@@ -41,7 +42,7 @@ void AUnitControlHUD::DrawHUD()
 				OperatorPawn -> GetSelectedUnits().AddUnique(SoldierUnit);
 			}
 		}
-
+		
 		for(auto* Unit: InRectangleTanks)
 		{
 			if(auto* TankUnit = Cast<ATankBase>(Unit))
@@ -58,8 +59,10 @@ void AUnitControlHUD::DrawHUD()
 			if(InRectangleUnits.Find(Unit) == -1)
 			{
 				Unit -> Deselected();
+				Cast<ASoldier>(Unit) -> ToggleWidget(false);
 				OperatorPawn -> GetSelectedUnits().Remove(Unit);
 			}
+			
 		}
 
 		for(auto* Unit: OperatorPawn -> GetSelectedTanks())
@@ -98,4 +101,9 @@ void AUnitControlHUD::MarqueeHeld()
 void AUnitControlHUD::MarqueeReleased()
 {
 	bIsDrawing = false;
+
+	if(InRectangleUnits.Num() > 0)
+	{
+		Cast<ASoldier>(InRectangleUnits[FMath::RandHelper(InRectangleUnits.Num() - 1)]) -> ToggleWidget(true);
+	}
 }
