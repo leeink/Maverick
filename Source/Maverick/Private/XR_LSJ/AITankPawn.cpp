@@ -153,7 +153,7 @@ void AAITankPawn::BeginPlay()
 	TankAbility.Hp = 10000.f;
 	MaxTankHp = TankAbility.Hp;
 	CurrentTankHp = MaxTankHp;
-    TankAbility.FindTargetRange = 10000.f;
+    TankAbility.FindTargetRange = 6000.f;
 	TankAbility.ExplosiveRange = 600.f;
 	TankAbility.ExplosiveMaxDamage = 105.f;
 	TankAbility.ExplosiveMinDamage = 5.f;
@@ -165,7 +165,7 @@ void AAITankPawn::BeginPlay()
 	if (AITankController)
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
-		FindPath(FVector(1025.958464,1622.088644,118.775006));
+		//FindPath(FVector(1500,0,0));
 		FindCloseTargetPlayerUnit();
 	}
 	//HpBar
@@ -177,7 +177,8 @@ void AAITankPawn::BeginPlay()
 		    HpBarUI->SetUITankImage();
     }
 
-	
+	if(false==StartGoalLocation.Equals(FVector::ZeroVector))
+		FindPath(StartGoalLocation);
 	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &AAITankPawn::FindCloseTargetPlayerUnit, 3.0f, true);
 }
 void AAITankPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -200,7 +201,7 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
     bool bTraceComplex = false;
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(this);
-    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
     TArray<FHitResult> OutHits;
     bool bIgnoreSelf = true;
     FLinearColor TraceColor = FLinearColor::Gray;
@@ -253,7 +254,8 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
 		Target = nullptr;
-		SetCommandState(PreState);
+		if(CurrentCommandState==EAIUnitCommandState::ATTACK)
+			SetCommandState(PreState);
     }
 }
 //가까운 적 탐색
@@ -340,7 +342,7 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
     }
     else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-         
+
     }
 }
 void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
@@ -494,7 +496,6 @@ void AAITankPawn::Tick(float DeltaTime)
 			{	
 				FireTotalTime=0;
 				FireCannon();
-				UE_LOG(LogTemp,Error,TEXT("111"));
 			}
 			
 		}
