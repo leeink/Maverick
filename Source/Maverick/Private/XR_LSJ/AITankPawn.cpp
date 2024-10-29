@@ -165,7 +165,7 @@ void AAITankPawn::BeginPlay()
 	if (AITankController)
 	{
 		AITankController->FCallback_AIController_MoveCompleted.BindUFunction(this,FName("OnMoveCompleted"));
-		FindPath(FVector(1025.958464,1622.088644,118.775006));
+		//FindPath(FVector(1500,0,0));
 		FindCloseTargetPlayerUnit();
 	}
 	//HpBar
@@ -200,7 +200,7 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
     bool bTraceComplex = false;
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(this);
-    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
     TArray<FHitResult> OutHits;
     bool bIgnoreSelf = true;
     FLinearColor TraceColor = FLinearColor::Gray;

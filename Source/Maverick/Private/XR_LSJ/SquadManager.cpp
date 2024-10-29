@@ -65,7 +65,7 @@ void ASquadManager::BeginPlay()
     SquadManagerAbility.Hp = 100.f;
     
     
-    SquadManagerAbility.FindTargetRange = 2000.f;
+    SquadManagerAbility.FindTargetRange = 3000.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
@@ -82,7 +82,7 @@ void ASquadManager::BeginPlay()
     AttachToComponent(GetSquadArray()[CurrentAttachedSquadNumber]->GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale);
     //AttachToActor(SquadArray[0],FAttachmentTransformRules::SnapToTargetIncludingScale);
 	FTimerHandle handle;
-	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 10.0f, true);
+	//GetWorld()->GetTimerManager().SetTimer(handle, this, &ASquadManager::CheckLocationForObject, 5.0f, true);
     FTimerHandle FindEnemy;
 	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &ASquadManager::FindCloseTargetPlayerUnit, 3.0f, true);
     
@@ -116,7 +116,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     ActorsToIgnore.Add(this);
 	for (AActor* SquadActor : GetSquadArray())
 		ActorsToIgnore.Add(SquadActor);
-    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
     TArray<FHitResult> OutHits;
     bool bIgnoreSelf = true;
     FLinearColor TraceColor = FLinearColor::Gray;
