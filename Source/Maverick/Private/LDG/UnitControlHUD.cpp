@@ -36,19 +36,25 @@ void AUnitControlHUD::DrawHUD()
 		// Unit Selection -----------------------------------------------
 		for(auto* Unit: InRectangleUnits)
 		{
-			if(auto* SoldierUnit = Cast<ASoldier>(Unit))
+			if(Unit != nullptr)
 			{
-				SoldierUnit -> Selected();
-				OperatorPawn -> GetSelectedUnits().AddUnique(SoldierUnit);
+				if(auto* SoldierUnit = Cast<ASoldier>(Unit))
+				{
+					SoldierUnit -> Selected();
+					OperatorPawn -> GetSelectedUnits().AddUnique(SoldierUnit);
+				}
 			}
 		}
 		
 		for(auto* Unit: InRectangleTanks)
 		{
-			if(auto* TankUnit = Cast<ATankBase>(Unit))
+			if(Unit != nullptr)
 			{
-				TankUnit -> Selected();
-				OperatorPawn -> GetSelectedTanks().AddUnique(TankUnit);
+				if(auto* TankUnit = Cast<ATankBase>(Unit))
+				{
+					TankUnit -> Selected();
+					OperatorPawn -> GetSelectedTanks().AddUnique(TankUnit);
+				}
 			}
 		}
 		// Unit Selection -----------------------------------------------
@@ -56,21 +62,26 @@ void AUnitControlHUD::DrawHUD()
 		// Unit DeSelection -----------------------------------------------
 		for(auto* Unit: OperatorPawn -> GetSelectedUnits())
 		{
-			if(InRectangleUnits.Find(Unit) == -1)
+			if(Unit != nullptr)
 			{
-				Unit -> Deselected();
-				Cast<ASoldier>(Unit) -> ToggleWidget(false);
-				OperatorPawn -> GetSelectedUnits().Remove(Unit);
+				if(InRectangleUnits.Find(Unit) == -1)
+				{
+					Unit -> Deselected();
+					Cast<ASoldier>(Unit) -> ToggleWidget(false);
+					OperatorPawn -> GetSelectedUnits().Remove(Unit);
+				}
 			}
-			
 		}
 
 		for(auto* Unit: OperatorPawn -> GetSelectedTanks())
 		{
-			if(InRectangleTanks.Find(Unit) == -1)
+			if(Unit != nullptr)
 			{
-				Unit -> Deselected();
-				OperatorPawn -> GetSelectedTanks().Remove(Unit);
+				if(InRectangleTanks.Find(Unit) == -1)
+				{
+					Unit -> Deselected();
+					OperatorPawn -> GetSelectedTanks().Remove(Unit);
+				}
 			}
 		}
 		// Unit DeSelection -----------------------------------------------
