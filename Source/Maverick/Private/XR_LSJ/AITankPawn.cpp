@@ -92,6 +92,7 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		
 		break;
 	case EAIUnitCommandState::DIE:
+		GetController()->StopMovement();
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
