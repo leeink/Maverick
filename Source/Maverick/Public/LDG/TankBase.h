@@ -54,6 +54,12 @@ class MAVERICK_API ATankBase : public APawn
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ArmyWidget;
 
+	UPROPERTY()
+	class UArmyWidgetBase* ArmyWidgetInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* ExplosionEffect;
+
 public:
 	ATankBase();
 

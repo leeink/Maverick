@@ -9,11 +9,8 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 {
 	if(ASoldierAIController* Controller =  Cast<ASoldierAIController>(OwnerComp.GetAIOwner()))
 	{
-		if(AActor* ControlledPawn = Controller->GetPawn())
-		{
-			Controller->AttackCommand(ControlledPawn);
-			return EBTNodeResult::Succeeded;
-		}
+		Controller->AttackCommand();
+		return EBTNodeResult::Succeeded;
 	}
 	else
 	{
