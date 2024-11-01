@@ -5,6 +5,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/Soldier.h"
 #include "LDG/TankBase.h"
 
 void ATankAIController::OnPossess(APawn* InPawn)
@@ -52,11 +53,22 @@ void ATankAIController::ChaseCommand(FVector GoalLocation)
 	}
 }
 
-void ATankAIController::AttackCommand(AActor* TargetActor)
+void ATankAIController::AttackCommand()
 {
-	AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
-	UGameplayStatics::ApplyDamage(Target, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
-	//RifleAnimInstance -> PlayAttackMontage();
+	if(AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor")))))
+	{
+		UGameplayStatics::ApplyRadialDamage(
+		GetWorld(),
+		500.f,
+		Target -> GetActorLocation(),
+		ExplosionRange,
+		UDamageType::StaticClass(),
+		{GetPawn()},
+		GetPawn(),
+		GetInstigator() -> GetController()
+		);
+		GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Attack"));
+	}
 }
 
 void ATankAIController::StartDetectionTimer()
@@ -71,13 +83,13 @@ void ATankAIController::StartDetectionTimer()
 void ATankAIController::EnemyDetection()
 {
 	FHitResult HitResult;
-	
-	UKismetSystemLibrary::SphereTraceSingle(
+	EObjectTypeQuery EnemyTraceType = UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel6);
+	UKismetSystemLibrary::SphereTraceSingleForObjects(
 		GetWorld(),
 		PossessedPawn -> GetActorLocation(),
 		PossessedPawn -> GetActorLocation(),
-		5000.f,
-		ETraceTypeQuery::TraceTypeQuery1,
+		DetectionRadius,
+		{EnemyTraceType},
 		false,
 		{PossessedPawn},
 		EDrawDebugTrace::ForDuration,
@@ -91,19 +103,10 @@ void ATankAIController::EnemyDetection()
 	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
-		//FString TargetActorName = FString::Printf(TEXT("%s"), *HitResult.GetActor() -> GetName());
-		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TargetActorName);
-		GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
 	}
 	else
 	{
-		GetWorldTimerManager().SetTimer(
-		ForgetTimerHandle,
-		this,
-		&ATankAIController::EnemyForget,
-		2.f,
-		false
-		);
+		EnemyForget();
 	}
 }
 

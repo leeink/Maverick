@@ -14,10 +14,10 @@ UBTTask_SetState::UBTTask_SetState()
 
 EBTNodeResult::Type UBTTask_SetState::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if(ASoldierAIController* Controller = Cast<ASoldierAIController>(OwnerComp.GetAIOwner()))
+	if(ASoldierAIController* SController = Cast<ASoldierAIController>(OwnerComp.GetAIOwner()))
 	{
-		Controller -> SetState(NewState);
-		Controller -> GetBlackboardComponent() -> SetValueAsEnum(TEXT("State"), static_cast<uint8>(NewState));
+		SController -> SetState(NewState);
+		SController -> GetBlackboardComponent() -> SetValueAsEnum(TEXT("State"), static_cast<uint8>(NewState));
 		
 		return EBTNodeResult::Succeeded;
 	}

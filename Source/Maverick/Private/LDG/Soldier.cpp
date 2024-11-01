@@ -29,7 +29,7 @@ ASoldier::ASoldier()
 	ArmyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ArmyWidget"));
 	ArmyWidget -> SetupAttachment(RootComponent);
 
-	ArmyWidget -> SetWidgetSpace(EWidgetSpace::World);
+	ArmyWidget -> SetWidgetSpace(EWidgetSpace::Screen);
 	ArmyWidget -> SetDrawSize(FVector2D(100.f, 100.f));
 	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,155.f));
 	ArmyWidget -> SetVisibility(false);
@@ -77,7 +77,7 @@ void ASoldier::ArmyWidgetBilboard()
 {
 	FRotator NewRotation = UKismetMathLibrary::FindLookAtRotation(this -> GetActorLocation(),
 		GetWorld() -> GetFirstPlayerController() -> GetPawn() -> GetActorLocation());
-
+	
 	ArmyWidget -> SetWorldRotation(NewRotation);
 }
 

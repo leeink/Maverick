@@ -9,7 +9,9 @@
 #include "Components/DecalComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "LDG/ArmyWidgetBase.h"
 #include "LDG/TankAIController.h"
 
 ATankBase::ATankBase()
@@ -30,7 +32,7 @@ ATankBase::ATankBase()
 
 	ArmyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ArmyWidget"));
 	ArmyWidget -> SetupAttachment(RootComponent);
-	ArmyWidget -> SetWidgetSpace(EWidgetSpace::World);
+	ArmyWidget -> SetWidgetSpace(EWidgetSpace::Screen);
 	ArmyWidget -> SetDrawSize(FVector2D(200.f, 200.f));
 	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,500.f));
 	ArmyWidget -> SetVisibility(true);
@@ -44,6 +46,9 @@ ATankBase::ATankBase()
 void ATankBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Health = MaxHealth;
+	ArmyWidgetInstance = Cast<UArmyWidgetBase>(ArmyWidget -> GetUserWidgetObject());
 }
 
 void ATankBase::Tick(float DeltaTime)
@@ -51,6 +56,7 @@ void ATankBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	ArmyWidgetBilboard();
+	UGameplayStatics::ApplyDamage(this, 1.f, nullptr, nullptr, nullptr);
 }
 
 void ATankBase::Selected()
@@ -78,6 +84,8 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 {
 	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;
+
+	ArmyWidgetInstance -> UpdateHealthBar(Health / MaxHealth);
 	
 	if(Health <= 0)	// Die
 	{

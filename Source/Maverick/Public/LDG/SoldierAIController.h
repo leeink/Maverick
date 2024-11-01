@@ -56,7 +56,7 @@ public:
 	void IdleCommand();
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
-	void AttackCommand(AActor* TargetActor);
+	void AttackCommand();
 	void Die();
 	
 	void StartDetectionTimer();

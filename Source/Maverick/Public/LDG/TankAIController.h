@@ -33,8 +33,11 @@ class MAVERICK_API ATankAIController : public AAIController
 	UPROPERTY()
 	ATankBase* PossessedPawn;
 
-	/*UPROPERTY()
-	URifleSoliderAnimInstance* RifleAnimInstance;*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Detection, meta = (AllowPrivateAccess = "true"))
+	float DetectionRadius = 2500.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Detection, meta = (AllowPrivateAccess = "true"))
+	float ExplosionRange = 800.f;
 
 	FTimerHandle DetectionTimerHandle;
 	FTimerHandle ForgetTimerHandle;
@@ -50,7 +53,7 @@ public:
 	void IdleCommand();
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
-	void AttackCommand(AActor* TargetActor);
+	void AttackCommand();
 	
 	void StartDetectionTimer();
 	void EnemyDetection();

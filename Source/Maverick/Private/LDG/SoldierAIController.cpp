@@ -62,11 +62,13 @@ void ASoldierAIController::ChaseCommand(FVector GoalLocation)
 	}
 }
 
-void ASoldierAIController::AttackCommand(AActor* TargetActor)
+void ASoldierAIController::AttackCommand()
 {
-	AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
-	UGameplayStatics::ApplyDamage(Target, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
-	RifleAnimInstance -> PlayAttackMontage();
+	if(AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor")))))
+	{
+		UGameplayStatics::ApplyDamage(Target, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
+		RifleAnimInstance -> PlayAttackMontage();
+	}
 }
 
 void ASoldierAIController::Die()
@@ -88,13 +90,13 @@ void ASoldierAIController::StartDetectionTimer()
 void ASoldierAIController::EnemyDetection()
 {
 	FHitResult HitResult;
-	
-	UKismetSystemLibrary::SphereTraceSingle(
+	EObjectTypeQuery EnemyTraceType = UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel6);
+	UKismetSystemLibrary::SphereTraceSingleForObjects(
 		GetWorld(),
 		PossessedPawn -> GetActorLocation(),
 		PossessedPawn -> GetActorLocation(),
 		DetectionRadius,
-		ETraceTypeQuery::TraceTypeQuery1,
+		{EnemyTraceType},
 		false,
 		{PossessedPawn},
 		EDrawDebugTrace::None,
@@ -108,19 +110,10 @@ void ASoldierAIController::EnemyDetection()
 	if(HitResult.bBlockingHit && HitResult.GetActor() && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
-		//GetWorldTimerManager().ClearTimer(ForgetTimerHandle);
 	}
 	else
 	{
 		EnemyForget();
-		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Forget"));
-		/*GetWorldTimerManager().SetTimer(
-		ForgetTimerHandle,
-		this,
-		&ASoldierAIController::EnemyForget,
-		2.f,
-		false
-		);*/
 	}
 }
 
