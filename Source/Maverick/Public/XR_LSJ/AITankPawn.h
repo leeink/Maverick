@@ -100,13 +100,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* HpWidgetComp;
-
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* MinimapHpWidgetComp;
+	UPROPERTY(EditDefaultsOnly)
+	class USpringArmComponent* MinimapHpWidgetSpringArm;
 public:
 	virtual FVector GetTargetLocation();
 	void FindCloseTargetPlayerUnit();
 	//체력바 UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

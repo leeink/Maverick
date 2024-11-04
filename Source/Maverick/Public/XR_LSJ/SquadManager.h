@@ -56,7 +56,16 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	//시작시 이동할 목표 지점
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
+
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* MinimapHpWidgetComp;
+	UPROPERTY(EditDefaultsOnly)
+	class USpringArmComponent* MinimapHpWidgetSpringArm;
 public:
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
+
 	virtual FVector GetTargetLocation();
 	//체력바 UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
