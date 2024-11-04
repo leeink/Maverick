@@ -75,6 +75,8 @@ public:
 	void Selected();
 	void Deselected();
 	void ArmyWidgetBilboard();
+	UFUNCTION(BlueprintImplementableEvent)
+	void TurretRotation(float angle);
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }
