@@ -56,7 +56,6 @@ void ATankBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	ArmyWidgetBilboard();
-	UGameplayStatics::ApplyDamage(this, 1.f, nullptr, nullptr, nullptr);
 }
 
 void ATankBase::Selected()

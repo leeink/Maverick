@@ -18,6 +18,13 @@ void ATankAIController::OnPossess(APawn* InPawn)
 	StartDetectionTimer();
 }
 
+void ATankAIController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	PossessedPawn -> TurretRotation(UpdateTurret());
+}
+
 void ATankAIController::SetState(ETankState NewState)
 {
 	CurrentState = NewState;
@@ -69,6 +76,23 @@ void ATankAIController::AttackCommand()
 		);
 		GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Attack"));
 	}
+}
+
+float ATankAIController::UpdateTurret()
+{
+	AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
+	if(Target != nullptr)
+	{
+		FVector CurrentLocation = PossessedPawn -> GetActorLocation();
+		FVector DirectionToTarget = Target -> GetActorLocation() - PossessedPawn -> GetActorLocation().GetSafeNormal();
+
+		float AngleBetween = FMath::Acos(FVector::DotProduct(PossessedPawn -> GetActorForwardVector(), DirectionToTarget));
+		float AngleInDegrees = FMath::RadiansToDegrees(AngleBetween);
+		float RotationSpeed = 90.f;
+	
+		return FMath::Min(RotationSpeed*GetWorld() -> GetDeltaSeconds(), AngleInDegrees);
+	}
+	return 0.f;
 }
 
 void ATankAIController::StartDetectionTimer()

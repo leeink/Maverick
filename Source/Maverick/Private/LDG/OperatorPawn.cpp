@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
@@ -169,7 +170,11 @@ void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 					TankAIController -> ChaseCommand(HitResult.Location);
 				}
 			}
-
+			if(AttackCursorEffect != nullptr)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), AttackCursorEffect, HitResult.Location, FRotator::ZeroRotator);
+			}
+			
 			bAttackReady = false;
 		}
 	}
@@ -214,6 +219,10 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 						TankAIController -> MoveCommand(HitResult.Location);
 					}
 				}
+			}
+			if(MoveCursorEffect != nullptr)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MoveCursorEffect, HitResult.Location, FRotator::ZeroRotator);
 			}
 		}
 		

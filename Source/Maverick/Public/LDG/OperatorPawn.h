@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class UNiagaraSystem;
 class ATankBase;
 class ARifleSoldier;
 class ASoldier;
@@ -75,6 +76,13 @@ class MAVERICK_API AOperatorPawn : public APawn
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
+
+	// Mouse Cursor Effect
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Cursor, meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* MoveCursorEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Cursor, meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* AttackCursorEffect;
 	
 	// Mouse Position
 	float MouseX;

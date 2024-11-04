@@ -47,6 +47,7 @@ public:
 
 public:
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	void SetState(ETankState NewState);
 
@@ -54,6 +55,7 @@ public:
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand();
+	float UpdateTurret();
 	
 	void StartDetectionTimer();
 	void EnemyDetection();
