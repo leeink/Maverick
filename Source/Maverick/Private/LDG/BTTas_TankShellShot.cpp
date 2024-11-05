@@ -4,7 +4,6 @@
 #include "LDG/BTTas_TankShellShot.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "LDG/TankAIController.h"
 
 UBTTas_TankShellShot::UBTTas_TankShellShot()

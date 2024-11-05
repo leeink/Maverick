@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WheeledVehiclePawn.h"
 #include "TankBase.generated.h"
 
 class UWidgetComponent;
@@ -58,8 +57,11 @@ class MAVERICK_API ATankBase : public APawn
 	class UArmyWidgetBase* ArmyWidgetInstance;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
-	UParticleSystem* ExplosionEffect;
+	UParticleSystem* ShotEffect;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* ExplosionEffect;
+	
 public:
 	ATankBase();
 
@@ -75,11 +77,14 @@ public:
 	void Selected();
 	void Deselected();
 	void ArmyWidgetBilboard();
+
 	UFUNCTION(BlueprintImplementableEvent)
-	void TurretRotation(float angle);
+	void OnRotate(float Degree);
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE UParticleSystem* GetShotEffect() const { return ShotEffect; }
+	FORCEINLINE UParticleSystem* GetExplosionEffect() const { return ExplosionEffect; }
 };
