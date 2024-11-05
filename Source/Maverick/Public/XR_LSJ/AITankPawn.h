@@ -7,6 +7,9 @@
 #include "IAICommand.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AITankPawn.generated.h"
+
+DECLARE_DELEGATE(FDel_TankUnitDie);
+
 USTRUCT(Atomic,BlueprintType)
 struct FTankData
 {
@@ -57,6 +60,8 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
 public:
+	//≈ ≈© ¡◊¿Ω æÀ∏≤ µ®∏Æ∞‘¿Ã∆Æ
+	FDel_TankUnitDie FDelTankUnitDie;
 	// Sets default values for this pawn's properties
 	AAITankPawn();
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")

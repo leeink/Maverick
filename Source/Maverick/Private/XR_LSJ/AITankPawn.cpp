@@ -115,6 +115,8 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
+		if(FDelTankUnitDie.IsBound())
+			FDelTankUnitDie.Execute();
 		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
 	default:
@@ -582,10 +584,10 @@ float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 		HpBarNewIcon->SetHpBar((float)(CurrentTankHp) / MaxTankHp);
 		if (CurrentTankHp <= 0)
 		{
-			SetCommandState(EAIUnitCommandState::DIE);
+			//SetCommandState(EAIUnitCommandState::DIE);
 			HpBarNewIcon->SetVisibility(ESlateVisibility::Collapsed);
 			MinimapHpWidgetComp->Deactivate();
-			DieAnimation(true);
+			//DieAnimation(true);
 		}
 	}
 	return Damage;

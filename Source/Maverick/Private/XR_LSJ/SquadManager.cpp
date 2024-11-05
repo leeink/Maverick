@@ -713,9 +713,9 @@ void ASquadManager::DamagedSquadUnit(float Damage)
 void ASquadManager::DieSquadUnit(int32 SquadNumber)
 {
     CurrentSquadCount--;
-    		SquadArray[SquadNumber]->FDelTargetDie.Unbind();
-			SquadArray[SquadNumber]->FDelSquadUnitDamaged.Unbind();
-			SquadArray[SquadNumber]->FDelSquadUnitDie.Unbind();
+    SquadArray[SquadNumber]->FDelTargetDie.Unbind();
+	SquadArray[SquadNumber]->FDelSquadUnitDamaged.Unbind();
+	SquadArray[SquadNumber]->FDelSquadUnitDie.Unbind();
     if (CurrentAttachedSquadNumber == SquadNumber)
     {
 		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
@@ -729,6 +729,8 @@ void ASquadManager::DieSquadUnit(int32 SquadNumber)
             }
         }
     }
+    if(FDelSoldierUnitDie.IsBound())
+        FDelSoldierUnitDie.Execute();
  //   FTimerHandle DestroyUnitHandle;
 	//GetWorld()->GetTimerManager().SetTimer(DestroyUnitHandle, [&]()
 	//	{

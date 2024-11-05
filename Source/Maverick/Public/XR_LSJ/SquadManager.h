@@ -8,6 +8,8 @@
 #include "IAICommand.h"
 #include "SquadManager.generated.h"
 
+DECLARE_DELEGATE(FDel_SoldierUnitDie);
+
 UENUM(BlueprintType)
 enum class EObstructionDirection : uint8
 {
@@ -62,6 +64,8 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	UPROPERTY(EditDefaultsOnly)
 	class USpringArmComponent* MinimapHpWidgetSpringArm;
 public:
+	//분대원 죽음 알림 델리게이트
+	FDel_SoldierUnitDie FDelSoldierUnitDie;
 	//체력바 UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
