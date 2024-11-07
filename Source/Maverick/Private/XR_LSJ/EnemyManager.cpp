@@ -7,6 +7,7 @@
 #include "XR_LSJ/SquadManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "XR_LSJ/AITankPawn.h"
+#include "XR_LSJ/GameResultWidget.h"
 
 // Sets default values
 AEnemyManager::AEnemyManager()
@@ -20,12 +21,40 @@ void AEnemyManager::DieSoldier()
 {
 	SoldierCount--;
 	EnemyCountWidget->SetSoldierCount(SoldierCount);
+
+	if (SoldierCount <= 0 && TankCount <= 0)
+	{
+		FTimerHandle ShowResultHandle;
+		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+	}
 }
+
+void AEnemyManager::ShowResult()
+{
+	UGameplayStatics::SetGamePaused(GetWorld(),true);
+
+	if (GameResultClass)
+	{
+		GameResultWidget = Cast<UGameResultWidget>(CreateWidget(GetWorld(),GameResultClass));
+		GameResultWidget->AddBasicSlot();
+		FString NickName = "AI";
+		GameResultWidget->AddNorthKoreaData(NickName, 0, 0, 0, 1);
+		FString Time = "30:00";
+		GameResultWidget->SetClearTime(Time);
+		GameResultWidget->AddToViewport();
+	}
+}
+
 void AEnemyManager::DieTank()
 {
-	UE_LOG(LogTemp,Error,TEXT("TankCount"));
 	TankCount--;
 	EnemyCountWidget->SetTankCount(TankCount);
+
+	if (SoldierCount <= 0 && TankCount <= 0)
+	{
+		FTimerHandle ShowResultHandle;
+		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+	}
 }
 // Called when the game starts or when spawned
 void AEnemyManager::BeginPlay()
@@ -60,16 +89,23 @@ void AEnemyManager::BeginPlay()
 		if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::Soldier)
 		{
 			SpawnLocation.Z = 190.0f;
-			ASquadManager* SquadManager = GetWorld()->SpawnActor<ASquadManager>(SquadManagerClass, SpawnLocation, SpawnRotation, SpawnParams);
-			SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));
-			SoldierCount+=SquadManager->GetCurrentSquadCount();
+			if (ASquadManager* SquadManager = GetWorld()->SpawnActor<ASquadManager>(SquadManagerClass, SpawnLocation, SpawnRotation, SpawnParams))
+			{
+				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));
+				SoldierCount+=SquadManager->GetCurrentSquadCount();
+			}
+
 		}
 		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::Tank)
 		{
 			SpawnLocation.Z = 350.0f;
-			AAITankPawn* TankPawn = GetWorld()->SpawnActor<AAITankPawn>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
-			TankPawn->FDelTankUnitDie.BindUFunction(this,FName("DieTank"));
-			TankCount++;
+			
+			if (AAITankPawn* TankPawn = GetWorld()->SpawnActor<AAITankPawn>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
+			{
+				TankPawn->FDelTankUnitDie.BindUFunction(this, FName("DieTank"));
+				TankCount++;
+			}
+	
 		}
 
 		PointActor->Destroy();

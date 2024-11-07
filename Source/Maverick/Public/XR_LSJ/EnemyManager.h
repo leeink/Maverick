@@ -12,6 +12,8 @@ class MAVERICK_API AEnemyManager : public AActor
 	GENERATED_BODY()
 	UPROPERTY()
 	class UEnemyCount* EnemyCountWidget;
+	class UGameResultWidget* GameResultWidget;
+	
 	int32 SoldierCount;
 	int32 TankCount;
 public:	
@@ -19,11 +21,14 @@ public:
 	AEnemyManager();
 	UFUNCTION()
 	void DieSoldier();
+	void ShowResult();
 	UFUNCTION()
 	void DieTank();
 	//화면에 Enemy count 표시
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")
 	TSubclassOf<UUserWidget> EnemyCountClass;
+	UPROPERTY(EditDefaultsOnly,Category = "Widget")
+	TSubclassOf<UUserWidget> GameResultClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")
 	TSubclassOf<class ASquadManager> SquadManagerClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")
