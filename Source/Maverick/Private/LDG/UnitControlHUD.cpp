@@ -115,6 +115,14 @@ void AUnitControlHUD::MarqueeReleased()
 
 	if(InRectangleUnits.Num() > 0)
 	{
+		int maxHpSum = 0;
+		int curHpSum = 0;
+		for(auto* Unit: InRectangleUnits){
+			maxHpSum += Cast<ASoldier>(Unit) -> GetMaxHealth();
+			curHpSum += Cast<ASoldier>(Unit) -> GetHealth();
+		}
+		float avgHp = static_cast<float>(curHpSum) / (maxHpSum);
+		
 		Cast<ASoldier>(InRectangleUnits[FMath::RandHelper(InRectangleUnits.Num() - 1)]) -> ToggleWidget(true);
 	}
 }
