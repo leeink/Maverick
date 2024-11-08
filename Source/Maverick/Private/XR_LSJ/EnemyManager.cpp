@@ -17,8 +17,6 @@ AEnemyManager::AEnemyManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	SoldierCount=0;
-	TankCount=0;
 }
 void AEnemyManager::DieSoldier()
 {
@@ -53,6 +51,14 @@ void AEnemyManager::DiePlayerTank()
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
+FString AEnemyManager::ConvertSecondsToMinutesAndSeconds(int32 TotalSeconds)
+{
+    int32 Minutes = TotalSeconds / 60;
+    int32 Seconds = TotalSeconds % 60;
+    
+    // 두 자리 형식을 유지하려면 추가 포맷
+    return FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+}
 void AEnemyManager::ShowResult()
 {
 	UGameplayStatics::SetGamePaused(GetWorld(),true);
@@ -65,7 +71,8 @@ void AEnemyManager::ShowResult()
 		FString NickNamePlayer = "Player";
 		GameResultWidget->AddNorthKoreaData(NickNameAI, MaxPlayerSoldierCount-PlayerSoldierCount, MaxSoldierCount-SoldierCount, MaxPlayerTankCount-PlayerTankCount, MaxTankCount-TankCount);
 		GameResultWidget->AddSouthKoreaData(NickNamePlayer, MaxSoldierCount-SoldierCount, MaxPlayerSoldierCount-PlayerSoldierCount, MaxTankCount-TankCount, MaxPlayerTankCount-PlayerTankCount);
-		FString Time = "30:00";
+		
+		FString Time = ConvertSecondsToMinutesAndSeconds(PlayTimeSeconds);
 		GameResultWidget->SetClearTime(Time);
 		GameResultWidget->AddToViewport();
 	}
@@ -174,10 +181,18 @@ void AEnemyManager::BeginPlay()
 	
 }
 
+void AEnemyManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	UserControlUI->RemoveFromParent();
+}
+
 // Called every frame
 void AEnemyManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	PlayTimeSeconds+=DeltaTime;
 
 }
 

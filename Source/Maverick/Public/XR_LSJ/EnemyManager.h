@@ -23,6 +23,8 @@ class MAVERICK_API AEnemyManager : public AActor
 	int32 MaxPlayerTankCount;
 	int32 PlayerSoldierCount;
 	int32 PlayerTankCount;
+
+	float PlayTimeSeconds;
 public:	
 	// Sets default values for this actor's properties
 	AEnemyManager();
@@ -32,6 +34,7 @@ public:
 	void DiePlayerSoldier();
 	UFUNCTION()
 	void DiePlayerTank();
+	FString ConvertSecondsToMinutesAndSeconds(int32 TotalSeconds);
 	void ShowResult();
 	UFUNCTION()
 	void DieTank();
@@ -55,6 +58,7 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame

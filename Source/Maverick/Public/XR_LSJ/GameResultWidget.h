@@ -28,6 +28,7 @@ class MAVERICK_API UGameResultWidget : public UUserWidget
 	TSubclassOf<UUserWidget> ScrollBox_ValueSlot;
 
 protected:
+	UFUNCTION()
 	void ToMainLevel();
 	virtual void NativeConstruct() override;
 public:

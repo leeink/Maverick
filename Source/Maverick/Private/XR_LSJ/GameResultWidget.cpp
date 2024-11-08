@@ -11,10 +11,11 @@
 
 void UGameResultWidget::ToMainLevel()
 {
-	
 	FString Option = TEXT("?game=/Game/XR_LSJ/Maps/LSJ_BP_OperatorGameModeBase.LSJ_BP_OperatorGameModeBase_C");
 	FString LevelPath = L"/Game/XR_LSJ/Maps/MainMenu.MainMenu";
 	UGameplayStatics::OpenLevel(GetWorld(),*LevelPath,true,Option);
+
+	//RemoveFromParent();
 }
 
 void UGameResultWidget::NativeConstruct()
