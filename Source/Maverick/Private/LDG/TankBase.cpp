@@ -9,7 +9,6 @@
 #include "Components/DecalComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
-#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/TankAIController.h"
@@ -56,6 +55,7 @@ void ATankBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	ArmyWidgetBilboard();
+	OnRotate(Cast<ATankAIController>(UAIBlueprintHelperLibrary::GetAIController(this)) -> GetRotationAngle());
 }
 
 void ATankBase::Selected()

@@ -55,7 +55,7 @@ public:
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand();
-	float UpdateTurret();
+	float GetRotationAngle();
 	
 	void StartDetectionTimer();
 	void EnemyDetection();

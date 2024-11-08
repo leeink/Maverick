@@ -86,7 +86,7 @@ void AOperatorPawn::UnPossessed()
 void AOperatorPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
 	{
 		if(bIsLeftMouseClick)
@@ -138,6 +138,11 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
 		EnhancedInputComponent->BindAction(IA_AttackReady , ETriggerEvent::Started , this , &AOperatorPawn::OnAttackReady);
+		EnhancedInputComponent->BindAction(IA_Ctrl , ETriggerEvent::Triggered , this , &AOperatorPawn::OnCtrlTriggered);
+		EnhancedInputComponent->BindAction(IA_Ctrl , ETriggerEvent::Completed , this , &AOperatorPawn::OnCtrlReleased);
+		EnhancedInputComponent->BindAction(IA_ArmySlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot1);
+		EnhancedInputComponent->BindAction(IA_ArmySlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot2);
+		EnhancedInputComponent->BindAction(IA_ArmySlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot3);
 	}
 }
 
@@ -286,4 +291,209 @@ void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 void AOperatorPawn::OnAttackReady(const FInputActionValue& Value)
 {
 	bAttackReady = true;
+}
+
+void AOperatorPawn::OnCtrlTriggered(const FInputActionValue& Value)
+{
+	bCtrlPressed = true;
+}
+
+void AOperatorPawn::OnCtrlReleased(const FInputActionValue& Value)
+{
+	bCtrlPressed = false;
+}
+
+
+void AOperatorPawn::OnSelectSlot1(const FInputActionValue& Value)
+{
+	if(bCtrlPressed)
+	{
+		if(SelectedUnits.Num() > 0)
+		{
+			ArmySlot1.Reset();
+		}
+		for(auto* Unit: SelectedUnits)
+		{
+			if(Unit != nullptr)
+			{
+				ArmySlot1.Add(Unit);
+			}
+		}
+		for(auto* Tank: SelectedTanks)
+		{
+			if(Tank != nullptr)
+			{
+				ArmySlot1.Add(Tank);
+			}
+		}
+	}
+	else
+	{
+		if(ArmySlot1.Num() > 0)
+		{
+			for(auto* Unit: SelectedUnits)
+			{
+				if(Unit != nullptr)
+				{
+					Unit -> Deselected();
+				}
+			}
+			for(auto* Tank: SelectedTanks)
+			{
+				if(Tank != nullptr)
+				{
+					Tank -> Deselected();
+				}
+			}
+			SelectedUnits.Reset();
+			SelectedTanks.Reset();
+		
+			for(auto* Unit: ArmySlot1)
+			{
+				if(Unit != nullptr)
+				{
+					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					{
+						SelectedUnits.Add(Soldier);
+						Soldier -> Selected();
+					}
+					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+					{
+						SelectedTanks.Add(Tank);
+						Tank -> Selected();
+					}
+				}
+			}
+		}
+	}
+}
+
+void AOperatorPawn::OnSelectSlot2(const FInputActionValue& Value)
+{
+	// Ctrl Pressed
+	if(bCtrlPressed)
+	{
+		// 
+		if(SelectedUnits.Num() > 0)
+		{
+			ArmySlot2.Reset();
+		}
+		for(auto* Unit: SelectedUnits)
+		{
+			if(Unit != nullptr)
+			{
+				ArmySlot2.Add(Unit);
+			}
+		}
+		for(auto* Tank: SelectedTanks)
+		{
+			if(Tank != nullptr)
+			{
+				ArmySlot2.Add(Tank);
+			}
+		}
+	}
+	else
+	{
+		if(ArmySlot2.Num() > 0)
+		{
+			for(auto* Unit: SelectedUnits)
+			{
+				if(Unit != nullptr)
+				{
+					Unit -> Deselected();
+				}
+			}
+			for(auto* Tank: SelectedTanks)
+			{
+				if(Tank != nullptr)
+				{
+					Tank -> Deselected();
+				}
+			}
+			SelectedUnits.Reset();
+			SelectedTanks.Reset();
+		
+			for(auto* Unit: ArmySlot2)
+			{
+				if(Unit != nullptr)
+				{
+					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					{
+						SelectedUnits.Add(Soldier);
+						Soldier -> Selected();
+					}
+					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+					{
+						SelectedTanks.Add(Tank);
+						Tank -> Selected();
+					}
+				}
+			}
+		}
+	}
+}
+
+void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
+{
+	if(bCtrlPressed)
+	{
+		if(SelectedUnits.Num() > 0)
+		{
+			ArmySlot3.Reset();
+		}
+		for(auto* Unit: SelectedUnits)
+		{
+			if(Unit != nullptr)
+			{
+				ArmySlot3.Add(Unit);
+			}
+		}
+		for(auto* Tank: SelectedTanks)
+		{
+			if(Tank != nullptr)
+			{
+				ArmySlot3.Add(Tank);
+			}
+		}
+	}
+	else
+	{
+		if(ArmySlot3.Num() > 0)
+		{
+			for(auto* Unit: SelectedUnits)
+			{
+				if(Unit != nullptr)
+				{
+					Unit -> Deselected();
+				}
+			}
+			for(auto* Tank: SelectedTanks)
+			{
+				if(Tank != nullptr)
+				{
+					Tank -> Deselected();
+				}
+			}
+			SelectedUnits.Reset();
+			SelectedTanks.Reset();
+		
+			for(auto* Unit: ArmySlot3)
+			{
+				if(Unit != nullptr)
+				{
+					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					{
+						SelectedUnits.Add(Soldier);
+						Soldier -> Selected();
+					}
+					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+					{
+						SelectedTanks.Add(Tank);
+						Tank -> Selected();
+					}
+				}
+			}
+		}
+	}
 }
