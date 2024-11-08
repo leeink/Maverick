@@ -40,9 +40,10 @@ ATankBase::ATankBase()
 	MiniMapWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniMapWidget"));
 	MiniMapWidget -> SetupAttachment(RootComponent);
 	MiniMapWidget -> SetWidgetSpace(EWidgetSpace::World);
-	MiniMapWidget -> SetRelativeLocation(FVector(0.f,0.f,2000.f));
+	MiniMapWidget -> SetRelativeLocation(FVector(0.f,0.f,10000.f));
 	MiniMapWidget -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 	MiniMapWidget -> SetRelativeScale3D(FVector(5.f));
+	MiniMapWidget -> CastShadow = false;
 	
 	GetMesh() -> SetReceivesDecals(false);
 
