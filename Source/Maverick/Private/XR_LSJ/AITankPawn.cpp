@@ -59,7 +59,6 @@ AAITankPawn::AAITankPawn()
 	MinimapHpWidgetSpringArm->bInheritRoll=false;
 
 	MinimapHpWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("MinimapHpWidgetComp"));
-    MinimapHpWidgetComp->SetupAttachment(MinimapHpWidgetSpringArm);
     MinimapHpWidgetComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     MinimapHpWidgetComp->SetWidgetSpace(EWidgetSpace::World);
     MinimapHpWidgetComp->SetDrawSize(FVector2D(100,100));
@@ -68,6 +67,7 @@ AAITankPawn::AAITankPawn()
 	MinimapHpWidgetComp->SetRelativeScale3D(FVector(1.000000,13.000000,13.000000));
 	MinimapHpWidgetComp->bVisibleInSceneCaptureOnly=true;
 	MinimapHpWidgetComp->SetCastShadow(false);
+	MinimapHpWidgetComp->SetupAttachment(MinimapHpWidgetSpringArm);
 
 	AIControllerClass = AAITankController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
