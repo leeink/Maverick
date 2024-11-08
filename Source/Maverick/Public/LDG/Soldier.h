@@ -41,6 +41,18 @@ class MAVERICK_API ASoldier : public ACharacter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ArmyWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* MiniMapWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* HealthWidget;
+
+	UPROPERTY()
+	class UArmyWidgetBase* ArmyWidgetInstance;
+
+	UPROPERTY()
+	class USoldierHealthWidget* SoldierHealthWidgetInstance;
+
 public:
 	// Sets default values for this character's properties
 	ASoldier();
@@ -60,7 +72,9 @@ public:
 	void ArmyWidgetBilboard();
 
 	FORCEINLINE bool IsSelected() const { return bSelected; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
+	FORCEINLINE UArmyWidgetBase* GetArmyWidgetInstance() const { return ArmyWidgetInstance; }
 	FORCEINLINE UFlockingComponent* GetFlockingComponent() const { return FlockingComponent; }
 };

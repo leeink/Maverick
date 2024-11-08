@@ -5,7 +5,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "LDG/Soldier.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "LDG/TankBase.h"
 
 void ATankAIController::OnPossess(APawn* InPawn)
@@ -13,7 +13,6 @@ void ATankAIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	PossessedPawn = Cast<ATankBase>(InPawn);
-	//RifleAnimInstance = Cast<URifleSoliderAnimInstance>(PossessedPawn -> GetMesh() -> GetAnimInstance());
 	RunBehaviorTree(BehaviourTree);
 	StartDetectionTimer();
 }
@@ -21,8 +20,6 @@ void ATankAIController::OnPossess(APawn* InPawn)
 void ATankAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	PossessedPawn -> TurretRotation(UpdateTurret());
 }
 
 void ATankAIController::SetState(ETankState NewState)
@@ -74,24 +71,36 @@ void ATankAIController::AttackCommand()
 		GetPawn(),
 		GetInstigator() -> GetController()
 		);
-		GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Attack"));
+		
+		if(PossessedPawn -> GetShotEffect() != nullptr)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PossessedPawn -> GetShotEffect(), PossessedPawn -> GetMesh() -> GetSocketLocation(FName(TEXT("gun_1_jntSocket"))), FRotator::ZeroRotator, FVector(3.f));
+		}
+		if(PossessedPawn -> GetExplosionEffect() != nullptr)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PossessedPawn -> GetExplosionEffect(), Target -> GetActorLocation(), FRotator::ZeroRotator, FVector(2.f));
+		}
 	}
 }
 
-float ATankAIController::UpdateTurret()
+float ATankAIController::GetRotationAngle()
 {
-	AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
+	AActor * Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
 	if(Target != nullptr)
 	{
-		FVector CurrentLocation = PossessedPawn -> GetActorLocation();
-		FVector DirectionToTarget = Target -> GetActorLocation() - PossessedPawn -> GetActorLocation().GetSafeNormal();
+		FVector ForwardVector = PossessedPawn -> GetActorForwardVector();
+		FVector TargetLocation = Target -> GetActorLocation();
+		FVector TargetDir = UKismetMathLibrary::FindLookAtRotation(PossessedPawn -> GetActorLocation(), TargetLocation).Vector();
 
-		float AngleBetween = FMath::Acos(FVector::DotProduct(PossessedPawn -> GetActorForwardVector(), DirectionToTarget));
-		float AngleInDegrees = FMath::RadiansToDegrees(AngleBetween);
-		float RotationSpeed = 90.f;
-	
-		return FMath::Min(RotationSpeed*GetWorld() -> GetDeltaSeconds(), AngleInDegrees);
+		FVector Cross = FVector::CrossProduct(ForwardVector, TargetDir.GetSafeNormal());
+		float Dot = FVector::DotProduct(ForwardVector, TargetDir.GetSafeNormal());
+
+		float AngleRadians = FMath::Acos(FMath::Clamp(Dot, -1.f, 1.f));
+
+		float sign = FMath::Sign(Cross.Z);
+		return FMath::RadiansToDegrees(AngleRadians) * sign;
 	}
+
 	return 0.f;
 }
 

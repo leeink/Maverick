@@ -67,6 +67,18 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_AttackReady;
 
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_Ctrl;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_ArmySlot1;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_ArmySlot2;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_ArmySlot3;
+
 	// Spectator Pawn Queue
 	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
 
@@ -110,6 +122,17 @@ class MAVERICK_API AOperatorPawn : public APawn
 
 	UPROPERTY()
 	TArray<ATankBase*> SelectedTanks;
+
+	UPROPERTY()
+	TArray<AActor*> ArmySlot1;
+
+	UPROPERTY()
+	TArray<AActor*> ArmySlot2;
+
+	UPROPERTY()
+	TArray<AActor*> ArmySlot3;
+
+	bool bCtrlPressed;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -131,6 +154,11 @@ protected:
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
 	void OnAttackReady(const FInputActionValue& Value);
+	void OnCtrlTriggered(const FInputActionValue& Value);
+	void OnCtrlReleased(const FInputActionValue& Value);
+	void OnSelectSlot1(const FInputActionValue& Value);
+	void OnSelectSlot2(const FInputActionValue& Value);
+	void OnSelectSlot3(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
@@ -141,4 +169,7 @@ public:
 
 	FORCEINLINE TArray<ASoldier*>& GetSelectedUnits() { return SelectedUnits; }
 	FORCEINLINE TArray<ATankBase*>& GetSelectedTanks() { return SelectedTanks; }
+	FORCEINLINE TArray<AActor*>& GetArmySlot1() { return ArmySlot1; }
+	FORCEINLINE TArray<AActor*>& GetArmySlot2() { return ArmySlot2; }
+	FORCEINLINE TArray<AActor*>& GetArmySlot3() { return ArmySlot3; }
 };
