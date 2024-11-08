@@ -12,6 +12,9 @@ class UBoxComponent;
 /**
  * 
  */
+
+DECLARE_DELEGATE_OneParam(FDel_SoldierUnitDie, int32);
+
 UCLASS()
 class MAVERICK_API ATankBase : public APawn
 {
@@ -53,6 +56,9 @@ class MAVERICK_API ATankBase : public APawn
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ArmyWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* MiniMapWidget;
+
 	UPROPERTY()
 	class UArmyWidgetBase* ArmyWidgetInstance;
 
@@ -61,6 +67,12 @@ class MAVERICK_API ATankBase : public APawn
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* DestroyEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DamagedMesh, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AActor> DamagedMesh;
 	
 public:
 	ATankBase();
@@ -73,6 +85,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	//Death Count Delegate
+	FDel_SoldierUnitDie Del_PlayerTankUnitDie;
 	
 	void Selected();
 	void Deselected();
