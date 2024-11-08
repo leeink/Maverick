@@ -103,9 +103,9 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			//con -> GetRifleAnimInstance() -> PlayDeathMontage();
 			GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			//GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if(FDel_SoldierUnitDie.IsBound())
+			if(Del_PlayerTankUnitDie.IsBound())
 			{
-				FDel_SoldierUnitDie.Execute(this);
+				Del_PlayerTankUnitDie.Execute();
 			}
 
 			GetWorld() -> SpawnActor<AActor>(DamagedMesh, GetActorLocation(), GetActorRotation());
