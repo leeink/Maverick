@@ -8,6 +8,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "XR_LSJ/AITankPawn.h"
 #include "XR_LSJ/GameResultWidget.h"
+#include "LDG/Soldier.h"
+#include "UserControlUI.h"
+#include "LDG/TankBase.h"
 
 // Sets default values
 AEnemyManager::AEnemyManager()
@@ -28,7 +31,28 @@ void AEnemyManager::DieSoldier()
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
+void AEnemyManager::DiePlayerSoldier()
+{
+	PlayerSoldierCount--;
+	UserControlUI->SetSoldierCount(PlayerSoldierCount);
+	UE_LOG(LogTemp,Error,TEXT("DiePlayerSoldier"));
+	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
+	{
+		FTimerHandle ShowResultHandle;
+		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+	}
+}
+void AEnemyManager::DiePlayerTank()
+{
+	PlayerTankCount--;
+	UserControlUI->SetTankCount(PlayerTankCount);
 
+	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
+	{
+		FTimerHandle ShowResultHandle;
+		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+	}
+}
 void AEnemyManager::ShowResult()
 {
 	UGameplayStatics::SetGamePaused(GetWorld(),true);
@@ -37,8 +61,10 @@ void AEnemyManager::ShowResult()
 	{
 		GameResultWidget = Cast<UGameResultWidget>(CreateWidget(GetWorld(),GameResultClass));
 		GameResultWidget->AddBasicSlot();
-		FString NickName = "AI";
-		GameResultWidget->AddNorthKoreaData(NickName, 0, 0, 0, 1);
+		FString NickNameAI = "AI";
+		FString NickNamePlayer = "Player";
+		GameResultWidget->AddNorthKoreaData(NickNameAI, MaxPlayerSoldierCount-PlayerSoldierCount, MaxSoldierCount-SoldierCount, MaxPlayerTankCount-PlayerTankCount, MaxTankCount-TankCount);
+		GameResultWidget->AddSouthKoreaData(NickNamePlayer, MaxSoldierCount-SoldierCount, MaxPlayerSoldierCount-PlayerSoldierCount, MaxTankCount-TankCount, MaxPlayerTankCount-PlayerTankCount);
 		FString Time = "30:00";
 		GameResultWidget->SetClearTime(Time);
 		GameResultWidget->AddToViewport();
@@ -65,8 +91,6 @@ void AEnemyManager::BeginPlay()
 	{
 		EnemyCountWidget = Cast<UEnemyCount>(CreateWidget(GetWorld(),EnemyCountClass));
 		EnemyCountWidget->AddToViewport();
-		EnemyCountWidget->SetTankCount(2);
-		EnemyCountWidget->SetSoldierCount(5*6);
 	}
 
 	//Àû ½ºÆù
@@ -105,15 +129,47 @@ void AEnemyManager::BeginPlay()
 				TankPawn->FDelTankUnitDie.BindUFunction(this, FName("DieTank"));
 				TankCount++;
 			}
-	
 		}
+		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::PlayerSoldier)
+		{
+			SpawnLocation.Z = 208.0f;
+			FActorSpawnParameters SpawnParams1;
+			if (ASoldier* PlayerSoldier = GetWorld()->SpawnActor<ASoldier>(PlayerSoldierPawnClass, SpawnLocation, SpawnRotation, SpawnParams1))
+			{
+				PlayerSoldier->Del_PlayerSoldierUnitDie.BindUFunction(this,FName("DiePlayerSoldier"));
+				PlayerSoldierCount++;
+			}
 
+		}
+		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::PlayerTank)
+		{
+			SpawnLocation.Z = 350.0f;
+			
+			if (ATankBase* TankPawn = GetWorld()->SpawnActor<ATankBase>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
+			{
+				TankPawn->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
+				PlayerTankCount++;
+			}
+		}
 		PointActor->Destroy();
 	}
+	if (EnemyCountWidget)
+	{
+		EnemyCountWidget->SetSoldierCount(SoldierCount);
+		EnemyCountWidget->SetTankCount(TankCount);
+		MaxSoldierCount=SoldierCount;
+		MaxTankCount=TankCount;
+	}
 
-	EnemyCountWidget->SetSoldierCount(SoldierCount);
-	EnemyCountWidget->SetTankCount(TankCount);
-
+	if (PlayerControllerClass)
+	{
+		UserControlUI = Cast<UUserControlUI>(CreateWidget(GetWorld(),PlayerControllerClass));
+		UserControlUI->SetTankCount(PlayerTankCount);
+		UserControlUI->SetSoldierCount(PlayerSoldierCount);
+		UserControlUI->AddToViewport();
+		MaxPlayerSoldierCount=PlayerSoldierCount;
+		MaxPlayerTankCount=PlayerTankCount;
+	}
 
 	
 }

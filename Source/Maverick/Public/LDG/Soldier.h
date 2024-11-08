@@ -9,7 +9,7 @@
 class UWidgetComponent;
 class UFlockingComponent;
 
-DECLARE_DELEGATE_OneParam(FDel_SoldierUnitDie, int32);
+DECLARE_DELEGATE(FDel_SoldierUnitDie);
 
 UCLASS()
 class MAVERICK_API ASoldier : public ACharacter

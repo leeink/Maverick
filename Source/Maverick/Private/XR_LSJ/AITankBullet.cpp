@@ -82,6 +82,7 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,ExplosiveRange,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
 	if (Hit)
 	{
+		DrawDebugSphere(GetWorld(),Start, ExplosiveRange, 12, FColor::Black, false, 5.0f);
 		for(FHitResult& HitResult :OutHits)
 		{
 			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Player"))
@@ -95,7 +96,8 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, GetOwner()->GetInstigatorController(), GetOwner(),NULL);
 				else
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, nullptr,nullptr ,NULL);
-				//DrawDebugSphere(GetWorld(), HitResult.GetActor()->GetActorLocation(), 10.0f, 12, FColor::Black, false, 5.0f);
+				UE_LOG(LogTemp,Error,TEXT("%s HitResult"),*HitResult.GetComponent()->GetName());
+				
 				
 			}
 		}

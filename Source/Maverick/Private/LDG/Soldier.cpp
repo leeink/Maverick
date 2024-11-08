@@ -112,9 +112,9 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		{
 			con -> Die();
 
-			if(FDel_SoldierUnitDie.IsBound())
+			if(Del_PlayerSoldierUnitDie.IsBound())
 			{
-				FDel_SoldierUnitDie.Execute(this);
+				Del_PlayerSoldierUnitDie.Execute();
 			}
 
 			FTimerHandle DieTimerHandle;

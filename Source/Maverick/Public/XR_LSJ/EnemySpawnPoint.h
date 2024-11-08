@@ -11,6 +11,8 @@ enum class EMOS : uint8
 {
 	Soldier,
 	Tank,
+	PlayerSoldier,
+	PlayerTank,
 };
 
 UCLASS()

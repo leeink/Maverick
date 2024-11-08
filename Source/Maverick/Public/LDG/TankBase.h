@@ -13,7 +13,7 @@ class UBoxComponent;
  * 
  */
 
-DECLARE_DELEGATE_OneParam(FDel_SoldierUnitDie, int32);
+DECLARE_DELEGATE(FDel_TankUnitDie);
 
 UCLASS()
 class MAVERICK_API ATankBase : public APawn
@@ -87,7 +87,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	//Death Count Delegate
-	FDel_SoldierUnitDie Del_PlayerTankUnitDie;
+	FDel_TankUnitDie Del_PlayerTankUnitDie;
 	
 	void Selected();
 	void Deselected();

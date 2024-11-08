@@ -6,11 +6,21 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "XR_LSJ/ResultValueSlotWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/Button.h"
+
+void UGameResultWidget::ToMainLevel()
+{
+	
+	FString Option = TEXT("?game=/Game/XR_LSJ/Maps/LSJ_BP_OperatorGameModeBase.LSJ_BP_OperatorGameModeBase_C");
+	FString LevelPath = L"/Game/XR_LSJ/Maps/MainMenu.MainMenu";
+	UGameplayStatics::OpenLevel(GetWorld(),*LevelPath,true,Option);
+}
 
 void UGameResultWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	Button_Close->OnClicked.AddDynamic(this, &UGameResultWidget::ToMainLevel);
 
 }
 
