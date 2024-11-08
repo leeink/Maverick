@@ -8,6 +8,8 @@
 #include "IAICommand.h"
 #include "SquadManager.generated.h"
 
+DECLARE_DELEGATE(FDel_SoldierUnitDie);
+
 UENUM(BlueprintType)
 enum class EObstructionDirection : uint8
 {
@@ -56,7 +58,18 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	//시작시 이동할 목표 지점
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
+
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* MinimapHpWidgetComp;
+	UPROPERTY(EditDefaultsOnly)
+	class USpringArmComponent* MinimapHpWidgetSpringArm;
 public:
+	//분대원 죽음 알림 델리게이트
+	FDel_SoldierUnitDie FDelSoldierUnitDie;
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
+
 	virtual FVector GetTargetLocation();
 	//체력바 UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")

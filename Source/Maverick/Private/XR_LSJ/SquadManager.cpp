@@ -16,6 +16,8 @@
 #include "Components/WidgetComponent.h"
 #include "LDG/Soldier.h"
 #include "LDG/SoldierAIController.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "HpBarNewIcon.h"
 
 FVector ASquadManager::GetTargetLocation()
 {
@@ -44,6 +46,24 @@ ASquadManager::ASquadManager()
     HpWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
     HpWidgetComp->SetDrawSize(FVector2D(100,100));
     HpWidgetComp->SetRelativeLocation(FVector(0,0.f,400.0f));
+
+    MinimapHpWidgetSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MinimapHpWidgetSpringArm"));
+	MinimapHpWidgetSpringArm->SetupAttachment(BoxComp);
+    MinimapHpWidgetSpringArm->TargetArmLength=0.f;
+	MinimapHpWidgetSpringArm->bInheritYaw=false;
+	MinimapHpWidgetSpringArm->bInheritPitch=false;
+	MinimapHpWidgetSpringArm->bInheritRoll=false;
+
+	MinimapHpWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("MinimapHpWidgetComp"));
+    MinimapHpWidgetComp->SetupAttachment(MinimapHpWidgetSpringArm);
+    MinimapHpWidgetComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MinimapHpWidgetComp->SetWidgetSpace(EWidgetSpace::World);
+    MinimapHpWidgetComp->SetDrawSize(FVector2D(100,100));
+    MinimapHpWidgetComp->SetRelativeLocation(FVector(0,0.f,5000.000000f));
+	MinimapHpWidgetComp->SetRelativeRotation(FRotator(90.000000,-90.000000,0.000000));
+	MinimapHpWidgetComp->SetRelativeScale3D(FVector(1.000000,10.000000,10.000000));
+	MinimapHpWidgetComp->bVisibleInSceneCaptureOnly=true;
+	MinimapHpWidgetComp->SetCastShadow(false);
 
     AIUnitCategory=EAIUnitCategory::SQUAD;
 }
@@ -103,6 +123,17 @@ void ASquadManager::BeginPlay()
         UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
 		if (HpBarUI)
 		    HpBarUI->SetUISquadImage();
+    }
+    //MinimapHpBar
+    if (MinimapHpWidgetComp&& MinimapHpWidgetClass)
+    {
+        MinimapHpWidgetComp->SetWidgetClass(MinimapHpWidgetClass);
+        UHpBarNewIcon* HpBarNewIcon =Cast<UHpBarNewIcon>(MinimapHpWidgetComp->GetUserWidgetObject());
+		if (HpBarNewIcon)
+		{
+			HpBarNewIcon->SetUISquadImage();
+			HpBarNewIcon->SetHpBar(1.0f);
+		} 
     }
         
     SetCurrentSquadCount(MaxSpawnCount);
@@ -665,14 +696,26 @@ void ASquadManager::DamagedSquadUnit(float Damage)
             HpWidgetComp->Deactivate();
         }
     }
+
+    UHpBarNewIcon* HpBarNewIcon =Cast<UHpBarNewIcon>(MinimapHpWidgetComp->GetUserWidgetObject());
+    if (HpBarNewIcon)
+    {
+        HpBarNewIcon->SetHpBar((float)(CurrentSquadHp)/MaxSquadHp);
+
+        if (CurrentSquadHp <= 0)
+        {
+            HpBarNewIcon->SetVisibility(ESlateVisibility::Collapsed);
+            MinimapHpWidgetComp->Deactivate();
+        }
+    }
 }
 
 void ASquadManager::DieSquadUnit(int32 SquadNumber)
 {
     CurrentSquadCount--;
-    		SquadArray[SquadNumber]->FDelTargetDie.Unbind();
-			SquadArray[SquadNumber]->FDelSquadUnitDamaged.Unbind();
-			SquadArray[SquadNumber]->FDelSquadUnitDie.Unbind();
+    SquadArray[SquadNumber]->FDelTargetDie.Unbind();
+	SquadArray[SquadNumber]->FDelSquadUnitDamaged.Unbind();
+	SquadArray[SquadNumber]->FDelSquadUnitDie.Unbind();
     if (CurrentAttachedSquadNumber == SquadNumber)
     {
 		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
@@ -686,6 +729,8 @@ void ASquadManager::DieSquadUnit(int32 SquadNumber)
             }
         }
     }
+    if(FDelSoldierUnitDie.IsBound())
+        FDelSoldierUnitDie.Execute();
  //   FTimerHandle DestroyUnitHandle;
 	//GetWorld()->GetTimerManager().SetTimer(DestroyUnitHandle, [&]()
 	//	{

@@ -21,6 +21,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "LDG/Soldier.h"
 #include "LDG/SoldierAIController.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "HpBarNewIcon.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -49,6 +51,23 @@ AAITankPawn::AAITankPawn()
     HpWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
     HpWidgetComp->SetDrawSize(FVector2D(100,100));
     HpWidgetComp->SetRelativeLocation(FVector(0,0.f,400.0f));
+
+	MinimapHpWidgetSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MinimapHpWidgetSpringArm"));
+	MinimapHpWidgetSpringArm->SetupAttachment(BoxComp);
+	MinimapHpWidgetSpringArm->bInheritYaw=false;
+	MinimapHpWidgetSpringArm->bInheritPitch=false;
+	MinimapHpWidgetSpringArm->bInheritRoll=false;
+
+	MinimapHpWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("MinimapHpWidgetComp"));
+    MinimapHpWidgetComp->SetupAttachment(MinimapHpWidgetSpringArm);
+    MinimapHpWidgetComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MinimapHpWidgetComp->SetWidgetSpace(EWidgetSpace::World);
+    MinimapHpWidgetComp->SetDrawSize(FVector2D(100,100));
+    MinimapHpWidgetComp->SetRelativeLocation(FVector(322.000000f,0.f,5000.000000f));
+	MinimapHpWidgetComp->SetRelativeRotation(FRotator(90.000000,-90.000000,0.000000));
+	MinimapHpWidgetComp->SetRelativeScale3D(FVector(1.000000,13.000000,13.000000));
+	MinimapHpWidgetComp->bVisibleInSceneCaptureOnly=true;
+	MinimapHpWidgetComp->SetCastShadow(false);
 
 	AIControllerClass = AAITankController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -96,6 +115,8 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
+		if(FDelTankUnitDie.IsBound())
+			FDelTankUnitDie.Execute();
 		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
 	default:
@@ -176,6 +197,19 @@ void AAITankPawn::BeginPlay()
         UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
 		if (HpBarUI)
 		    HpBarUI->SetUITankImage();
+    }
+	//MinimapHpBar
+    if (MinimapHpWidgetComp&& MinimapHpWidgetClass)
+    {
+        MinimapHpWidgetComp->SetWidgetClass(MinimapHpWidgetClass);
+        UHpBarNewIcon* HpBarNewIcon =Cast<UHpBarNewIcon>(MinimapHpWidgetComp->GetUserWidgetObject());
+		if (HpBarNewIcon)
+		{
+			HpBarNewIcon->SetUITankImage();
+			HpBarNewIcon->SetHpBar(1.0f);
+		}
+		    
+
     }
 
 	if(false==StartGoalLocation.Equals(FVector::ZeroVector))
@@ -543,6 +577,17 @@ float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
 			HpWidgetComp->Deactivate();
 			DieAnimation(true);
+		}
+		UHpBarNewIcon* HpBarNewIcon =Cast<UHpBarNewIcon>(MinimapHpWidgetComp->GetUserWidgetObject());
+		if(nullptr==HpBarNewIcon)
+			return Damage;
+		HpBarNewIcon->SetHpBar((float)(CurrentTankHp) / MaxTankHp);
+		if (CurrentTankHp <= 0)
+		{
+			//SetCommandState(EAIUnitCommandState::DIE);
+			HpBarNewIcon->SetVisibility(ESlateVisibility::Collapsed);
+			MinimapHpWidgetComp->Deactivate();
+			//DieAnimation(true);
 		}
 	}
 	return Damage;

@@ -7,6 +7,9 @@
 #include "IAICommand.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AITankPawn.generated.h"
+
+DECLARE_DELEGATE(FDel_TankUnitDie);
+
 USTRUCT(Atomic,BlueprintType)
 struct FTankData
 {
@@ -57,6 +60,8 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
 public:
+	//탱크 죽음 알림 델리게이트
+	FDel_TankUnitDie FDelTankUnitDie;
 	// Sets default values for this pawn's properties
 	AAITankPawn();
 	UFUNCTION(BlueprintImplementableEvent, Category="Custom")
@@ -100,13 +105,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* HpWidgetComp;
-
+	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	class UWidgetComponent* MinimapHpWidgetComp;
+	UPROPERTY(EditDefaultsOnly)
+	class USpringArmComponent* MinimapHpWidgetSpringArm;
 public:
 	virtual FVector GetTargetLocation();
 	void FindCloseTargetPlayerUnit();
 	//체력바 UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
+	//체력바 UI Class
+	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
+	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
