@@ -112,6 +112,11 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		{
 			con -> Die();
 
+			if(FDel_SoldierUnitDie.IsBound())
+			{
+				FDel_SoldierUnitDie.Execute(this);
+			}
+
 			FTimerHandle DieTimerHandle;
 			GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
 			{
