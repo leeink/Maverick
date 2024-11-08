@@ -9,6 +9,8 @@
 class UWidgetComponent;
 class UFlockingComponent;
 
+DECLARE_DELEGATE_OneParam(FDel_SoldierUnitDie, int32);
+
 UCLASS()
 class MAVERICK_API ASoldier : public ACharacter
 {
@@ -65,6 +67,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
+	//Death Count Delegate
+	FDel_SoldierUnitDie Del_PlayerSoldierUnitDie;
 	
 	void Selected();
 	void Deselected();
