@@ -9,6 +9,7 @@
 #include "Components/DecalComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/TankAIController.h"
@@ -35,6 +36,13 @@ ATankBase::ATankBase()
 	ArmyWidget -> SetDrawSize(FVector2D(200.f, 200.f));
 	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,500.f));
 	ArmyWidget -> SetVisibility(true);
+
+	MiniMapWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniMapWidget"));
+	MiniMapWidget -> SetupAttachment(RootComponent);
+	MiniMapWidget -> SetWidgetSpace(EWidgetSpace::World);
+	MiniMapWidget -> SetRelativeLocation(FVector(0.f,0.f,2000.f));
+	MiniMapWidget -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
+	MiniMapWidget -> SetRelativeScale3D(FVector(5.f));
 	
 	GetMesh() -> SetReceivesDecals(false);
 
@@ -56,6 +64,7 @@ void ATankBase::Tick(float DeltaTime)
 
 	ArmyWidgetBilboard();
 	OnRotate(Cast<ATankAIController>(UAIBlueprintHelperLibrary::GetAIController(this)) -> GetRotationAngle());
+	//UGameplayStatics::ApplyDamage(this, 1000.f, GetInstigatorController(), this, nullptr);
 }
 
 void ATankBase::Selected()
@@ -95,11 +104,12 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			GetMesh() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			//GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-			FTimerHandle DieTimerHandle;
-			GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
+			GetWorld() -> SpawnActor<AActor>(DamagedMesh, GetActorLocation(), GetActorRotation());
+			if(DestroyEffect != nullptr)
 			{
-				Destroy();
-			}, 3.0f, false, 3.0f);
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyEffect, GetActorLocation());
+			}
+			Destroy();
 		}
 	}
 	

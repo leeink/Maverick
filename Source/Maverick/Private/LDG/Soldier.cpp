@@ -27,15 +27,20 @@ ASoldier::ASoldier()
 
 	ArmyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ArmyWidget"));
 	ArmyWidget -> SetupAttachment(RootComponent);
-
-	HealthWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidget"));
-	HealthWidget -> SetupAttachment(RootComponent);
-
 	ArmyWidget -> SetWidgetSpace(EWidgetSpace::Screen);
 	ArmyWidget -> SetDrawSize(FVector2D(100.f, 100.f));
 	ArmyWidget -> SetRelativeLocation(FVector(0.f,0.f,155.f));
 	ArmyWidget -> SetVisibility(false);
 
+	MiniMapWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MiniMapWidget"));
+	MiniMapWidget -> SetupAttachment(RootComponent);
+	MiniMapWidget -> SetWidgetSpace(EWidgetSpace::World);
+	MiniMapWidget -> SetRelativeLocation(FVector(0.f,0.f,2000.f));
+	MiniMapWidget -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
+	MiniMapWidget -> SetRelativeScale3D(FVector(5.f));
+	
+	HealthWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidget"));
+	HealthWidget -> SetupAttachment(RootComponent);
 	HealthWidget -> SetWidgetSpace(EWidgetSpace::Screen);
 	HealthWidget -> SetDrawSize(FVector2D(160.f, 160.f));
 	HealthWidget -> SetRelativeLocation(FVector(0.f,0.f,155.f));

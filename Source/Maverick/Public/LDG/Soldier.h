@@ -42,6 +42,9 @@ class MAVERICK_API ASoldier : public ACharacter
 	UWidgetComponent* ArmyWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* MiniMapWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* HealthWidget;
 
 	UPROPERTY()

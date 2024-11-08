@@ -53,6 +53,9 @@ class MAVERICK_API ATankBase : public APawn
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ArmyWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* MiniMapWidget;
+
 	UPROPERTY()
 	class UArmyWidgetBase* ArmyWidgetInstance;
 
@@ -61,6 +64,12 @@ class MAVERICK_API ATankBase : public APawn
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* DestroyEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DamagedMesh, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AActor> DamagedMesh;
 	
 public:
 	ATankBase();
