@@ -108,4 +108,5 @@ public:
 	void SetAttackCurrentTime(float val) { AttackCurrentTime = val; }
 	bool GetIsAttacking() const { return IsAttacking; }
 	void SetIsAttacking(bool val, AActor* TargetActor);
+	FVector GetLastDestination();
 };

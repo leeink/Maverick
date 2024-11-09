@@ -85,6 +85,7 @@ public:
 
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
+	void SetMinimapUIZOrder(int32 Value);
 	TArray<class AAISquad*> GetSquadArray() const { return SquadArray; }
 	void SetSquadArray(TArray<class AAISquad*> val) { SquadArray = val; }
 	int32 GetCurrentSquadCount() const { return CurrentSquadCount; }
@@ -107,6 +108,7 @@ protected:
 	void AttackTargetSquad(AActor* TargetActor);
 	//목표지점에서 충돌된 Actor 의 경계값 위치 가져오기 
 	TArray<FVector> GetSurfacePointsOnRotatedBoundingBox(AActor* TargetActor, float Interval /*= 50.0f*/);
+	TArray<FVector> GetSurfacePointsOnRotatedBoxComp(AActor* TargetActor, float Interval /*= 50.0f*/);
 	//TargetLocation로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
 	void FindPath(const FVector& TargetLocation);
 	//엄폐물로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
@@ -121,12 +123,16 @@ protected:
 	//체력바 표시하는 분대원이 죽었다면 살아있는 다른 분대원에게 부착
 	UFUNCTION()
 	void DieSquadUnit(int32 SquadNumber);
+	//분대원이 이동 불가능한 위치를 받았다면 분대장 주위의 유효한 위치를 준다.
+	UFUNCTION()
+	void MoveToValidDestination(int32 SquadNumber);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	//엄폐할 위치가 분대원 수보다 부족한 경우 위치를 생성
 	void MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum);
+
 	//엄폐할 위치 생성
 	void GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints);
 	

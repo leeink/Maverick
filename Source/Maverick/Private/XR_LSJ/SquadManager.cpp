@@ -18,6 +18,7 @@
 #include "LDG/SoldierAIController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "HpBarNewIcon.h"
+#include "AI/Navigation/NavigationTypes.h"
 
 FVector ASquadManager::GetTargetLocation()
 {
@@ -76,7 +77,12 @@ EAIUnitCommandState ASquadManager::GetCurrentCommandState()
 void ASquadManager::SetCommandState(EAIUnitCommandState Command)
 {
 }
-
+void ASquadManager::SetMinimapUIZOrder(int32 Value)
+{
+    FVector Location = MinimapHpWidgetComp->GetRelativeLocation();
+    Location.Z+=Value;
+    MinimapHpWidgetComp->SetRelativeLocation(Location);
+}
 // Called when the game starts or when spawned
 void ASquadManager::BeginPlay()
 {
@@ -94,6 +100,7 @@ void ASquadManager::BeginPlay()
         SquadArray[SpawnCount]->FDelTargetDie.BindUFunction(this, FName("FindCloseTargetPlayerUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDamaged.BindUFunction(this, FName("DamagedSquadUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDie.BindUFunction(this, FName("DieSquadUnit"));
+        SquadArray[SpawnCount]->FDelFailToDestination.BindUFunction(this, FName("MoveToValidDestination"));
         MaxSquadHp += SquadManagerAbility.Hp;
         CurrentSquadHp = MaxSquadHp;
 	}
@@ -111,7 +118,7 @@ void ASquadManager::BeginPlay()
 		FTimerHandle DestroyUnitHandle;
 		GetWorld()->GetTimerManager().SetTimer(DestroyUnitHandle, [&]()
 			{
-				 CheckLocationForObject(StartGoalLocation);
+				CheckLocationForObject(StartGoalLocation);
 			}, 2.0f, false);
     }
 		
@@ -585,7 +592,7 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
     }
     else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-         //UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+         UE_LOG(LogTemp, Warning, TEXT("No Path"));
     }
 }
 
@@ -668,7 +675,7 @@ void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
      // 결과 처리
     if (bHit&&nullptr!=HitResult.GetActor()) //목표지점에 오브젝트 존재 시 
     {
-        ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
+        ObstructionPoints = GetSurfacePointsOnRotatedBoxComp(HitResult.GetActor(), 100.0f);
         //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
@@ -784,6 +791,7 @@ void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& O
 			FVector DirectionPosition = BaseForwardVector * SquadPositionArray[SquadCount].X + BaseRightVector * SquadPositionArray[SquadCount].Y;
 			DirectionPosition.Z = 0;
 			OutPoints[SquadCount]=(OutPoints[0]+DirectionPosition);// += SquadPositionArray[SquadCount]);
+
             //UE_LOG(LogTemp, Log, TEXT("NewVertexArray(%s)"), *OutPoints[SquadCount].ToString());
 		    //DrawDebugSphere(TargetActor->GetWorld(), OutPoints[SquadCount], 10.0f, 12, FColor::Blue, false, 5.0f);
         }
@@ -793,12 +801,48 @@ void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& O
         
     }
 }
+void ASquadManager::MoveToValidDestination(int32 SquadNumber)
+{
+    UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+    if (!NavSystem) return;
+
+    FNavLocation RandomLocation;
+    float MinDistance = 100.0f;
+    float MaxRadius = 300.0f;
+    // 반복적으로 찾기
+    for (int32 i = 0; i < 10; ++i) // 최대 10번 시도
+    {
+        // MaxRadius 내에서 내비게이션 가능한 임의의 위치 찾기
+        if (NavSystem->GetRandomReachablePointInRadius(SquadArray[CurrentAttachedSquadNumber]->FSMComp->GetLastDestination(), 300.0f, RandomLocation))
+        {
+            
+            RandomLocation.Location.Z = 190.0f;
+            // 찾은 위치가 MinDistance 이상 떨어져 있는지 확인
+            if (FVector::Dist(GetActorLocation(), RandomLocation.Location) >= MinDistance || i==9)
+            {
+                UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),GetActorLocation(),RandomLocation.Location);
+                if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
+                {
+                    TArray<FVector> ArrayLocation;
+                    ArrayLocation = NavPath->PathPoints;
+
+					if (SquadArray[SquadNumber] == nullptr)
+						continue;
+					if (SquadArray[SquadNumber]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+						continue;
+					SquadArray[SquadNumber]->FSMComp->MovePathAsync(ArrayLocation);
+                }
+                return;
+            }
+        }
+    }
+}
 // 두 점 P1, P2 사이를 직선 방정식을 이용해 일정 간격으로 점을 생성
 void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints)
 {
     float Distance = FVector::Dist(P1, P2);
     int32 NumPoints = FMath::CeilToInt(Distance / Interval);  // 50cm 간격으로 몇 개의 점을 생성할지 계산
-
+    UE_LOG(LogTemp,Error,TEXT("%d"),NumPoints);
     for (int32 i = 1; i <= NumPoints-1; ++i)
     {
         float t = i / static_cast<float>(NumPoints);  // t는 0에서 1 사이를 일정하게 증가
@@ -958,5 +1002,94 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
   //  UE_LOG(LogTemp, Log, TEXT("Index(%d)"), NewVertexArray.Num());
     
 
+    return NewVertexArray;
+}
+
+// 일정 간격(50cm)으로 바운딩 박스 주위를 둘러싼 점들을 SquadManager와의 거리 기준으로 정렬
+TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetActor, float Interval /*= 50.0f*/)
+{
+    TArray<FVector> VertexArray;
+    TArray<FVector> NewVertexArray;
+    if (!TargetActor)
+    {
+        return NewVertexArray;  // 액터가 없으면 빈 배열 반환
+    }
+    
+    UBoxComponent* BoxComponent = TargetActor->FindComponentByClass<UBoxComponent>();
+	if (BoxComponent)
+	{
+        // 8개의 극단적 꼭지점을 계산할 변수들
+        FVector MinXY, MaxX, MaxY, MaxXY;
+		MinXY = FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0);
+        MaxX =  FVector(BoxComponent->GetScaledBoxExtent().X,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0);
+		MaxY = FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,BoxComponent->GetScaledBoxExtent().Y,0);
+        MaxXY = FVector(BoxComponent->GetScaledBoxExtent().X,BoxComponent->GetScaledBoxExtent().Y,0);
+
+        // 월드 변환 (위치, 회전, 스케일 적용)
+        FTransform ActorTransform = TargetActor->GetActorTransform();
+
+		FVector FrontLeftVertex = ActorTransform.TransformPosition(MinXY); // 좌상단 왼쪽
+		FVector FrontRightVertex = ActorTransform.TransformPosition(MaxX); // 우상단 오른쪽
+		FVector BackLeftVertex = ActorTransform.TransformPosition(MaxY); // 좌하단 왼쪽
+		FVector BackRightVertex = ActorTransform.TransformPosition(MaxXY); // 우하단 오른쪽
+         
+         //좌우상하 꼭지점
+		 VertexArray.Add(FrontLeftVertex);// 좌상단 왼쪽
+         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+		 VertexArray.Add(FrontRightVertex);  // 우상단 오른쪽
+         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+		 VertexArray.Add(BackLeftVertex); // 좌하단 왼쪽
+         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+		 VertexArray.Add(BackRightVertex); // 우하단 오른쪽
+         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+
+         //좌우상하 방향
+         VertexArray.Add(ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,0,0))); // 좌
+         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X,0,0))); // 우
+		 UE_LOG(LogTemp,Error,TEXT("right %s"),*VertexArray.Last().ToString());
+         VertexArray.Add(ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0))); // 상
+		 UE_LOG(LogTemp,Error,TEXT("up %s"),*VertexArray.Last().ToString());
+         VertexArray.Add(ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y,0))); // 하
+         UE_LOG(LogTemp,Error,TEXT("down %s"),*VertexArray.Last().ToString());
+         //TargetActor와 SquadManager액터의 가까운 방향에 해당하는 위치를 구한다.
+         EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
+         float DirectionVertexDistance = MaxMoveLength;
+
+         for (int DirectionVertexCount = 4; DirectionVertexCount < VertexArray.Num(); DirectionVertexCount++)
+         {
+             float ActorToVertexDistance = FVector::Distance(VertexArray[DirectionVertexCount], GetActorLocation());
+             if (DirectionVertexDistance > ActorToVertexDistance)
+             {
+                DirectionVertexDistance = ActorToVertexDistance;
+                ObstructionDirection = (EObstructionDirection)(DirectionVertexCount-4);
+             }
+         }
+         switch (ObstructionDirection)
+         {
+         case EObstructionDirection::Left: //VertexArray[4] : 좌측 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
+            UE_LOG(LogTemp,Error,TEXT("left"));
+             break;
+         case EObstructionDirection::Right: //VertexArray[5] : 우측 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
+            UE_LOG(LogTemp,Error,TEXT("Right"));
+             break;
+         case EObstructionDirection::Down: //VertexArray[6] : 상단 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
+             UE_LOG(LogTemp,Error,TEXT("Down"));
+             break;
+         case EObstructionDirection::Up: //VertexArray[7] : 하단 방향
+            GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
+             UE_LOG(LogTemp,Error,TEXT("Up"));
+             break;
+         default:
+             break;
+         }
+             //엄폐 위치가 분대원 수보다 적다면 분대원 위치를 지정해준다.
+		 if (NewVertexArray.Num() < GetCurrentSquadCount())
+			 MakeObstructionPoint(TargetActor, NewVertexArray, ObstructionDirection);
+        
+    }
     return NewVertexArray;
 }

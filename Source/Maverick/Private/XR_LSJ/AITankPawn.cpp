@@ -77,7 +77,12 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 {
 	return CurrentCommandState;
 }
-
+void AAITankPawn::SetMinimapUIZOrder(int32 Value)
+{
+    FVector Location = MinimapHpWidgetComp->GetRelativeLocation();
+    Location.Z+=Value;
+    MinimapHpWidgetComp->SetRelativeLocation(Location);
+}
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
 	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)

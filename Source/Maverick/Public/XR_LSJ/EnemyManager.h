@@ -20,6 +20,16 @@ class MAVERICK_API AEnemyManager : public AActor
 	//플레이어 유닛 수와 명령을 표시하는 위젯
 	UPROPERTY()
 	class UUserControlUI* UserControlUI;
+	//적 탱크 모든 부대
+	UPROPERTY()
+	TArray<class AAITankPawn*> EnemyTankAll;
+	UPROPERTY()
+	TArray<class ASquadManager*> EnemySquadAll;
+	UPROPERTY()
+	TArray<class ATankBase*> PlayerTankAll;
+	UPROPERTY()
+	TArray<class ASoldier*> PlayerSquadAll;
+
 	//최대 적 보병의 수
 	int32 MaxSoldierCount;
 	//최대 적 탱크의 수
@@ -39,6 +49,7 @@ class MAVERICK_API AEnemyManager : public AActor
 	int32 PlayerTankCount;
 	//플레이 타임 초
 	float PlayTimeSeconds;
+	bool EndGame;
 public:	
 	// Sets default values for this actor's properties
 	AEnemyManager();

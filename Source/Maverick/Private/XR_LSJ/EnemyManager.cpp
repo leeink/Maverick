@@ -20,33 +20,43 @@ AEnemyManager::AEnemyManager()
 }
 void AEnemyManager::DieSoldier()
 {
+	if(EndGame)
+		return;
 	SoldierCount--;
 	EnemyCountWidget->SetSoldierCount(SoldierCount);
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
 void AEnemyManager::DiePlayerSoldier()
 {
+	if(EndGame)
+		return;
 	PlayerSoldierCount--;
 	UserControlUI->SetSoldierCount(PlayerSoldierCount);
-	UE_LOG(LogTemp,Error,TEXT("DiePlayerSoldier"));
+
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
 void AEnemyManager::DiePlayerTank()
 {
+	if(EndGame)
+		return;
+
 	PlayerTankCount--;
 	UserControlUI->SetTankCount(PlayerTankCount);
 
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
@@ -80,11 +90,14 @@ void AEnemyManager::ShowResult()
 
 void AEnemyManager::DieTank()
 {
+	if(EndGame)
+		return;
 	TankCount--;
 	EnemyCountWidget->SetTankCount(TankCount);
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
@@ -93,7 +106,7 @@ void AEnemyManager::DieTank()
 void AEnemyManager::BeginPlay()
 {
 	Super::BeginPlay();
-
+	EndGame = false;
 	if (EnemyCountClass)
 	{
 		EnemyCountWidget = Cast<UEnemyCount>(CreateWidget(GetWorld(),EnemyCountClass));
@@ -122,7 +135,9 @@ void AEnemyManager::BeginPlay()
 			SpawnLocation.Z = 190.0f;
 			if (ASquadManager* SquadManager = GetWorld()->SpawnActor<ASquadManager>(SquadManagerClass, SpawnLocation, SpawnRotation, SpawnParams))
 			{
-				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));
+				EnemySquadAll.Add(SquadManager);
+				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));		
+				SquadManager->SetMinimapUIZOrder(SoldierCount);
 				SoldierCount+=SquadManager->GetCurrentSquadCount();
 			}
 
@@ -130,10 +145,11 @@ void AEnemyManager::BeginPlay()
 		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::Tank)
 		{
 			SpawnLocation.Z = 350.0f;
-			
 			if (AAITankPawn* TankPawn = GetWorld()->SpawnActor<AAITankPawn>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
 			{
+				EnemyTankAll.Add(TankPawn);
 				TankPawn->FDelTankUnitDie.BindUFunction(this, FName("DieTank"));
+				TankPawn->SetMinimapUIZOrder(SoldierCount+TankCount);
 				TankCount++;
 			}
 		}
@@ -143,6 +159,7 @@ void AEnemyManager::BeginPlay()
 			FActorSpawnParameters SpawnParams1;
 			if (ASoldier* PlayerSoldier = GetWorld()->SpawnActor<ASoldier>(PlayerSoldierPawnClass, SpawnLocation, SpawnRotation, SpawnParams1))
 			{
+				PlayerSquadAll.Add(PlayerSoldier);
 				PlayerSoldier->Del_PlayerSoldierUnitDie.BindUFunction(this,FName("DiePlayerSoldier"));
 				PlayerSoldierCount++;
 			}
@@ -154,6 +171,7 @@ void AEnemyManager::BeginPlay()
 			
 			if (ATankBase* TankPawn = GetWorld()->SpawnActor<ATankBase>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
 			{
+				PlayerTankAll.Add(TankPawn);
 				TankPawn->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
 				PlayerTankCount++;
 			}

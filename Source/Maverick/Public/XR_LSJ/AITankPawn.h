@@ -77,6 +77,7 @@ public:
     void FireFx(bool Active);
 	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
+	void SetMinimapUIZOrder(int32 Value);
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
 	//Bullet
 	UPROPERTY(EditDefaultsOnly)
