@@ -22,6 +22,9 @@ class MAVERICK_API AEnemySpawnPoint : public AActor
 	//병과
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess),Category = "MOS")
 	EMOS MOS = EMOS::Soldier;
+	//시작시 이동할 위치
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess),Category = "MOS")
+	FVector StartLocation;
 public:	
 	// Sets default values for this actor's properties
 	AEnemySpawnPoint();
@@ -37,4 +40,6 @@ public:
 public:
 	EMOS GetMOS() const { return MOS; }
 	void SetMOS(EMOS val) { MOS = val; }
+	FVector GetStartLocation() const { return StartLocation; }
+	void SetStartLocation(FVector val) { StartLocation = val; }
 };

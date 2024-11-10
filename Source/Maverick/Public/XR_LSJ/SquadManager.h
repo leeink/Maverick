@@ -58,6 +58,9 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	//시작시 이동할 목표 지점
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
+	//마지막으로 이동 명령한 목표 지점
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
+	FVector LastGoalLocation;
 
 	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* MinimapHpWidgetComp;
@@ -76,7 +79,7 @@ public:
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
 	//목표지점 최대 거리
 	UPROPERTY(EditDefaultsOnly)
-	float MaxMoveLength = 10000.0f;
+	float MaxMoveLength = 50000.0f;
 	// Sets default values for this actor's properties
 	ASquadManager();
 	//스폰할 분대원 BP
@@ -90,6 +93,9 @@ public:
 	void SetSquadArray(TArray<class AAISquad*> val) { SquadArray = val; }
 	int32 GetCurrentSquadCount() const { return CurrentSquadCount; }
 	void SetCurrentSquadCount(int32 val) { CurrentSquadCount = val; }
+
+	//TargetLocation로 이동한다. 엄폐물이 있다면 엄폐할 수 있는 가장 가까운 위치로 이동한다. 
+	void CheckLocationForObject(const FVector& TargetLocation);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -113,8 +119,7 @@ protected:
 	void FindPath(const FVector& TargetLocation);
 	//엄폐물로 가는 경로를 찾아 분대원들에게 전달, 도착시 진형을 유지한다.
 	void FindObstructionPath(TArray<FVector>& TargetLocation);
-	//TargetLocation로 이동한다. 엄폐물이 있다면 엄폐할 수 있는 가장 가까운 위치로 이동한다. 
-	void CheckLocationForObject(const FVector& TargetLocation);
+
 	//CheckLocationForObject 테스트
 	void CheckLocationForObject();
 	//분대원이 데미지를 받으면 체력바에 동기화

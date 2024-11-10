@@ -645,6 +645,7 @@ void ASquadManager::CheckLocationForObject()
 }
 void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
 {
+    LastGoalLocation = TargetLocation;
        // 트레이스 시작과 끝 위치 설정
     FVector BoxStart = TargetLocation;
     FVector BoxEnd = BoxStart; // X축으로 1000 유닛 떨어진 곳
@@ -813,7 +814,7 @@ void ASquadManager::MoveToValidDestination(int32 SquadNumber)
     for (int32 i = 0; i < 10; ++i) // 최대 10번 시도
     {
         // MaxRadius 내에서 내비게이션 가능한 임의의 위치 찾기
-        if (NavSystem->GetRandomReachablePointInRadius(SquadArray[CurrentAttachedSquadNumber]->FSMComp->GetLastDestination(), 300.0f, RandomLocation))
+        if (NavSystem->GetRandomReachablePointInRadius(LastGoalLocation, MaxRadius, RandomLocation))
         {
             
             RandomLocation.Location.Z = 190.0f;
@@ -1044,14 +1045,33 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetAc
          UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
 
          //좌우상하 방향
-         VertexArray.Add(ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,0,0))); // 좌
+         FVector LeftSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,0,0));
+         FVector LeftDirection = LeftSideLocation - TargetActor->GetActorLocation();
+         LeftDirection.Normalize();
+         VertexArray.Add(LeftSideLocation+LeftDirection*1000.0f); // 좌
          UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
-		 VertexArray.Add(ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X,0,0))); // 우
+         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Red, false, 100.0f);
+
+         FVector RightSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X,0,0));
+         FVector RightDirection = RightSideLocation - TargetActor->GetActorLocation();
+         RightDirection.Normalize();
+		 VertexArray.Add(RightSideLocation+RightDirection*1000.0f); // 우
 		 UE_LOG(LogTemp,Error,TEXT("right %s"),*VertexArray.Last().ToString());
-         VertexArray.Add(ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0))); // 상
+         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Yellow, false, 100.0f);
+
+         FVector FrontSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0));
+         FVector FrontDirection = FrontSideLocation - TargetActor->GetActorLocation();
+         FrontDirection.Normalize();
+         VertexArray.Add(FrontSideLocation+FrontDirection*1000.0f); // 상
 		 UE_LOG(LogTemp,Error,TEXT("up %s"),*VertexArray.Last().ToString());
-         VertexArray.Add(ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y,0))); // 하
+         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Blue, false, 100.0f);
+
+         FVector BackSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y,0));
+         FVector BackDirection = BackSideLocation - TargetActor->GetActorLocation();
+         BackDirection.Normalize();
+         VertexArray.Add(BackSideLocation+BackDirection*1000.0f); // 하
          UE_LOG(LogTemp,Error,TEXT("down %s"),*VertexArray.Last().ToString());
+         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Black, false, 100.0f);
          //TargetActor와 SquadManager액터의 가까운 방향에 해당하는 위치를 구한다.
          EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;

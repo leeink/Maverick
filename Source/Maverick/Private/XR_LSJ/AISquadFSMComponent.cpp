@@ -138,20 +138,24 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 			else
 			{
 				NextPoint = PathVectorArray[CurrentPathPointIndex] + SquadPosition;
-				AISquadController->MoveToLocation(NextPoint, 100.0f);
+				AISquadController->MoveToLocation(NextPoint, 500.0f);
 			}
 		}
 		else
 		{
 			SetState(EEnemyState::IDLE);
-			
 		}
+	}
+	else if (CurrentPathPointIndex < (PathVectorArray.Num()))
+	{
+		AISquadController->MoveToLocation(PathVectorArray[CurrentPathPointIndex]);
 	}
 	else
 	{
 		AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
 		//SquadManager가 이동 불가능한 위치를 주었다면 델리게이트 호출
-		AISquadBody->FDelFailToDestination.Execute(AISquadBody->GetMySquadNumber());
+		if(AISquadBody->FDelFailToDestination.IsBound())
+			AISquadBody->FDelFailToDestination.Execute(AISquadBody->GetMySquadNumber());
 		//SetState(EEnemyState::IDLE);
 	}
 }
@@ -178,7 +182,7 @@ void UAISquadFSMComponent::MovePathAsync(TArray<FVector>& NavPathArray)
 		else
 		{
 			NextPoint = PathVectorArray[CurrentPathPointIndex] + SquadPosition;
-			AISquadController->MoveToLocation(NextPoint, 100.0f);
+			AISquadController->MoveToLocation(NextPoint, 500.0f);
 		}
     }
     else

@@ -138,7 +138,10 @@ void AEnemyManager::BeginPlay()
 				EnemySquadAll.Add(SquadManager);
 				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));		
 				SquadManager->SetMinimapUIZOrder(SoldierCount);
+				if(!EnemySpawnPoint->GetStartLocation().Equals(FVector::ZeroVector))
+					SquadManager->CheckLocationForObject(EnemySpawnPoint->GetStartLocation());
 				SoldierCount+=SquadManager->GetCurrentSquadCount();
+
 			}
 
 		}
@@ -150,6 +153,8 @@ void AEnemyManager::BeginPlay()
 				EnemyTankAll.Add(TankPawn);
 				TankPawn->FDelTankUnitDie.BindUFunction(this, FName("DieTank"));
 				TankPawn->SetMinimapUIZOrder(SoldierCount+TankCount);
+				if(!EnemySpawnPoint->GetStartLocation().Equals(FVector::ZeroVector))
+					TankPawn->FindPath(EnemySpawnPoint->GetStartLocation());
 				TankCount++;
 			}
 		}
