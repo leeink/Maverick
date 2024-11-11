@@ -35,4 +35,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetIsOccupied() const { return bIsOccupied; }
+
+	UFUNCTION(BlueprintCallable)
+	float GetOccupiedPercent() const { return FMath::Clamp((OccupyingTime / OccupiedTime), 0.f, 100.f); }
 };
