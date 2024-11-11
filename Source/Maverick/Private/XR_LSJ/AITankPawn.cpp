@@ -368,7 +368,7 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
 
 	// 지원되는 에이전트 설정을 가져오기
     //const TArray<FNavDataConfig>& SupportedAgents = NavSystem->SupportedAgen();
-
+	
  
 
 	FVector StartLocation =  GetActorLocation();
@@ -382,7 +382,7 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
     }
     else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-
+		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 1!"));
     }
 }
 void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
@@ -401,13 +401,13 @@ void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
 		else
 		{
 			SetCommandState(EAIUnitCommandState::IDLE);
-			//UE_LOG(LogTemp, Warning, TEXT("Reached final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("Failed final destination 2!"));
 		}
 	}
 	else
 	{
 		SetCommandState(EAIUnitCommandState::IDLE);
-		//UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3!"));
 	}
 }
 void AAITankPawn::MovePathAsync(TArray<FVector>& NavPathArray)

@@ -16,6 +16,7 @@ enum class EAIUnitCommandState : uint8
 	ATTACK  ,
 	DAMAGE  ,
 	DIE  ,
+	Defense,
 };
 UENUM(BlueprintType)
 enum class EAIUnitCategory : uint8

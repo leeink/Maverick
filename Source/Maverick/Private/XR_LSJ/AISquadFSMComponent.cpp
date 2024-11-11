@@ -146,9 +146,9 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 			SetState(EEnemyState::IDLE);
 		}
 	}
-	else if (CurrentPathPointIndex < (PathVectorArray.Num()))
+	else if (CurrentPathPointIndex < (PathVectorArray.Num()-1))
 	{
-		AISquadController->MoveToLocation(PathVectorArray[CurrentPathPointIndex]);
+		AISquadController->MoveToLocation(PathVectorArray[CurrentPathPointIndex++]);
 	}
 	else
 	{

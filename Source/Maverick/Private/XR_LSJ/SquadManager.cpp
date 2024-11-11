@@ -76,6 +76,7 @@ EAIUnitCommandState ASquadManager::GetCurrentCommandState()
 
 void ASquadManager::SetCommandState(EAIUnitCommandState Command)
 {
+    CurrentCommandState = Command;
 }
 void ASquadManager::SetMinimapUIZOrder(int32 Value)
 {
@@ -712,6 +713,7 @@ void ASquadManager::DamagedSquadUnit(float Damage)
 
         if (CurrentSquadHp <= 0)
         {
+            SetCommandState(EAIUnitCommandState::DIE);
             HpBarNewIcon->SetVisibility(ESlateVisibility::Collapsed);
             MinimapHpWidgetComp->Deactivate();
         }
@@ -817,11 +819,11 @@ void ASquadManager::MoveToValidDestination(int32 SquadNumber)
         if (NavSystem->GetRandomReachablePointInRadius(LastGoalLocation, MaxRadius, RandomLocation))
         {
             
-            RandomLocation.Location.Z = 190.0f;
+            RandomLocation.Location.Z = 218.0f;
             // 찾은 위치가 MinDistance 이상 떨어져 있는지 확인
             if (FVector::Dist(GetActorLocation(), RandomLocation.Location) >= MinDistance || i==9)
             {
-                UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),GetActorLocation(),RandomLocation.Location);
+                UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),SquadArray[SquadNumber]->GetActorLocation(),RandomLocation.Location);
                 if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
                 {
                     TArray<FVector> ArrayLocation;
@@ -1076,7 +1078,7 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetAc
          EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;
 
-         for (int DirectionVertexCount = 4; DirectionVertexCount < VertexArray.Num(); DirectionVertexCount++)
+         for (int DirectionVertexCount = 6; DirectionVertexCount < VertexArray.Num(); DirectionVertexCount++)
          {
              float ActorToVertexDistance = FVector::Distance(VertexArray[DirectionVertexCount], GetActorLocation());
              if (DirectionVertexDistance > ActorToVertexDistance)

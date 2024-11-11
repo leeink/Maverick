@@ -6,6 +6,34 @@
 #include "GameFramework/Actor.h"
 #include "EnemyManager.generated.h"
 
+UENUM(BlueprintType)
+enum class EPlayerUnitPathDirection : uint8
+{
+	Left,
+	Middle,
+	Right
+};
+
+USTRUCT(Atomic,BlueprintType)
+struct FOccupiedLocationStruct
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	//점령 위치
+	//탱크와 분대 둘 다 위치할 수 있다.
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	FVector OccupiedLocation;
+	//탱크 위치
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TArray<FVector> TankLocation;
+	//분대 위치
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TArray<FVector> SquadLocation;
+	//최소 방어 유닛 배치 여부
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TArray<bool> DefensiveUnit;
+};
+
 UCLASS()
 class MAVERICK_API AEnemyManager : public AActor
 {
@@ -50,6 +78,17 @@ class MAVERICK_API AEnemyManager : public AActor
 	//플레이 타임 초
 	float PlayTimeSeconds;
 	bool EndGame;
+	
+	//위쪽의 점령지가 플레이어에게 점령 되었는지 여부
+	bool OccupiedTop;
+	//아래쪽의 점령지가 플레이어에게 점령 되었는지 여부
+	bool OccupiedBottom;
+	//적들이 위치할 위쪽의 점령지에서의 위치정보
+	FOccupiedLocationStruct TopOccupiedLocationStruct;
+	//적들이 위치할 아래쪽의 점령지에서의 위치정보
+	FOccupiedLocationStruct BottomOccupiedLocationStruct;
+	//플레이어 유닛의 위치를 확인하는 FTimerHandle
+	FTimerHandle CheckPlayerUnitLocationHandle;
 public:	
 	// Sets default values for this actor's properties
 	AEnemyManager();
@@ -85,11 +124,22 @@ public:
 	TSubclassOf<class ATankBase> PlayerTankPawnClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")
 	TSubclassOf<class ASoldier> PlayerSoldierPawnClass;
+
+	//위쪽 점령지
+	UFUNCTION(BlueprintCallable)
+	void SetOccupiedTop(bool Value){OccupiedTop=Value;}
+	//아래쪽 점령지
+	UFUNCTION(BlueprintCallable)
+	void SetOccupiedBottom(bool Value){OccupiedBottom=Value;}
 protected:
 
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct, class AOccupiedLocation* pOccupiedLocationActor);
+	void CheckPlayerUnitLocation();
+	void MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLocationStruct);
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
