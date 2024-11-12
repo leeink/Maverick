@@ -39,6 +39,7 @@ AAITankPawn::AAITankPawn()
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 
 	CurrentCommandState = EAIUnitCommandState::IDLE;
+	CurrentTankState= EAIUnitCommandState::IDLE;
 	AIUnitCategory = EAIUnitCategory::TANK;
 
 	
@@ -77,6 +78,12 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 {
 	return CurrentCommandState;
 }
+
+EAIUnitCommandState AAITankPawn::GetCurrentTankState()
+{
+	return CurrentTankState;
+}
+
 void AAITankPawn::SetMinimapUIZOrder(int32 Value)
 {
     FVector Location = MinimapHpWidgetComp->GetRelativeLocation();
@@ -129,6 +136,54 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		break;
 	}
 }
+
+void AAITankPawn::SetTankState(EAIUnitCommandState Command)
+{
+	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
+	{
+		MoveWheelAnimation(0);
+		return;
+	}
+		
+	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
+		PreState = CurrentCommandState;
+
+	CurrentCommandState = Command;
+
+	UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
+	UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
+
+	switch ( CurrentCommandState )
+	{
+	case EAIUnitCommandState::IDLE:
+
+		GetController()->StopMovement();
+		MoveWheelAnimation(0);
+		break;
+	case EAIUnitCommandState::MOVE:
+		MoveWheelAnimation(MovementComponent->GetMaxSpeed());
+		break;
+	case EAIUnitCommandState::ATTACK:
+		
+		break;
+	case EAIUnitCommandState::DAMAGE:
+		
+		break;
+	case EAIUnitCommandState::DIE:
+		GetController()->StopMovement();
+		if(FDelUnitDie.IsBound())
+			FDelUnitDie.Execute();
+		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
+		if(FDelTankUnitDie.IsBound())
+			FDelTankUnitDie.Execute();
+		//겹쳐있을때 이게 문제 있는 듯>?
+		break;
+	default:
+		
+		break;
+	}
+}
+
 float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 {
 	//Center에서 Target을 바라보는 Vector

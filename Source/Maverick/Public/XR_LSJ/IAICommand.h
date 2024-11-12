@@ -38,7 +38,7 @@ class MAVERICK_API IIAICommand
 {
 	GENERATED_BODY()
 protected:
-	
+	bool DefenseMode;
 	EAIUnitCommandState CurrentCommandState;
 	EAIUnitCategory AIUnitCategory;
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
@@ -50,4 +50,6 @@ public:
 	virtual FVector GetTargetLocation() { return FVector::ZeroVector; }
 	//죽었을때 알려주는 델리게이트
 	FDel_UnitDie FDelUnitDie;
+	bool GetDefenseMode() const { return DefenseMode; }
+	void SetDefenseMode(bool val) { DefenseMode = val; }
 };

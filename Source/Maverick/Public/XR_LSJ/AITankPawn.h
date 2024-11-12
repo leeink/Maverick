@@ -59,6 +59,8 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	//시작시 이동할 목표 지점
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
+
+	EAIUnitCommandState CurrentTankState;
 public:
 	//탱크 죽음 알림 델리게이트
 	FDel_TankUnitDie FDelTankUnitDie;
@@ -77,8 +79,11 @@ public:
     void FireFx(bool Active);
 	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
+	UFUNCTION(BlueprintCallable)
+	virtual EAIUnitCommandState GetCurrentTankState();
 	void SetMinimapUIZOrder(int32 Value);
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
+	virtual void SetTankState(EAIUnitCommandState Command);
 	//Bullet
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> BulletFactory; 

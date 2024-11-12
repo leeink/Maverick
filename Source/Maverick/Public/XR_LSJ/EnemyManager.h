@@ -140,6 +140,7 @@ protected:
 	void UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct, class AOccupiedLocation* pOccupiedLocationActor);
 	void CheckPlayerUnitLocation();
 	void MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLocationStruct);
+	void MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStruct);
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
