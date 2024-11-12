@@ -8,6 +8,7 @@
 #include "XR_LSJ/ResultValueSlotWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/Button.h"
+#include "XR_LSJ/ResultIconWidget.h"
 
 void UGameResultWidget::ToMainLevel()
 {
@@ -24,7 +25,12 @@ void UGameResultWidget::NativeConstruct()
 	Button_Close->OnClicked.AddDynamic(this, &UGameResultWidget::ToMainLevel);
 
 }
-
+void UGameResultWidget::SetResultIcon(bool Value)
+{
+	UResultIconWidget* Icon = Cast<UResultIconWidget>(WBP_Result_Icon);
+	if(Icon)
+		Icon->SetVisibleIcon(Value);
+}
 void UGameResultWidget::AddBasicSlot()
 {
 	auto* BasicSlotSouthKorea = CreateWidget(GetWorld(), ScrollBox_BasicSlot);
