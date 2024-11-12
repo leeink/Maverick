@@ -11,6 +11,7 @@
 #include "LDG/Soldier.h"
 #include "UserControlUI.h"
 #include "LDG/TankBase.h"
+#include "XR_LSJ/OccupiedLocation.h"
 
 // Sets default values
 AEnemyManager::AEnemyManager()
@@ -20,33 +21,43 @@ AEnemyManager::AEnemyManager()
 }
 void AEnemyManager::DieSoldier()
 {
+	if(EndGame)
+		return;
 	SoldierCount--;
 	EnemyCountWidget->SetSoldierCount(SoldierCount);
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
 void AEnemyManager::DiePlayerSoldier()
 {
+	if(EndGame)
+		return;
 	PlayerSoldierCount--;
 	UserControlUI->SetSoldierCount(PlayerSoldierCount);
-	UE_LOG(LogTemp,Error,TEXT("DiePlayerSoldier"));
+
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
 }
 void AEnemyManager::DiePlayerTank()
 {
+	if(EndGame)
+		return;
+
 	PlayerTankCount--;
 	UserControlUI->SetTankCount(PlayerTankCount);
 
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
@@ -80,11 +91,14 @@ void AEnemyManager::ShowResult()
 
 void AEnemyManager::DieTank()
 {
+	if(EndGame)
+		return;
 	TankCount--;
 	EnemyCountWidget->SetTankCount(TankCount);
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
+		EndGame = true;
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
 	}
@@ -93,7 +107,9 @@ void AEnemyManager::DieTank()
 void AEnemyManager::BeginPlay()
 {
 	Super::BeginPlay();
-
+	OccupiedTop = true;
+	OccupiedBottom = false;
+	EndGame = false;
 	if (EnemyCountClass)
 	{
 		EnemyCountWidget = Cast<UEnemyCount>(CreateWidget(GetWorld(),EnemyCountClass));
@@ -121,19 +137,29 @@ void AEnemyManager::BeginPlay()
 		{
 			SpawnLocation.Z = 190.0f;
 			if (ASquadManager* SquadManager = GetWorld()->SpawnActor<ASquadManager>(SquadManagerClass, SpawnLocation, SpawnRotation, SpawnParams))
-			{
-				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));
+			{	
+				SquadManager->SetDefenseMode(false);
+				SquadManager->FDelSoldierUnitDie.BindUFunction(this,FName("DieSoldier"));		
+				SquadManager->SetMinimapUIZOrder(SoldierCount);
+				if(!EnemySpawnPoint->GetStartLocation().Equals(FVector::ZeroVector))
+					SquadManager->CheckLocationForObject(EnemySpawnPoint->GetStartLocation());
 				SoldierCount+=SquadManager->GetCurrentSquadCount();
+				EnemySquadAll.Add(SquadManager);
+
 			}
 
 		}
 		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::Tank)
 		{
 			SpawnLocation.Z = 350.0f;
-			
 			if (AAITankPawn* TankPawn = GetWorld()->SpawnActor<AAITankPawn>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
-			{
+			{	
+				TankPawn->SetDefenseMode(false);
 				TankPawn->FDelTankUnitDie.BindUFunction(this, FName("DieTank"));
+				TankPawn->SetMinimapUIZOrder(SoldierCount+TankCount);
+				if(!EnemySpawnPoint->GetStartLocation().Equals(FVector::ZeroVector))
+					TankPawn->FindPath(EnemySpawnPoint->GetStartLocation());
+				EnemyTankAll.Add(TankPawn);
 				TankCount++;
 			}
 		}
@@ -143,6 +169,7 @@ void AEnemyManager::BeginPlay()
 			FActorSpawnParameters SpawnParams1;
 			if (ASoldier* PlayerSoldier = GetWorld()->SpawnActor<ASoldier>(PlayerSoldierPawnClass, SpawnLocation, SpawnRotation, SpawnParams1))
 			{
+				PlayerSquadAll.Add(PlayerSoldier);
 				PlayerSoldier->Del_PlayerSoldierUnitDie.BindUFunction(this,FName("DiePlayerSoldier"));
 				PlayerSoldierCount++;
 			}
@@ -154,6 +181,7 @@ void AEnemyManager::BeginPlay()
 			
 			if (ATankBase* TankPawn = GetWorld()->SpawnActor<ATankBase>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
 			{
+				PlayerTankAll.Add(TankPawn);
 				TankPawn->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
 				PlayerTankCount++;
 			}
@@ -178,9 +206,197 @@ void AEnemyManager::BeginPlay()
 		MaxPlayerTankCount=PlayerTankCount;
 	}
 
-	
+	TopOccupiedLocationStruct.DefensiveUnit.Init(false,2);
+	BottomOccupiedLocationStruct.DefensiveUnit.Init(false,2);
+	TArray<AActor*> FoundOccupiedLocationActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AOccupiedLocation::StaticClass(), FoundOccupiedLocationActors);
+	for (AActor* PointActor : FoundOccupiedLocationActors)
+	{
+		AOccupiedLocation* OccupiedLocationActor = Cast<AOccupiedLocation>(PointActor);
+		if (OccupiedLocationActor)
+		{
+			if (OccupiedLocationActor->GetIsTop())
+				UpdateOccupiedLocationStruct(TopOccupiedLocationStruct,OccupiedLocationActor);
+			else
+				UpdateOccupiedLocationStruct(BottomOccupiedLocationStruct,OccupiedLocationActor);
+		}
+	}
+	FTimerHandle BeginCheckPlayerUnitLocationHandle;
+	GetWorld()->GetTimerManager().SetTimer(BeginCheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,5.0f,false);
+	GetWorld()->GetTimerManager().SetTimer(CheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,30.0f,true);
 }
+void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)
+{
+	switch (pOccupiedLocationActor->GetOccupiedLocationType())
+	{
+	case EOccupiedLocationType::Occupation:
+		pOccupiedLocationStruct.OccupiedLocation = pOccupiedLocationActor->GetActorLocation();
+		break;
+	case EOccupiedLocationType::Tank:
+		pOccupiedLocationStruct.TankLocation.Add(pOccupiedLocationActor->GetActorLocation());
+		break;
+	case EOccupiedLocationType::Squad:
+		FVector Location = pOccupiedLocationActor->GetActorLocation();
+		Location.Z = 190.f;
+		pOccupiedLocationStruct.SquadLocation.Add(Location);
+		break;
+	}
+}
+void AEnemyManager::CheckPlayerUnitLocation()
+{
+	//왜 이도ㅇ을 안하지?
+		//중간에 CheckPlayerUnitLocation이 실행되서
+		//LandScape에 충돌판정이 되어서
+	//점령한 곳이 없다면 위쪽을 점령한다.
+	if (false == OccupiedTop && false == OccupiedBottom)
+	{
+		MoveToTakeOver(TopOccupiedLocationStruct);
+	}
+	else if (false == OccupiedTop) //아래쪽을 점령했다면 최소 분대를 아래쪽에 배치하고 위쪽을 점령한다.
+	{
+		//최소 방어 분대 배치 체크
+		MinDefensiveDeployment(BottomOccupiedLocationStruct);
+		
+		//위쪽을 점령한다.
+		MoveToTakeOver(TopOccupiedLocationStruct);
+	}
+	else if (false == OccupiedBottom)
+	{
+		//최소 방어 분대 배치 체크
+		MinDefensiveDeployment(TopOccupiedLocationStruct);
 
+		//아래쪽을 점령한다.
+		MoveToTakeOver(BottomOccupiedLocationStruct);
+	}
+}
+//최소 방어 배치
+void AEnemyManager::MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLocationStruct)
+{
+		int32 UnitCount = 0;
+		//가까운 분대를 배치 시킨다. 분대가 없다면 탱크를 배치한다.
+		for (int32 DefensiveUnitCount = 0; DefensiveUnitCount < OccupiedLocationStruct.DefensiveUnit.Num(); DefensiveUnitCount++)
+		{
+			if (OccupiedLocationStruct.DefensiveUnit[DefensiveUnitCount] == false)
+			{
+				if (DefensiveUnitCount == 0)
+				{
+					float MinDistance = 100000.f;
+					ASquadManager* CloseFirstSquad = nullptr;
+					for (int32 pSquadManagerCount = 0; pSquadManagerCount < EnemySquadAll.Num(); pSquadManagerCount++)
+					{
+						if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState() == EAIUnitCommandState::DIE)
+							continue;
+						if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState() == EAIUnitCommandState::Defense)
+							continue;
+						float DefenseDistance = FVector::Distance(OccupiedLocationStruct.OccupiedLocation, EnemySquadAll[pSquadManagerCount]->GetActorLocation());
+						if (MinDistance > DefenseDistance)
+						{
+							MinDistance = DefenseDistance;
+							CloseFirstSquad = EnemySquadAll[pSquadManagerCount];
+						}
+					}
+					if (nullptr == CloseFirstSquad)
+						break;
+					CloseFirstSquad->CheckLocationForObject(OccupiedLocationStruct.OccupiedLocation);
+					CloseFirstSquad->SetCommandState(EAIUnitCommandState::Defense);
+					OccupiedLocationStruct.DefensiveUnit[0] = true;
+					UnitCount++;
+				}
+				else
+				{
+					float MinDistance = 100000.f;
+					ASquadManager* CloseFirstSquad = nullptr;
+					for (int32 pSquadManagerCount = 0; pSquadManagerCount < EnemySquadAll.Num(); pSquadManagerCount++)
+					{
+						if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState() == EAIUnitCommandState::DIE)
+							continue;
+						if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState() == EAIUnitCommandState::Defense)
+							continue;
+						float DefenseDistance = FVector::Distance(OccupiedLocationStruct.SquadLocation[0], EnemySquadAll[pSquadManagerCount]->GetActorLocation());
+						if (MinDistance > DefenseDistance)
+						{
+							MinDistance = DefenseDistance;
+							CloseFirstSquad = EnemySquadAll[pSquadManagerCount];
+						}
+					}
+					if (nullptr == CloseFirstSquad)
+						continue;
+					CloseFirstSquad->CheckLocationForObject(OccupiedLocationStruct.SquadLocation[0]);
+					CloseFirstSquad->SetCommandState(EAIUnitCommandState::Defense);
+					OccupiedLocationStruct.DefensiveUnit[1] = true;
+					UnitCount++;
+				}
+			}
+		}
+		if (UnitCount <= 0) //탱크를 배치
+		{
+			if (OccupiedLocationStruct.DefensiveUnit[0] == false)
+			{
+				float MinDistance = 100000.f;
+				AAITankPawn* CloseFirstSquad = nullptr;
+				for (int32 pTankCount = 0; pTankCount < EnemyTankAll.Num(); pTankCount++)
+				{
+					if (EnemyTankAll[pTankCount]->GetCurrentCommandState() == EAIUnitCommandState::DIE)
+						continue;
+					if (EnemyTankAll[pTankCount]->GetDefenseMode())
+						continue;
+					float DefenseDistance = FVector::Distance(OccupiedLocationStruct.OccupiedLocation, EnemyTankAll[pTankCount]->GetActorLocation());
+					
+					if (MinDistance > DefenseDistance)
+					{
+						MinDistance = DefenseDistance;
+						CloseFirstSquad = EnemyTankAll[pTankCount];
+					}
+				}
+				if (nullptr == CloseFirstSquad)
+					return;
+				CloseFirstSquad->SetDefenseMode(true);
+				FVector Location = OccupiedLocationStruct.OccupiedLocation;
+				Location.Z = 350.0f;
+				CloseFirstSquad->FindPath(Location);
+				OccupiedLocationStruct.DefensiveUnit[0] = true;
+			}
+		}
+}
+//점령 이동
+void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStruct)
+{
+	int32 CurrentRemainSquad = -1;
+	int32 CurrentRemainTank = -1;
+	for (int32 pSquadManagerCount = 0;pSquadManagerCount<EnemySquadAll.Num(); pSquadManagerCount++)
+	{
+		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
+			continue;
+		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::ATTACK)
+			continue;
+		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::Defense)
+			continue;
+		if (CurrentRemainSquad == -1)
+		{
+			EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.OccupiedLocation);
+		}
+		else
+		{
+			EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.SquadLocation[CurrentRemainSquad]);
+		}
+		CurrentRemainSquad++;
+	}
+	for (int32 pTankCount = 0;pTankCount<EnemyTankAll.Num(); pTankCount++)
+	{
+		if (EnemyTankAll[pTankCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
+			continue;
+		if (EnemyTankAll[pTankCount]->GetCurrentCommandState() != EAIUnitCommandState::IDLE)
+			continue;
+		if (EnemyTankAll[pTankCount]->GetDefenseMode())
+			continue;
+		if(CurrentRemainSquad<=0&&CurrentRemainTank==-1)
+			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.OccupiedLocation);
+		else
+			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank]);
+		EnemyTankAll[pTankCount]->SetDefenseMode(false);
+		CurrentRemainTank++;
+	}
+}
 void AEnemyManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);

@@ -39,6 +39,7 @@ AAITankPawn::AAITankPawn()
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 
 	CurrentCommandState = EAIUnitCommandState::IDLE;
+	CurrentTankState= EAIUnitCommandState::IDLE;
 	AIUnitCategory = EAIUnitCategory::TANK;
 
 	
@@ -78,6 +79,17 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 	return CurrentCommandState;
 }
 
+EAIUnitCommandState AAITankPawn::GetCurrentTankState()
+{
+	return CurrentTankState;
+}
+
+void AAITankPawn::SetMinimapUIZOrder(int32 Value)
+{
+    FVector Location = MinimapHpWidgetComp->GetRelativeLocation();
+    Location.Z+=Value;
+    MinimapHpWidgetComp->SetRelativeLocation(Location);
+}
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
 	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
@@ -124,6 +136,54 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		break;
 	}
 }
+
+void AAITankPawn::SetTankState(EAIUnitCommandState Command)
+{
+	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
+	{
+		MoveWheelAnimation(0);
+		return;
+	}
+		
+	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
+		PreState = CurrentCommandState;
+
+	CurrentCommandState = Command;
+
+	UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
+	UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
+
+	switch ( CurrentCommandState )
+	{
+	case EAIUnitCommandState::IDLE:
+
+		GetController()->StopMovement();
+		MoveWheelAnimation(0);
+		break;
+	case EAIUnitCommandState::MOVE:
+		MoveWheelAnimation(MovementComponent->GetMaxSpeed());
+		break;
+	case EAIUnitCommandState::ATTACK:
+		
+		break;
+	case EAIUnitCommandState::DAMAGE:
+		
+		break;
+	case EAIUnitCommandState::DIE:
+		GetController()->StopMovement();
+		if(FDelUnitDie.IsBound())
+			FDelUnitDie.Execute();
+		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
+		if(FDelTankUnitDie.IsBound())
+			FDelTankUnitDie.Execute();
+		//겹쳐있을때 이게 문제 있는 듯>?
+		break;
+	default:
+		
+		break;
+	}
+}
+
 float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 {
 	//Center에서 Target을 바라보는 Vector
@@ -363,7 +423,7 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
 
 	// 지원되는 에이전트 설정을 가져오기
     //const TArray<FNavDataConfig>& SupportedAgents = NavSystem->SupportedAgen();
-
+	
  
 
 	FVector StartLocation =  GetActorLocation();
@@ -377,7 +437,7 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
     }
     else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // 경로가 끊겼을때
     {
-
+		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 1!"));
     }
 }
 void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
@@ -396,13 +456,13 @@ void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
 		else
 		{
 			SetCommandState(EAIUnitCommandState::IDLE);
-			//UE_LOG(LogTemp, Warning, TEXT("Reached final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("Failed final destination 2!"));
 		}
 	}
 	else
 	{
 		SetCommandState(EAIUnitCommandState::IDLE);
-		//UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3! %d %s"),(int)Result,*AISquadBody->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3!"));
 	}
 }
 void AAITankPawn::MovePathAsync(TArray<FVector>& NavPathArray)

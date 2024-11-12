@@ -144,6 +144,7 @@ void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	FDelUnitDie.Unbind();
 	FDelTargetDie.Unbind();
 	FDelSquadUnitDie.Unbind();
+	FDelFailToDestination.Unbind();
 }
 // Called when the game starts or when spawned
 void AAISquad::BeginPlay()

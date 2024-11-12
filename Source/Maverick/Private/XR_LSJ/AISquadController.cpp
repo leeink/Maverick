@@ -11,5 +11,5 @@ void AAISquadController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	{
 		FCallback_AIController_MoveCompleted.Broadcast(Result.Code); 
 	}
-	
+	//UE_LOG(LogTemp, Warning, TEXT("2 MovePathAsync %s"),*K2_GetPawn()->GetName());
 };
