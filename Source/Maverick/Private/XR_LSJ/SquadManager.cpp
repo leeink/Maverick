@@ -33,7 +33,7 @@ ASquadManager::ASquadManager()
     SquadPositionArray.Add(FVector(0, 0, 0));
 	SquadPositionArray.Add(FVector(150, -200, 0));
 	SquadPositionArray.Add(FVector(-150, -150, 0));
-	SquadPositionArray.Add(FVector(-150, 150, 0));
+	SquadPositionArray.Add(FVector(-300, 250, 0));
 	SquadPositionArray.Add(FVector(250, 0, 0));
 	SquadPositionArray.Add(FVector(150, 200, 0));
 
@@ -89,7 +89,7 @@ void ASquadManager::BeginPlay()
 {
 	Super::BeginPlay();
    
-    SquadManagerAbility.Hp = 100.f;
+    SquadManagerAbility.Hp = 300.f;
     
     
     SquadManagerAbility.FindTargetRange = 3000.f;
@@ -190,7 +190,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 
             SquadLastIdx = SquadCount;
         }
-       
+         DrawDebugSphere(GetWorld(),Start, Radius, 12, FColor::Black, false, 5.0f);
         for (const FHitResult& HitResult : OutHits)
         {
             if(false ==HitResult.GetActor()->ActorHasTag("Player"))
@@ -251,6 +251,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 						}
                     }
 				}
+               
 		    }
         }
       
@@ -505,6 +506,7 @@ void ASquadManager::AttackTargetUnit()
 {
     if(Target.Num() < CurrentSquadCount)
        return;
+   
      for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
     {
         if(SquadArray[SquadCount]==nullptr)
@@ -513,7 +515,7 @@ void ASquadManager::AttackTargetUnit()
             continue;
 		if (Target[SquadCount] == nullptr)
 			continue;
-        //UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
+        UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
         SquadArray[SquadCount]->FSMComp->SetIsAttacking(true, Target[SquadCount]);
     }
 }

@@ -148,7 +148,7 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 	}
 	else if (CurrentPathPointIndex < (PathVectorArray.Num()-1))
 	{
-		AISquadController->MoveToLocation(PathVectorArray[CurrentPathPointIndex++]);
+		AISquadController->MoveToLocation(PathVectorArray[CurrentPathPointIndex]);
 	}
 	else
 	{
@@ -277,13 +277,17 @@ void UAISquadFSMComponent::RotateUpperbodyToTarget(const float& DeltaTime)
 		}
 		else
 		{
-			if (GetAttackCurrentTime() < AttackCoolTime)
+			AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
+			AISquadController->StopMovement();
+			SetState(EEnemyState::IDLE);
+
+			/*if (GetAttackCurrentTime() < AttackCoolTime)
 			{
-				EndAttack();	
+				EndAttack();
 			}
 
 			float newYaw = FMath::Lerp(AISquadAnimInstance->GetAimYaw(),0,DeltaTime*10.0f);
-			AISquadAnimInstance->SetAimYaw(newYaw);
+			AISquadAnimInstance->SetAimYaw(newYaw);*/
 		}
 		/*	FHitResult OutHit;
 			FVector Start = AISquadBody->GetGunMeshComp()->GetSocketLocation(TEXT("Muzzle"));
@@ -328,7 +332,7 @@ void UAISquadFSMComponent::SetIsAttacking(bool val, AActor* TargetActor)
 	IsAttacking = val;
 	Target = TargetActor;
 	AISquadAnimInstance->SetIsAttacking(val);
-	
+	AISquadController->StopMovement();
 }
 
 FVector UAISquadFSMComponent::GetLastDestination()

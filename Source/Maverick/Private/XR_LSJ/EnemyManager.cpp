@@ -177,9 +177,9 @@ void AEnemyManager::BeginPlay()
 		}
 		else if (EnemySpawnPoint&&EnemySpawnPoint->GetMOS() == EMOS::PlayerTank)
 		{
-			SpawnLocation.Z = 350.0f;
+			SpawnLocation.Z = 120.f;
 			
-			if (ATankBase* TankPawn = GetWorld()->SpawnActor<ATankBase>(TankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
+			if (ATankBase* TankPawn = GetWorld()->SpawnActor<ATankBase>(PlayerTankPawnClass, SpawnLocation, SpawnRotation, SpawnParams))
 			{
 				PlayerTankAll.Add(TankPawn);
 				TankPawn->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
@@ -223,7 +223,7 @@ void AEnemyManager::BeginPlay()
 	}
 	FTimerHandle BeginCheckPlayerUnitLocationHandle;
 	GetWorld()->GetTimerManager().SetTimer(BeginCheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,5.0f,false);
-	GetWorld()->GetTimerManager().SetTimer(CheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,30.0f,true);
+	GetWorld()->GetTimerManager().SetTimer(CheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,50.0f,true);
 }
 void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)
 {
@@ -366,8 +366,6 @@ void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStru
 	for (int32 pSquadManagerCount = 0;pSquadManagerCount<EnemySquadAll.Num(); pSquadManagerCount++)
 	{
 		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
-			continue;
-		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::ATTACK)
 			continue;
 		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::Defense)
 			continue;
