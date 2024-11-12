@@ -71,6 +71,9 @@ class MAVERICK_API ATankBase : public APawn
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = VFX, meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* DestroyEffect;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SFX, meta = (AllowPrivateAccess = "true"))
+	USoundBase* DestroySound;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DamagedMesh, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AActor> DamagedMesh;
 	

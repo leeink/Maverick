@@ -31,16 +31,16 @@ void UOccupiedComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		if(OccupyingTime <= 0.f)	return;
 		OccupyingTime -= DeltaTime;
-		GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OccupyingTime: %f"), OccupyingTime));
+		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OccupyingTime: %f"), OccupyingTime));
 	}
 	else
 	{
 		OccupyingTime += DeltaTime;
-		GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OccupyingTime: %f"), OccupyingTime));
+		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OccupyingTime: %f"), OccupyingTime));
 		if(OccupyingTime >= OccupiedTime)
 		{
 			bIsOccupied = true;
-			GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Occupied!")));
+			//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Occupied!")));
 		}
 	}
 }

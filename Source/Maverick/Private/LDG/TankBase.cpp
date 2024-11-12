@@ -116,6 +116,13 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyEffect, GetActorLocation());
 			}
+
+			if(DestroySound != nullptr)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestroySound, GetActorLocation());
+			}
+
+			
 			Destroy();
 		}
 	}

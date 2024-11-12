@@ -49,6 +49,9 @@ class MAVERICK_API ASoldier : public ACharacter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* HealthWidget;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SFX, meta = (AllowPrivateAccess = "true"))
+	USoundBase* DieSound;
+
 	UPROPERTY()
 	class UArmyWidgetBase* ArmyWidgetInstance;
 
