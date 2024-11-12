@@ -29,4 +29,6 @@ public:
 public:
 	void PlayAttackMontage();
 	void PlayDeathMontage();
+
+	FORCEINLINE UAnimMontage* GetAttackMontage() const { return AttackMontage; }
 };
