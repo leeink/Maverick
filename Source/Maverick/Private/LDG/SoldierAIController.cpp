@@ -75,6 +75,10 @@ void ASoldierAIController::Die()
 {
 	SetState(EState::Die);
 	PossessedPawn -> GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if(RifleAnimInstance -> Montage_IsPlaying(RifleAnimInstance -> GetAttackMontage()))
+	{
+		RifleAnimInstance -> StopAllMontages(.1f);
+	}
 	RifleAnimInstance -> PlayDeathMontage();
 }
 
