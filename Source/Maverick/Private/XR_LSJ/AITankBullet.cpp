@@ -82,7 +82,7 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,ExplosiveRange,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
 	if (Hit)
 	{
-		DrawDebugSphere(GetWorld(),Start, ExplosiveRange, 12, FColor::Black, false, 5.0f);
+		//DrawDebugSphere(GetWorld(),Start, ExplosiveRange, 12, FColor::Black, false, 5.0f);
 		for(FHitResult& HitResult :OutHits)
 		{
 			if (HitResult.GetActor() && HitResult.GetActor()->ActorHasTag("Player"))

@@ -57,16 +57,19 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 		
 		if (FDelSquadUnitDamaged.IsBound())
 			FDelSquadUnitDamaged.Execute(HpLost);
+
 		if (SquadAbility.Hp <= 0)
 		{
-			SetCommandState(EAIUnitCommandState::DIE);
 			FSMComp->SetState(EEnemyState::DIE);
+			GetController()->StopMovement();
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
 			//UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
 			if(FDelUnitDie.IsBound())
 				FDelUnitDie.Execute();
 		}
+
+
 	}
 	return Damage;
 }

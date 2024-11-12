@@ -107,7 +107,7 @@ void AEnemyManager::DieTank()
 void AEnemyManager::BeginPlay()
 {
 	Super::BeginPlay();
-	OccupiedTop = false;
+	OccupiedTop = true;
 	OccupiedBottom = false;
 	EndGame = false;
 	if (EnemyCountClass)
@@ -222,7 +222,7 @@ void AEnemyManager::BeginPlay()
 		}
 	}
 	FTimerHandle BeginCheckPlayerUnitLocationHandle;
-	//GetWorld()->GetTimerManager().SetTimer(BeginCheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,5.0f,false);
+	GetWorld()->GetTimerManager().SetTimer(BeginCheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,5.0f,false);
 	GetWorld()->GetTimerManager().SetTimer(CheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,50.0f,true);
 }
 void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)

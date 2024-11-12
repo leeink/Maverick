@@ -9,6 +9,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "LDG/Soldier.h"
 #include "LDG/SoldierAIController.h"
+#include "LDG/TankBase.h"
+#include "LDG/TankAIController.h"
 
 // Sets default values
 AAISquadBullet::AAISquadBullet()
@@ -52,7 +54,18 @@ void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 					UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr,nullptr ,NULL);
 			 }
 		 }
-		
+		ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(OtherActor);
+		 if (TargetPlayerTankUnit)
+		 {
+			 ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+			 if (controller && (controller->CurrentState != ETankState::Die))
+			 {
+				if(GetOwner()!=nullptr)
+					UGameplayStatics::ApplyDamage(OtherActor, 1.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
+				else
+					UGameplayStatics::ApplyDamage(OtherActor, 1.0f, nullptr,nullptr ,NULL);
+			 }
+		 }
 	}
 	else if (OtherActor && OtherActor->ActorHasTag("Enemy"))
 	{	
