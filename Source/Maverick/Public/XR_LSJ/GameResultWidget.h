@@ -21,7 +21,8 @@ class MAVERICK_API UGameResultWidget : public UUserWidget
 	class UTextBlock* Text_Time;
 	UPROPERTY(meta=(BindWidget))
 	class UButton* Button_Close;
-
+	UPROPERTY(meta=(BindWidget))
+	class UResultIconWidget* WBP_Result_Icon;
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")
 	TSubclassOf<UUserWidget> ScrollBox_BasicSlot;
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")
@@ -31,7 +32,10 @@ protected:
 	UFUNCTION()
 	void ToMainLevel();
 	virtual void NativeConstruct() override;
+	
 public:
+	UFUNCTION(BlueprintCallable)
+	void SetResultIcon(bool Value);
 	void AddBasicSlot();
 	void SetClearTime(FString Time);
 	void AddSouthKoreaData(FString Name,int32 KillEnemySoldierCount, int32 LostSoldier,int32 KillEnemyTankCount, int32 LostTank);

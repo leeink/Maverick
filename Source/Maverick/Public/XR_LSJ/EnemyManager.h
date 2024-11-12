@@ -107,9 +107,10 @@ public:
 	//플레이 타임(초)를 MM:SS로 변환
 	FString ConvertSecondsToMinutesAndSeconds(int32 TotalSeconds);
 	//플레이어와 적의 닉네임과 처치한 적, 처치된 아군 수를 표시하는 결과창을 띄운다.
-	void ShowResult();
-	
-	UPROPERTY(EditDefaultsOnly,Category = "Widget")
+	UFUNCTION(BlueprintCallable)
+	void ShowResult(bool Value);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Widget")
 	TSubclassOf<UUserWidget> PlayerControllerClass;
 	//화면에 Enemy count 표시
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")

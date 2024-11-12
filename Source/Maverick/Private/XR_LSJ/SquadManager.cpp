@@ -190,7 +190,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 
             SquadLastIdx = SquadCount;
         }
-         DrawDebugSphere(GetWorld(),Start, Radius, 12, FColor::Black, false, 5.0f);
+         //DrawDebugSphere(GetWorld(),Start, Radius, 12, FColor::Black, false, 5.0f);
         for (const FHitResult& HitResult : OutHits)
         {
             if(false ==HitResult.GetActor()->ActorHasTag("Player"))

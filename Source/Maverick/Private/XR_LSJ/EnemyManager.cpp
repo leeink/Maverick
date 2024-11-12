@@ -30,7 +30,10 @@ void AEnemyManager::DieSoldier()
 	{
 		EndGame = true;
 		FTimerHandle ShowResultHandle;
-		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
+			{
+				ShowResult(true);
+			}, 3.0f, false);
 	}
 }
 void AEnemyManager::DiePlayerSoldier()
@@ -44,7 +47,10 @@ void AEnemyManager::DiePlayerSoldier()
 	{
 		EndGame = true;
 		FTimerHandle ShowResultHandle;
-		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
+			{
+				ShowResult(false);
+			}, 3.0f, false);
 	}
 }
 void AEnemyManager::DiePlayerTank()
@@ -59,7 +65,10 @@ void AEnemyManager::DiePlayerTank()
 	{
 		EndGame = true;
 		FTimerHandle ShowResultHandle;
-		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
+			{
+				ShowResult(false);
+			}, 3.0f, false);
 	}
 }
 FString AEnemyManager::ConvertSecondsToMinutesAndSeconds(int32 TotalSeconds)
@@ -70,7 +79,7 @@ FString AEnemyManager::ConvertSecondsToMinutesAndSeconds(int32 TotalSeconds)
     // 두 자리 형식을 유지하려면 추가 포맷
     return FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 }
-void AEnemyManager::ShowResult()
+void AEnemyManager::ShowResult(bool Value)
 {
 	UGameplayStatics::SetGamePaused(GetWorld(),true);
 
@@ -82,7 +91,7 @@ void AEnemyManager::ShowResult()
 		FString NickNamePlayer = "Player";
 		GameResultWidget->AddNorthKoreaData(NickNameAI, MaxPlayerSoldierCount-PlayerSoldierCount, MaxSoldierCount-SoldierCount, MaxPlayerTankCount-PlayerTankCount, MaxTankCount-TankCount);
 		GameResultWidget->AddSouthKoreaData(NickNamePlayer, MaxSoldierCount-SoldierCount, MaxPlayerSoldierCount-PlayerSoldierCount, MaxTankCount-TankCount, MaxPlayerTankCount-PlayerTankCount);
-		
+		GameResultWidget->SetResultIcon(Value);
 		FString Time = ConvertSecondsToMinutesAndSeconds(PlayTimeSeconds);
 		GameResultWidget->SetClearTime(Time);
 		GameResultWidget->AddToViewport();
@@ -100,7 +109,10 @@ void AEnemyManager::DieTank()
 	{
 		EndGame = true;
 		FTimerHandle ShowResultHandle;
-		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,this,&AEnemyManager::ShowResult,3.0f,false);
+				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
+			{
+				ShowResult(true);
+			}, 3.0f, false);
 	}
 }
 // Called when the game starts or when spawned
