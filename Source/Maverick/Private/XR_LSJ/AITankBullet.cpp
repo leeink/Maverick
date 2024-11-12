@@ -96,7 +96,7 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, GetOwner()->GetInstigatorController(), GetOwner(),NULL);
 				else
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, nullptr,nullptr ,NULL);
-				UE_LOG(LogTemp,Error,TEXT("%s HitResult"),*HitResult.GetComponent()->GetName());
+				//UE_LOG(LogTemp,Error,TEXT("%s HitResult"),*HitResult.GetComponent()->GetName());
 				
 				
 			}
