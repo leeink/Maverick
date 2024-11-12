@@ -7,6 +7,7 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/DecalComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/FlockingComponent.h"
@@ -124,6 +125,10 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			FTimerHandle DieTimerHandle;
 			GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, [this]()
 			{
+				if(DieSound != nullptr)
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), DieSound, GetActorLocation());
+				}
 				Destroy();
 			}, 3.0f, false, 3.0f);
 		}
