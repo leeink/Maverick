@@ -12,6 +12,7 @@
 #include "UserControlUI.h"
 #include "LDG/TankBase.h"
 #include "XR_LSJ/OccupiedLocation.h"
+#include "XR_LSJ/ResultIconWidget.h"
 
 // Sets default values
 AEnemyManager::AEnemyManager()
@@ -26,9 +27,17 @@ void AEnemyManager::DieSoldier()
 	SoldierCount--;
 	EnemyCountWidget->SetSoldierCount(SoldierCount);
 
+
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
 		EndGame = true;
+		
+		if (GameResultIconClass)
+		{
+			ResultIconWidget = Cast<UResultIconWidget>(CreateWidget(GetWorld(), GameResultIconClass));
+			ResultIconWidget->SetVisibleIcon(true);
+			ResultIconWidget->AddToViewport();
+		}
 		FTimerHandle ShowResultHandle;
 				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
@@ -46,6 +55,12 @@ void AEnemyManager::DiePlayerSoldier()
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
 		EndGame = true;
+		if (GameResultIconClass)
+		{
+			ResultIconWidget = Cast<UResultIconWidget>(CreateWidget(GetWorld(),GameResultIconClass));
+			ResultIconWidget->SetVisibleIcon(false);
+			ResultIconWidget->AddToViewport();
+		}
 		FTimerHandle ShowResultHandle;
 				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
@@ -64,6 +79,13 @@ void AEnemyManager::DiePlayerTank()
 	if (PlayerSoldierCount <= 0 && PlayerTankCount <= 0)
 	{
 		EndGame = true;
+		
+		if (GameResultIconClass)
+		{
+			ResultIconWidget = Cast<UResultIconWidget>(CreateWidget(GetWorld(),GameResultIconClass));
+			ResultIconWidget->SetVisibleIcon(false);
+			ResultIconWidget->AddToViewport();
+		}
 		FTimerHandle ShowResultHandle;
 		GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
@@ -108,6 +130,12 @@ void AEnemyManager::DieTank()
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
 		EndGame = true;
+		if (GameResultIconClass)
+		{
+			ResultIconWidget = Cast<UResultIconWidget>(CreateWidget(GetWorld(), GameResultIconClass));
+			ResultIconWidget->SetVisibleIcon(true);
+			ResultIconWidget->AddToViewport();
+		}
 		FTimerHandle ShowResultHandle;
 				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
@@ -245,6 +273,7 @@ void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccup
 		pOccupiedLocationStruct.OccupiedLocation = pOccupiedLocationActor->GetActorLocation();
 		break;
 	case EOccupiedLocationType::Tank:
+		//UE_LOG(LogTemp,Error,TEXT(" %s CurrentRemainTank %s"),*pOccupiedLocationActor->GetName(),*pOccupiedLocationActor->GetActorLocation().ToString());
 		pOccupiedLocationStruct.TankLocation.Add(pOccupiedLocationActor->GetActorLocation());
 		break;
 	case EOccupiedLocationType::Squad:
@@ -403,7 +432,8 @@ void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStru
 			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.OccupiedLocation);
 		else
 			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank]);
-		EnemyTankAll[pTankCount]->SetDefenseMode(false);
+		
+		//UE_LOG(LogTemp,Error,TEXT("pTankCount %d CurrentRemainTank %s"),pTankCount,*OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank].ToString());
 		CurrentRemainTank++;
 	}
 }

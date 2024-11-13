@@ -45,6 +45,8 @@ class MAVERICK_API AEnemyManager : public AActor
 	//게임 결과창 위젯
 	UPROPERTY()
 	class UGameResultWidget* GameResultWidget;
+	UPROPERTY()
+	class UResultIconWidget* ResultIconWidget;
 	//플레이어 유닛 수와 명령을 표시하는 위젯
 	UPROPERTY()
 	class UUserControlUI* UserControlUI;
@@ -117,6 +119,8 @@ public:
 	TSubclassOf<UUserWidget> EnemyCountClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")
 	TSubclassOf<UUserWidget> GameResultClass;
+	UPROPERTY(EditDefaultsOnly,Category = "Widget")
+	TSubclassOf<UUserWidget> GameResultIconClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")
 	TSubclassOf<class ASquadManager> SquadManagerClass;
 	UPROPERTY(EditDefaultsOnly,Category = "Spawn")

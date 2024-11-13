@@ -33,7 +33,7 @@ void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
         FVector WorldPosition;
         WorldPosition.X = WorldPositionX;
         WorldPosition.Y = WorldPositionY;
-       UE_LOG(LogTemp,Error,TEXT("%f %f %s"), NormalX,NormalY,*ClickPosition.ToString());
+       //UE_LOG(LogTemp,Error,TEXT("%f %f %s"), NormalX,NormalY,*ClickPosition.ToString());
         WorldPosition.Z = PlayerPawn->GetActorLocation().Z; // 높이값 고정 또는 특정 레벨의 높이로 설정
         PlayerPawn->SetActorLocation(WorldPosition);
     }
