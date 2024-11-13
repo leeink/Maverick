@@ -22,7 +22,7 @@ AEnemyManager::AEnemyManager()
 }
 void AEnemyManager::DieSoldier()
 {
-	if(EndGame)
+	if(EndGame || SoldierCount<=0)
 		return;
 	SoldierCount--;
 	EnemyCountWidget->SetSoldierCount(SoldierCount);
@@ -30,7 +30,7 @@ void AEnemyManager::DieSoldier()
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
-		EndGame = true;
+		/*EndGame = true;
 		
 		if (GameResultIconClass)
 		{
@@ -42,7 +42,7 @@ void AEnemyManager::DieSoldier()
 				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
 				ShowResult(true);
-			}, 3.0f, false);
+			}, 3.0f, false);*/
 	}
 }
 void AEnemyManager::DiePlayerSoldier()
@@ -122,14 +122,14 @@ void AEnemyManager::ShowResult(bool Value)
 
 void AEnemyManager::DieTank()
 {
-	if(EndGame)
+	if(EndGame || TankCount<=0)
 		return;
 	TankCount--;
 	EnemyCountWidget->SetTankCount(TankCount);
 
 	if (SoldierCount <= 0 && TankCount <= 0)
 	{
-		EndGame = true;
+		/*EndGame = true;
 		if (GameResultIconClass)
 		{
 			ResultIconWidget = Cast<UResultIconWidget>(CreateWidget(GetWorld(), GameResultIconClass));
@@ -140,7 +140,7 @@ void AEnemyManager::DieTank()
 				GetWorld()->GetTimerManager().SetTimer(ShowResultHandle,[&]()
 			{
 				ShowResult(true);
-			}, 3.0f, false);
+			}, 3.0f, false);*/
 	}
 }
 // Called when the game starts or when spawned

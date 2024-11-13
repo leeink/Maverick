@@ -34,7 +34,7 @@ AAISquadBullet::AAISquadBullet()
 	
 	SetMovementComp(CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp")));
 	GetMovementComp()->SetUpdatedComponent(RootComponent);
-
+	GetMovementComp()->ProjectileGravityScale=0.1f;
 }
 
 void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -80,7 +80,7 @@ void AAISquadBullet::BeginPlay()
 	Super::BeginPlay();
 	BulletFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BulletFXSystem,MeshComp,"", FVector::ZeroVector, FRotator::ZeroRotator, FVector(1, 1, 1), EAttachLocation::SnapToTarget, true, ENCPoolMethod::AutoRelease);
 	FTimerHandle DestroyHandle;
-	GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &AAISquadBullet::DestroyBullet, 3.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(DestroyHandle, this, &AAISquadBullet::DestroyBullet, 1.0f, true);
 
 }
 void AAISquadBullet::DestroyBullet()

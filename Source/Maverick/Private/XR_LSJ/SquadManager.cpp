@@ -19,6 +19,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "HpBarNewIcon.h"
 #include "AI/Navigation/NavigationTypes.h"
+#include "LDG/TankBase.h"
+#include "LDG/TankAIController.h"
 
 FVector ASquadManager::GetTargetLocation()
 {
@@ -92,7 +94,7 @@ void ASquadManager::BeginPlay()
     SquadManagerAbility.Hp = 300.f;
     
     
-    SquadManagerAbility.FindTargetRange = 3000.f;
+    SquadManagerAbility.FindTargetRange = 4000.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
@@ -212,6 +214,20 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 					continue;
 				}
             }
+            else if (ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(HitResult.GetActor()))
+			{
+				ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+	            if (controller&&controller->CurrentState==ETankState::Die)
+	            {
+		            //FSMComp->SetIsAttacking(false,nullptr);
+		            continue;
+	            }
+                else if (controller == nullptr)
+				{
+                    //UE_LOG(LogTemp,Error,TEXT("controller Die"));
+					continue;
+				}
+			}
             
              //각 분대원에게 찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
             //타겟에게 공격 지시

@@ -29,7 +29,7 @@ AAITankBullet::AAITankBullet()
 	BulletFXComponent->SetRelativeScale3D(NewScale);
 	BulletFXComponent->SetupAttachment(RootComponent);
 
-	ExplosiveMaxDamage = 50.0f;
+	ExplosiveMaxDamage = 500.0f;
 	ExplosiveMinDamage = 10.0f;
 	ExplosiveRange = 100.0f;
 	
@@ -71,7 +71,7 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	ActorsToIgnore.Add(GetOwner());
-	EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::ForOneFrame;
+	EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
 	TArray<FHitResult> OutHits;
 	bool bIgnoreSelf = true;
 	FLinearColor TraceColor = FLinearColor::Gray;

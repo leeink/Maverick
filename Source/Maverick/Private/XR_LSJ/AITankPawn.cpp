@@ -23,6 +23,8 @@
 #include "LDG/SoldierAIController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "HpBarNewIcon.h"
+#include "LDG/TankBase.h"
+#include "LDG/TankAIController.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -124,10 +126,10 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 		break;
 	case EAIUnitCommandState::DIE:
 		GetController()->StopMovement();
-		if(FDelUnitDie.IsBound())
+		if (FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
-		if(FDelTankUnitDie.IsBound())
+		if (FDelTankUnitDie.IsBound())
 			FDelTankUnitDie.Execute();
 		//겹쳐있을때 이게 문제 있는 듯>?
 		break;
@@ -139,50 +141,7 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 
 void AAITankPawn::SetTankState(EAIUnitCommandState Command)
 {
-	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
-	{
-		MoveWheelAnimation(0);
-		return;
-	}
-		
-	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
-		PreState = CurrentCommandState;
-
-	CurrentCommandState = Command;
-
-	//UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
-	//UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
-
-	switch ( CurrentCommandState )
-	{
-	case EAIUnitCommandState::IDLE:
-
-		GetController()->StopMovement();
-		MoveWheelAnimation(0);
-		break;
-	case EAIUnitCommandState::MOVE:
-		MoveWheelAnimation(MovementComponent->GetMaxSpeed());
-		break;
-	case EAIUnitCommandState::ATTACK:
-		
-		break;
-	case EAIUnitCommandState::DAMAGE:
-		
-		break;
-	case EAIUnitCommandState::DIE:
-		GetController()->StopMovement();
-		BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(FDelUnitDie.IsBound())
-			FDelUnitDie.Execute();
-		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
-		if(FDelTankUnitDie.IsBound())
-			FDelTankUnitDie.Execute();
-		//겹쳐있을때 이게 문제 있는 듯>?
-		break;
-	default:
-		
-		break;
-	}
+	
 }
 
 float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
@@ -242,7 +201,7 @@ void AAITankPawn::BeginPlay()
 	TankAbility.ExplosiveMinDamage = 5.f;
 
 	TurretRotSpeed = 50.0f;
-	FireCoolTime = 2.0f;
+	FireCoolTime = 3.5f;
 
 	AITankController = Cast<AAITankController>(GetController());
 	if (AITankController)
@@ -322,6 +281,20 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
 		            continue;
 	            }	
             }
+			else if (ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(HitResult.GetActor()))
+			{
+				ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+	            if (controller&&controller->CurrentState==ETankState::Die)
+	            {
+		            //FSMComp->SetIsAttacking(false,nullptr);
+		            continue;
+	            }
+				else if (controller == nullptr)
+				{
+                    //UE_LOG(LogTemp,Error,TEXT("controller Die"));
+					continue;
+				}
+			}
             
             //찾은 적들 중 가장 가까운 적이고 중간에 장애물이 없다면 타겟으로 지정
             //타겟에게 공격 지시
