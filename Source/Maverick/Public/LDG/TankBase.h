@@ -14,6 +14,7 @@ class UBoxComponent;
  */
 
 DECLARE_DELEGATE(FDel_TankUnitDie);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnActorDestroyedDelegate, AActor*);
 
 UCLASS()
 class MAVERICK_API ATankBase : public APawn
@@ -79,10 +80,12 @@ class MAVERICK_API ATankBase : public APawn
 	
 public:
 	ATankBase();
+	FOnActorDestroyedDelegate OnActorDestroyed;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Destroyed() override;
 
 public:	
 	// Called every frame
