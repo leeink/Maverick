@@ -118,9 +118,10 @@ void ASoldierAIController::EnemyDetection()
 		{
 			if(Unit -> GetCurrentCommandState() == EAIUnitCommandState::DIE)
 			{
-				GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
+				return;
 			}
 		}
+		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
 	}
 	else
 	{

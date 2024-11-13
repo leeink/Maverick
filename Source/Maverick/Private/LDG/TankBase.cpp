@@ -61,6 +61,13 @@ void ATankBase::BeginPlay()
 	ArmyWidgetInstance = Cast<UArmyWidgetBase>(ArmyWidget -> GetUserWidgetObject());
 }
 
+void ATankBase::Destroyed()
+{
+	Super::Destroyed();
+
+	OnActorDestroyed.Broadcast(this);
+}
+
 void ATankBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -93,7 +100,7 @@ void ATankBase::ArmyWidgetBilboard()
 float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                             AActor* DamageCauser)
 {
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
+	//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;
 
 	ArmyWidgetInstance -> UpdateHealthBar(Health / MaxHealth);
@@ -121,8 +128,6 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			{
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestroySound, GetActorLocation());
 			}
-
-			
 			Destroy();
 		}
 	}
