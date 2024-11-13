@@ -515,7 +515,7 @@ void ASquadManager::AttackTargetUnit()
             continue;
 		if (Target[SquadCount] == nullptr)
 			continue;
-        UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
+        //UE_LOG(LogTemp, Warning, TEXT("Owner %s Target %s"),*SquadArray[SquadCount]->GetName(),*Target[SquadCount]->GetName() );
         SquadArray[SquadCount]->FSMComp->SetIsAttacking(true, Target[SquadCount]);
     }
 }
@@ -847,7 +847,6 @@ void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVe
 {
     float Distance = FVector::Dist(P1, P2);
     int32 NumPoints = FMath::CeilToInt(Distance / Interval);  // 50cm 간격으로 몇 개의 점을 생성할지 계산
-    UE_LOG(LogTemp,Error,TEXT("%d"),NumPoints);
     for (int32 i = 1; i <= NumPoints-1; ++i)
     {
         float t = i / static_cast<float>(NumPoints);  // t는 0에서 1 사이를 일정하게 증가
@@ -1040,42 +1039,42 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetAc
          
          //좌우상하 꼭지점
 		 VertexArray.Add(FrontLeftVertex);// 좌상단 왼쪽
-         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+         //UE_LOG(LogTemp,Error,TEXT("FrontLeftVertex %s"),*VertexArray.Last().ToString());
 		 VertexArray.Add(FrontRightVertex);  // 우상단 오른쪽
-         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+         //UE_LOG(LogTemp,Error,TEXT("FrontRightVertex %s"),*VertexArray.Last().ToString());
 		 VertexArray.Add(BackLeftVertex); // 좌하단 왼쪽
-         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+         //UE_LOG(LogTemp,Error,TEXT("BackLeftVertex %s"),*VertexArray.Last().ToString());
 		 VertexArray.Add(BackRightVertex); // 우하단 오른쪽
-         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+         //UE_LOG(LogTemp,Error,TEXT("BackRightVertex %s"),*VertexArray.Last().ToString());
 
          //좌우상하 방향
          FVector LeftSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,0,0));
          FVector LeftDirection = LeftSideLocation - TargetActor->GetActorLocation();
          LeftDirection.Normalize();
          VertexArray.Add(LeftSideLocation+LeftDirection*1000.0f); // 좌
-         UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
-         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Red, false, 100.0f);
+         //UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
+         //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Red, false, 100.0f);
 
          FVector RightSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X,0,0));
          FVector RightDirection = RightSideLocation - TargetActor->GetActorLocation();
          RightDirection.Normalize();
 		 VertexArray.Add(RightSideLocation+RightDirection*1000.0f); // 우
-		 UE_LOG(LogTemp,Error,TEXT("right %s"),*VertexArray.Last().ToString());
-         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Yellow, false, 100.0f);
+		 //UE_LOG(LogTemp,Error,TEXT("right %s"),*VertexArray.Last().ToString());
+         //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Yellow, false, 100.0f);
 
          FVector FrontSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0));
          FVector FrontDirection = FrontSideLocation - TargetActor->GetActorLocation();
          FrontDirection.Normalize();
          VertexArray.Add(FrontSideLocation+FrontDirection*1000.0f); // 상
-		 UE_LOG(LogTemp,Error,TEXT("up %s"),*VertexArray.Last().ToString());
-         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Blue, false, 100.0f);
+		 //UE_LOG(LogTemp,Error,TEXT("up %s"),*VertexArray.Last().ToString());
+         //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Blue, false, 100.0f);
 
          FVector BackSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y,0));
          FVector BackDirection = BackSideLocation - TargetActor->GetActorLocation();
          BackDirection.Normalize();
          VertexArray.Add(BackSideLocation+BackDirection*1000.0f); // 하
-         UE_LOG(LogTemp,Error,TEXT("down %s"),*VertexArray.Last().ToString());
-         DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Black, false, 100.0f);
+         //UE_LOG(LogTemp,Error,TEXT("down %s"),*VertexArray.Last().ToString());
+         //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Black, false, 100.0f);
          //TargetActor와 SquadManager액터의 가까운 방향에 해당하는 위치를 구한다.
          EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;
@@ -1093,19 +1092,19 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetAc
          {
          case EObstructionDirection::Left: //VertexArray[4] : 좌측 방향
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
-            UE_LOG(LogTemp,Error,TEXT("left"));
+            //UE_LOG(LogTemp,Error,TEXT("left"));
              break;
          case EObstructionDirection::Right: //VertexArray[5] : 우측 방향
             GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
-            UE_LOG(LogTemp,Error,TEXT("Right"));
+            //UE_LOG(LogTemp,Error,TEXT("Right"));
              break;
          case EObstructionDirection::Down: //VertexArray[6] : 상단 방향
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
-             UE_LOG(LogTemp,Error,TEXT("Down"));
+             //UE_LOG(LogTemp,Error,TEXT("Down"));
              break;
          case EObstructionDirection::Up: //VertexArray[7] : 하단 방향
             GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
-             UE_LOG(LogTemp,Error,TEXT("Up"));
+             //UE_LOG(LogTemp,Error,TEXT("Up"));
              break;
          default:
              break;

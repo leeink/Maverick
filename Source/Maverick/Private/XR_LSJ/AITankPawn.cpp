@@ -103,8 +103,8 @@ void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 
 	CurrentCommandState = Command;
 
-	UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
-	UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
+	//UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
+	//UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
 
 	switch ( CurrentCommandState )
 	{
@@ -150,8 +150,8 @@ void AAITankPawn::SetTankState(EAIUnitCommandState Command)
 
 	CurrentCommandState = Command;
 
-	UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
-	UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
+	//UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
+	//UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
 
 	switch ( CurrentCommandState )
 	{
@@ -171,6 +171,7 @@ void AAITankPawn::SetTankState(EAIUnitCommandState Command)
 		break;
 	case EAIUnitCommandState::DIE:
 		GetController()->StopMovement();
+		BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if(FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);

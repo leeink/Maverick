@@ -104,7 +104,7 @@ void AAISquad::AttackFire()
 		return;
 	}
 	//muzzle ÀÌÆåÆ® 
-	GunMuzzleFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(GunMuzzleFXSystem,GetGunMeshComp(),TEXT("Muzzle"),FVector::ZeroVector,FRotator::ZeroRotator,FVector(1,1,1),EAttachLocation::SnapToTarget,true,ENCPoolMethod::AutoRelease);
+	GunMuzzleFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(GunMuzzleFXSystem,GetGunMeshComp(),TEXT("Muzzle"),FVector::ZeroVector,FRotator::ZeroRotator,FVector(5,5,5),EAttachLocation::SnapToTarget,true,ENCPoolMethod::AutoRelease);
 	
 	//ÃÑ¾Ë ¹æÇâ
 	FVector LaunchDirection = (FSMComp->GetTarget()->GetActorLocation() - GetGunMeshComp()->GetSocketLocation(TEXT("Muzzle"))).GetSafeNormal();

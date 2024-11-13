@@ -128,7 +128,6 @@ void AAITankBullet::BeginPlay()
 
 void AAITankBullet::OnParticleSystemFinished(UParticleSystemComponent* FinishedComponent)
 {
-    UE_LOG(LogTemp, Log, TEXT("Particle System Finished"));
 	DestroyBullet();
 }
 void AAITankBullet::DestroyBullet()
