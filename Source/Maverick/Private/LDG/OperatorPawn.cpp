@@ -161,18 +161,25 @@ void AOperatorPawn::OnMouseLeftStarted(const FInputActionValue& Value)
 
 			for(auto* Unit: SelectedUnits)
 			{
-				if(ASoldierAIController* SoldierController = Cast<ASoldierAIController>(Unit -> GetController()))
+				if(Unit != nullptr)
 				{
-					SoldierController -> ChaseCommand(HitResult.Location);
+					if(ASoldierAIController* SoldierController = Cast<ASoldierAIController>(Unit -> GetController()))
+					{
+						SoldierController -> ChaseCommand(HitResult.Location);
+					}
 				}
+				
 			}
 
 			for(auto* Tank: SelectedTanks)
 			{
-				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+				if(Tank != nullptr)
 				{
-					//GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Chase Command"));
-					TankAIController -> ChaseCommand(HitResult.Location);
+					if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+					{
+						//GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Chase Command"));
+						TankAIController -> ChaseCommand(HitResult.Location);
+					}
 				}
 			}
 			if(AttackCursorEffect != nullptr)

@@ -9,6 +9,7 @@
 #include "LDG/FlockingComponent.h"
 #include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/Soldier.h"
+#include "XR_LSJ/AITankPawn.h"
 
 void ASoldierAIController::OnPossess(APawn* InPawn)
 {
@@ -111,8 +112,15 @@ void ASoldierAIController::EnemyDetection()
 		0.1f
 		);
 
-	if(HitResult.bBlockingHit && HitResult.GetActor() && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
+	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
+		if(AAITankPawn* Unit = Cast<AAITankPawn>(HitResult.GetActor()))
+		{
+			if(Unit -> GetCurrentCommandState() == EAIUnitCommandState::DIE)
+			{
+				return;
+			}
+		}
 		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
 	}
 	else

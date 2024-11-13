@@ -4,7 +4,6 @@
 #include "LDG/UnitControlHUD.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "LDG/OperatorPawn.h"
 #include "LDG/Soldier.h"
 #include "LDG/TankBase.h"

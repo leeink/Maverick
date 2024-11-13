@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
+#include "LDG/OperatorPawn.h"
 #include "LDG/TankAIController.h"
 
 ATankBase::ATankBase()
@@ -93,7 +94,7 @@ void ATankBase::ArmyWidgetBilboard()
 float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                             AActor* DamageCauser)
 {
-	GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
+	//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Take Damage"));
 	Health -= DamageAmount;
 
 	ArmyWidgetInstance -> UpdateHealthBar(Health / MaxHealth);
@@ -121,8 +122,11 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			{
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestroySound, GetActorLocation());
 			}
-
-			
+			/*
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Pre Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Num()));
+			Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Remove(this);
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Post Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Num()));
+			*/
 			Destroy();
 		}
 	}
