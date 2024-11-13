@@ -504,8 +504,3 @@ void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
 		}
 	}
 }
-
-void AOperatorPawn::RemoveTank(ATankBase* Tank)
-{
-	SelectedTanks.Remove(Tank);
-}

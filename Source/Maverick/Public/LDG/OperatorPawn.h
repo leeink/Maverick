@@ -159,7 +159,6 @@ protected:
 	void OnSelectSlot1(const FInputActionValue& Value);
 	void OnSelectSlot2(const FInputActionValue& Value);
 	void OnSelectSlot3(const FInputActionValue& Value);
-	void RemoveTank(ATankBase* Tank);
 
 public:	
 	// Called every frame
