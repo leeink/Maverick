@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/TankBase.h"
+#include "XR_LSJ/IAICommand.h"
+#include "XR_LSJ/AITankPawn.h"
 
 void ATankAIController::OnPossess(APawn* InPawn)
 {
@@ -135,7 +137,13 @@ void ATankAIController::EnemyDetection()
 
 	if(HitResult.bBlockingHit && HitResult.GetActor() -> ActorHasTag(TEXT("Enemy")))
 	{
-		GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
+		if(AAITankPawn* Unit = Cast<AAITankPawn>(HitResult.GetActor()))
+		{
+			if(Unit -> GetCurrentCommandState() == EAIUnitCommandState::DIE)
+			{
+				GetBlackboardComponent() -> SetValueAsObject(FName(TEXT("TargetActor")), HitResult.GetActor());
+			}
+		}
 	}
 	else
 	{
