@@ -11,6 +11,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/FlockingComponent.h"
+#include "LDG/OperatorPawn.h"
 #include "LDG/SoldierAIController.h"
 #include "LDG/SoldierHealthWidget.h"
 
@@ -129,6 +130,11 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 				{
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), DieSound, GetActorLocation());
 				}
+				//Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Remove(this);
+				/*GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Pre Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Num()));
+				Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Remove(this);
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Post Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Num()));
+				*/
 				Destroy();
 			}, 3.0f, false, 3.0f);
 		}

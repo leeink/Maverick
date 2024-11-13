@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "LDG/ArmyWidgetBase.h"
+#include "LDG/OperatorPawn.h"
 #include "LDG/TankAIController.h"
 
 ATankBase::ATankBase()
@@ -59,13 +60,6 @@ void ATankBase::BeginPlay()
 
 	Health = MaxHealth;
 	ArmyWidgetInstance = Cast<UArmyWidgetBase>(ArmyWidget -> GetUserWidgetObject());
-}
-
-void ATankBase::Destroyed()
-{
-	Super::Destroyed();
-
-	OnActorDestroyed.Broadcast(this);
 }
 
 void ATankBase::Tick(float DeltaTime)
@@ -128,6 +122,11 @@ float ATankBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			{
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestroySound, GetActorLocation());
 			}
+			/*
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Pre Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Num()));
+			Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Remove(this);
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Post Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedTanks().Num()));
+			*/
 			Destroy();
 		}
 	}
