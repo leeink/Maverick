@@ -39,6 +39,9 @@ class MAVERICK_API ATankAIController : public AAIController
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Detection, meta = (AllowPrivateAccess = "true"))
 	float ExplosionRange = 800.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Damage, meta = (AllowPrivateAccess = "true"))
+	float Damage = 500.f;
+
 	FTimerHandle DetectionTimerHandle;
 	FTimerHandle ForgetTimerHandle;
 

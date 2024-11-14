@@ -67,7 +67,7 @@ void ASoldierAIController::AttackCommand()
 {
 	if(AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor")))))
 	{
-		UGameplayStatics::ApplyDamage(Target, 25.f, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(Target, Damage, GetInstigator() -> GetController(), GetOwner(), UDamageType::StaticClass());
 		RifleAnimInstance -> PlayAttackMontage();
 	}
 }
