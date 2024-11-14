@@ -6,11 +6,15 @@
 
 FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-    // 클릭된 위치를 위젯 공간에서 좌표로 얻기
-    FVector2D LocalClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        // 클릭된 위치를 위젯 공간에서 좌표로 얻기
+        FVector2D LocalClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 
-    // 클릭된 위치로 플레이어 이동
-    MovePlayerToMapClick(LocalClickPosition);
+        // 클릭된 위치로 플레이어 이동
+        MovePlayerToMapClick(LocalClickPosition);
+    }
+
 
     return FReply::Handled();
 }
