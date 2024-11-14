@@ -39,6 +39,9 @@ class MAVERICK_API ASoldierAIController : public AAIController
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Detection, meta = (AllowPrivateAccess = "true"))
 	float DetectionRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Damage, meta = (AllowPrivateAccess = "true"))
+	float Damage = 25.f;
 	
 	FTimerHandle DetectionTimerHandle;
 	FTimerHandle ForgetTimerHandle;
