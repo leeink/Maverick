@@ -156,6 +156,18 @@ void AEnemyManager::BeginPlay()
 		EnemyCountWidget->AddToViewport();
 	}
 
+	TArray<AActor*> FoundSquadActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASquadManager::StaticClass(), FoundSquadActors);
+	for (AActor* SquadActor : FoundSquadActors)
+	{
+		if (ASquadManager* SquadManager = Cast<ASquadManager>(SquadActor))
+		{
+			SquadManager->SetDefenseMode(false);
+			SquadManager->FDelSoldierUnitDie.BindUFunction(this, FName("DieSoldier"));
+			SquadManager->SetMinimapUIZOrder(SoldierCount);
+			SoldierCount += SquadManager->GetCurrentSquadCount();
+		}
+	}
 	//적 스폰
 	//월드에 있는 특정 박스 오브젝트를 찾고 그 위치에 스폰
 	//count ++ 해줌
