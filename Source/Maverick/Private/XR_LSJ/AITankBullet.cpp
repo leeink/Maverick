@@ -30,7 +30,7 @@ AAITankBullet::AAITankBullet()
 	BulletFXComponent->SetupAttachment(RootComponent);
 
 	ExplosiveMaxDamage = 500.0f;
-	ExplosiveMinDamage = 10.0f;
+	ExplosiveMinDamage = 200.0f;
 	ExplosiveRange = 100.0f;
 	
 	MovementComp = (CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp")));
@@ -92,12 +92,14 @@ void AAITankBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 				TargetLocation.Z=0;
 				float Distance = FVector::Distance(Start,TargetLocation );
 				float Damage = FMath::Lerp(ExplosiveMinDamage, ExplosiveMaxDamage, (ExplosiveRange-Distance) / ExplosiveRange);
+				Damage = 100.0f;
+				UE_LOG(LogTemp,Error,TEXT("%f %f %f"),ExplosiveMinDamage, ExplosiveMaxDamage, (ExplosiveRange-Distance) / ExplosiveRange);
 				if(GetOwner()!=nullptr)
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, GetOwner()->GetInstigatorController(), GetOwner(),NULL);
 				else
 					UGameplayStatics::ApplyDamage(HitResult.GetActor(), Damage, nullptr,nullptr ,NULL);
 				//UE_LOG(LogTemp,Error,TEXT("%s HitResult"),*HitResult.GetComponent()->GetName());
-				
+				UE_LOG(LogTemp,Error,TEXT("%f"),Damage);
 				
 			}
 		}
