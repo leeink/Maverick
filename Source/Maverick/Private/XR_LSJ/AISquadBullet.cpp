@@ -49,9 +49,9 @@ void AAISquadBullet::NotifyActorBeginOverlap(AActor* OtherActor)
 			 if (controller && (controller->GetCurrentState() != EState::Die && !controller->IsDead()))
 			 {
 				if(GetOwner()!=nullptr)
-					UGameplayStatics::ApplyDamage(OtherActor, 10.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
+					UGameplayStatics::ApplyDamage(OtherActor, 5.0f, GetOwner()->GetInstigatorController(),GetOwner(),NULL);
 				else
-					UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr,nullptr ,NULL);
+					UGameplayStatics::ApplyDamage(OtherActor, 5.0f, nullptr,nullptr ,NULL);
 			 }
 		 }
 		ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(OtherActor);

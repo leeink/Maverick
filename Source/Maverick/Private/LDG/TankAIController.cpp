@@ -65,7 +65,7 @@ void ATankAIController::AttackCommand()
 	{
 		UGameplayStatics::ApplyRadialDamage(
 		GetWorld(),
-		500.f,
+		Damage,
 		Target -> GetActorLocation(),
 		ExplosionRange,
 		UDamageType::StaticClass(),
