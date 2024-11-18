@@ -132,7 +132,11 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY()
 	TArray<AActor*> ArmySlot3;
 
+	// Army Control Variables
 	bool bCtrlPressed;
+	float LastClickTime = 0.f;
+	float DoubleClickInterval = .2f;
+	bool bWaitingForSecondClick;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -159,6 +163,7 @@ protected:
 	void OnSelectSlot1(const FInputActionValue& Value);
 	void OnSelectSlot2(const FInputActionValue& Value);
 	void OnSelectSlot3(const FInputActionValue& Value);
+	void DoubleClickMoveLocation(FVector Location);
 
 public:	
 	// Called every frame
