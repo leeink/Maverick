@@ -12,7 +12,6 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
-#include "LDG/OperatorSpectatorPawn.h"
 #include "LDG/RifleSoldier.h"
 #include "LDG/SoldierAIController.h"
 #include "LDG/TankAIController.h"
@@ -34,6 +33,8 @@ AOperatorPawn::AOperatorPawn()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 	Camera -> SetRelativeRotation(FRotator(-50.f, 0.f, 0.f));
+
+	LocationArray.Init(FVector(0.f), 3);
 }
 
 // Called when the game starts or when spawned
@@ -133,7 +134,6 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
 		EnhancedInputComponent->BindAction(IA_MouseWheelUp , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelUp);
 		EnhancedInputComponent->BindAction(IA_MouseWheelDown , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelDown);
-		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
@@ -255,43 +255,39 @@ void AOperatorPawn::OnMouseWheelDown(const FInputActionValue& Value)
 	ScrollSpeed = FMath::Clamp(ScrollSpeed + delta * 100, 6000.f, 120000.f);
 }
 
-void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
-{
-	AOperatorSpectatorPawn* spawn = GetWorld() -> SpawnActor<AOperatorSpectatorPawn>(SpectatorClass, CurrentMousePosition, FRotator::ZeroRotator);
-	if(SpectatorPawnArray.Num() == 3)
-	{
-		SpectatorPawnArray.RemoveAt(0);
-	}
-	SpectatorPawnArray.Add(spawn);
-}
-
 void AOperatorPawn::OnSwitchSlot1(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 0)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[0]);
+		LocationArray[0] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[0], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
 void AOperatorPawn::OnSwitchSlot2(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 1)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[1]);
+		LocationArray[1] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[1], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
 void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 2)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[2]);
+		LocationArray[2] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[2], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 

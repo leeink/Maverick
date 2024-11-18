@@ -79,15 +79,12 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_ArmySlot3;
 
-	// Spectator Pawn Queue
-	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
+	// LocationArray
+	TArray<FVector> LocationArray;
 
 	//Scroll Speed
 	UPROPERTY(EditDefaultsOnly, Category = ScrollSpeed, meta = (AllowPrivateAccess = "true"))
 	float ScrollSpeed;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
 
 	// Mouse Cursor Effect
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Cursor, meta = (AllowPrivateAccess = "true"))
@@ -153,7 +150,6 @@ protected:
 	void OnMouseRight(const FInputActionValue& Value);
 	void OnMouseWheelUp(const FInputActionValue& Value);
 	void OnMouseWheelDown(const FInputActionValue& Value);
-	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
