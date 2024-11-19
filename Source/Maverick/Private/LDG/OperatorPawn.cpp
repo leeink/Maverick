@@ -10,9 +10,9 @@
 #include "InputActionValue.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
-#include "LDG/OperatorSpectatorPawn.h"
 #include "LDG/RifleSoldier.h"
 #include "LDG/SoldierAIController.h"
 #include "LDG/TankAIController.h"
@@ -25,7 +25,10 @@ AOperatorPawn::AOperatorPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
+	Collsion = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
+	SetRootComponent(Collsion);
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 0.0f;
@@ -34,6 +37,8 @@ AOperatorPawn::AOperatorPawn()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 	Camera -> SetRelativeRotation(FRotator(-50.f, 0.f, 0.f));
+
+	LocationArray.Init(FVector(0.f), 3);
 }
 
 // Called when the game starts or when spawned
@@ -133,7 +138,6 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_MouseRight , ETriggerEvent::Started , this , &AOperatorPawn::OnMouseRight);
 		EnhancedInputComponent->BindAction(IA_MouseWheelUp , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelUp);
 		EnhancedInputComponent->BindAction(IA_MouseWheelDown , ETriggerEvent::Triggered , this , &AOperatorPawn::OnMouseWheelDown);
-		EnhancedInputComponent->BindAction(IA_SpawnSpectator , ETriggerEvent::Started , this , &AOperatorPawn::OnSpawnSpectator);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot1);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot2);
 		EnhancedInputComponent->BindAction(IA_SwitchSlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSwitchSlot3);
@@ -255,43 +259,39 @@ void AOperatorPawn::OnMouseWheelDown(const FInputActionValue& Value)
 	ScrollSpeed = FMath::Clamp(ScrollSpeed + delta * 100, 6000.f, 120000.f);
 }
 
-void AOperatorPawn::OnSpawnSpectator(const FInputActionValue& Value)
-{
-	AOperatorSpectatorPawn* spawn = GetWorld() -> SpawnActor<AOperatorSpectatorPawn>(SpectatorClass, CurrentMousePosition, FRotator::ZeroRotator);
-	if(SpectatorPawnArray.Num() == 3)
-	{
-		SpectatorPawnArray.RemoveAt(0);
-	}
-	SpectatorPawnArray.Add(spawn);
-}
-
 void AOperatorPawn::OnSwitchSlot1(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 0)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[0]);
+		LocationArray[0] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[0], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
 void AOperatorPawn::OnSwitchSlot2(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 1)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[1]);
+		LocationArray[1] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[1], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
 void AOperatorPawn::OnSwitchSlot3(const FInputActionValue& Value)
 {
-	AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController());
-	
-	if(PlayerController && SpectatorPawnArray.Num() > 2)
+	if(bCtrlPressed)
 	{
-		PlayerController -> Possess(SpectatorPawnArray[2]);
+		LocationArray[2] = GetActorLocation();
+	}
+	else
+	{
+		SetActorLocation(LocationArray[2], false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
@@ -313,6 +313,7 @@ void AOperatorPawn::OnCtrlReleased(const FInputActionValue& Value)
 
 void AOperatorPawn::OnSelectSlot1(const FInputActionValue& Value)
 {
+	// Unit designation
 	if(bCtrlPressed)
 	{
 		if(SelectedUnits.Num() > 0)
@@ -336,51 +337,76 @@ void AOperatorPawn::OnSelectSlot1(const FInputActionValue& Value)
 	}
 	else
 	{
-		if(ArmySlot1.Num() > 0)
+		float currentTime = GetWorld() -> GetTimeSeconds();
+		if(bWaitingForSecondClick)	// Double Click
 		{
-			for(auto* Unit: SelectedUnits)
+			float timeBetweenClicks = currentTime - LastClickTime;
+
+			if(timeBetweenClicks < DoubleClickInterval)
 			{
-				if(Unit != nullptr)
-				{
-					Unit -> Deselected();
-				}
+				FVector ArmyLocation = ArmySlot1[FMath::RandHelper(ArmySlot1.Num() - 1)] -> GetActorLocation();
+				DoubleClickMoveLocation(ArmyLocation);
 			}
-			for(auto* Tank: SelectedTanks)
+			bWaitingForSecondClick = false;
+		}
+		else      // Single Click
+		{
+			if(ArmySlot1.Num() > 0)
 			{
-				if(Tank != nullptr)
+				for(auto* Unit: SelectedUnits)
 				{
-					Tank -> Deselected();
+					if(Unit != nullptr)
+					{
+						Unit -> Deselected();
+					}
 				}
-			}
-			SelectedUnits.Reset();
-			SelectedTanks.Reset();
+				for(auto* Tank: SelectedTanks)
+				{
+					if(Tank != nullptr)
+					{
+						Tank -> Deselected();
+					}
+				}
+				SelectedUnits.Reset();
+				SelectedTanks.Reset();
 		
-			for(auto* Unit: ArmySlot1)
-			{
-				if(Unit != nullptr)
+				for(auto* Unit: ArmySlot1)
 				{
-					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					if(Unit != nullptr)
 					{
-						SelectedUnits.Add(Soldier);
-						Soldier -> Selected();
-					}
-					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
-					{
-						SelectedTanks.Add(Tank);
-						Tank -> Selected();
+						if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+						{
+							SelectedUnits.Add(Soldier);
+							Soldier -> Selected();
+						}
+						else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+						{
+							SelectedTanks.Add(Tank);
+							Tank -> Selected();
+						}
 					}
 				}
+				
+				bWaitingForSecondClick = true;
+				LastClickTime = currentTime;
+        
+				// Reset Timer
+				FTimerHandle ResetTimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(ResetTimerHandle, [this]()
+				{
+					bWaitingForSecondClick = false;
+				}, DoubleClickInterval, false);
 			}
 		}
+		
 	}
 }
 
 void AOperatorPawn::OnSelectSlot2(const FInputActionValue& Value)
 {
-	// Ctrl Pressed
+	// Unit designation
 	if(bCtrlPressed)
 	{
-		// 
 		if(SelectedUnits.Num() > 0)
 		{
 			ArmySlot2.Reset();
@@ -402,47 +428,74 @@ void AOperatorPawn::OnSelectSlot2(const FInputActionValue& Value)
 	}
 	else
 	{
-		if(ArmySlot2.Num() > 0)
+		float currentTime = GetWorld() -> GetTimeSeconds();
+		if(bWaitingForSecondClick)	// Double Click
 		{
-			for(auto* Unit: SelectedUnits)
+			float timeBetweenClicks = currentTime - LastClickTime;
+
+			if(timeBetweenClicks < DoubleClickInterval)
 			{
-				if(Unit != nullptr)
-				{
-					Unit -> Deselected();
-				}
+				FVector ArmyLocation = ArmySlot2[FMath::RandHelper(ArmySlot2.Num() - 1)] -> GetActorLocation();
+				DoubleClickMoveLocation(ArmyLocation);
 			}
-			for(auto* Tank: SelectedTanks)
+			bWaitingForSecondClick = false;
+		}
+		else      // Single Click
+		{
+			if(ArmySlot2.Num() > 0)
 			{
-				if(Tank != nullptr)
+				for(auto* Unit: SelectedUnits)
 				{
-					Tank -> Deselected();
+					if(Unit != nullptr)
+					{
+						Unit -> Deselected();
+					}
 				}
-			}
-			SelectedUnits.Reset();
-			SelectedTanks.Reset();
+				for(auto* Tank: SelectedTanks)
+				{
+					if(Tank != nullptr)
+					{
+						Tank -> Deselected();
+					}
+				}
+				SelectedUnits.Reset();
+				SelectedTanks.Reset();
 		
-			for(auto* Unit: ArmySlot2)
-			{
-				if(Unit != nullptr)
+				for(auto* Unit: ArmySlot2)
 				{
-					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					if(Unit != nullptr)
 					{
-						SelectedUnits.Add(Soldier);
-						Soldier -> Selected();
-					}
-					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
-					{
-						SelectedTanks.Add(Tank);
-						Tank -> Selected();
+						if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+						{
+							SelectedUnits.Add(Soldier);
+							Soldier -> Selected();
+						}
+						else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+						{
+							SelectedTanks.Add(Tank);
+							Tank -> Selected();
+						}
 					}
 				}
+				
+				bWaitingForSecondClick = true;
+				LastClickTime = currentTime;
+        
+				// Reset Timer
+				FTimerHandle ResetTimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(ResetTimerHandle, [this]()
+				{
+					bWaitingForSecondClick = false;
+				}, DoubleClickInterval, false);
 			}
 		}
+		
 	}
 }
 
 void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
 {
+	// Unit designation
 	if(bCtrlPressed)
 	{
 		if(SelectedUnits.Num() > 0)
@@ -466,41 +519,73 @@ void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
 	}
 	else
 	{
-		if(ArmySlot3.Num() > 0)
+		float currentTime = GetWorld() -> GetTimeSeconds();
+		if(bWaitingForSecondClick)	// Double Click
 		{
-			for(auto* Unit: SelectedUnits)
+			float timeBetweenClicks = currentTime - LastClickTime;
+
+			if(timeBetweenClicks < DoubleClickInterval)
 			{
-				if(Unit != nullptr)
-				{
-					Unit -> Deselected();
-				}
+				FVector ArmyLocation = ArmySlot3[FMath::RandHelper(ArmySlot3.Num() - 1)] -> GetActorLocation();
+				DoubleClickMoveLocation(ArmyLocation);
 			}
-			for(auto* Tank: SelectedTanks)
+			bWaitingForSecondClick = false;
+		}
+		else      // Single Click
+		{
+			if(ArmySlot3.Num() > 0)
 			{
-				if(Tank != nullptr)
+				for(auto* Unit: SelectedUnits)
 				{
-					Tank -> Deselected();
+					if(Unit != nullptr)
+					{
+						Unit -> Deselected();
+					}
 				}
-			}
-			SelectedUnits.Reset();
-			SelectedTanks.Reset();
+				for(auto* Tank: SelectedTanks)
+				{
+					if(Tank != nullptr)
+					{
+						Tank -> Deselected();
+					}
+				}
+				SelectedUnits.Reset();
+				SelectedTanks.Reset();
 		
-			for(auto* Unit: ArmySlot3)
-			{
-				if(Unit != nullptr)
+				for(auto* Unit: ArmySlot3)
 				{
-					if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+					if(Unit != nullptr)
 					{
-						SelectedUnits.Add(Soldier);
-						Soldier -> Selected();
-					}
-					else if(ATankBase* Tank = Cast<ATankBase>(Unit))
-					{
-						SelectedTanks.Add(Tank);
-						Tank -> Selected();
+						if(ASoldier* Soldier = Cast<ASoldier>(Unit))
+						{
+							SelectedUnits.Add(Soldier);
+							Soldier -> Selected();
+						}
+						else if(ATankBase* Tank = Cast<ATankBase>(Unit))
+						{
+							SelectedTanks.Add(Tank);
+							Tank -> Selected();
+						}
 					}
 				}
+				
+				bWaitingForSecondClick = true;
+				LastClickTime = currentTime;
+        
+				// Reset Timer
+				FTimerHandle ResetTimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(ResetTimerHandle, [this]()
+				{
+					bWaitingForSecondClick = false;
+				}, DoubleClickInterval, false);
 			}
 		}
+		
 	}
+}
+
+void AOperatorPawn::DoubleClickMoveLocation(FVector Location)
+{
+	//GEngine -> AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, TEXT("Double Click Move"));
+	SetActorLocation(FVector(Location.X - 1000.f, Location.Y - 1000.f, GetActorLocation().Z), false, nullptr, ETeleportType::TeleportPhysics);
 }
