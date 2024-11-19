@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class UArmySelectWidget;
 class UBoxComponent;
 class UNiagaraSystem;
 class ATankBase;
@@ -138,6 +139,13 @@ class MAVERICK_API AOperatorPawn : public APawn
 	float LastClickTime = 0.f;
 	float DoubleClickInterval = .2f;
 	bool bWaitingForSecondClick;
+
+	// Army Control Widgets
+	UPROPERTY(EditDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> ArmySelectWidgetClass;
+	
+	UPROPERTY(VisibleDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
+	UArmySelectWidget* ArmySelectWidget;
 	
 public:
 	// Sets default values for this pawn's properties
