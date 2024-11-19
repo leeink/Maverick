@@ -96,6 +96,7 @@ public:
 
 	//TargetLocation로 이동한다. 엄폐물이 있다면 엄폐할 수 있는 가장 가까운 위치로 이동한다. 
 	void CheckLocationForObject(const FVector& TargetLocation);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -131,6 +132,9 @@ protected:
 	//분대원이 이동 불가능한 위치를 받았다면 분대장 주위의 유효한 위치를 준다.
 	UFUNCTION()
 	void MoveToValidDestination(int32 SquadNumber);
+	//인게임에서 분대가 감춰지거나 보이게 만든다.
+	UFUNCTION()
+	void SetInGameHidden(bool HaveToHidden);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

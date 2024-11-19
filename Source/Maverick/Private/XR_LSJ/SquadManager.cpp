@@ -104,6 +104,7 @@ void ASquadManager::BeginPlay()
         SquadArray[SpawnCount]->FDelSquadUnitDamaged.BindUFunction(this, FName("DamagedSquadUnit"));
         SquadArray[SpawnCount]->FDelSquadUnitDie.BindUFunction(this, FName("DieSquadUnit"));
         SquadArray[SpawnCount]->FDelFailToDestination.BindUFunction(this, FName("MoveToValidDestination"));
+        SquadArray[SpawnCount]->FDelInGameHidden.BindUFunction(this, FName("SetInGameHidden"));
         MaxSquadHp += SquadManagerAbility.Hp;
         CurrentSquadHp = MaxSquadHp;
 	}
@@ -147,6 +148,7 @@ void ASquadManager::BeginPlay()
     }
         
     SetCurrentSquadCount(MaxSpawnCount);
+    SetInGameHidden(true);
 }
 // 효율적인 거리 비교 함수 (제곱근 연산 없이)
 bool ASquadManager::IsCloserThan(const FVector& PointA, const FVector& PointB, const FVector& PointC)
@@ -315,7 +317,6 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     }
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
-        
          for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		 {
             if(SquadArray[SquadCount]==nullptr)
@@ -858,6 +859,54 @@ void ASquadManager::MoveToValidDestination(int32 SquadNumber)
         }
     }
 }
+
+void ASquadManager::SetInGameHidden(bool HaveToHidden)
+{
+    //분대원 누구라도 보여진다면 분대 전체를 보이게 만든다.
+    if (false == HaveToHidden)
+    {
+         MinimapHpWidgetComp->SetVisibility(!HaveToHidden);
+         HpWidgetComp->SetVisibility(!HaveToHidden);
+        for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
+		{
+			if (SquadArray[SpawnCount] == nullptr)
+				continue;
+			if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+				continue;
+			SquadArray[SpawnCount]->SetInGameHidden(HaveToHidden);
+		}
+    }
+    else  //분대원 모두를 감춘다.
+    {
+        bool consistent = true;
+		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
+		{
+			if (SquadArray[SpawnCount] == nullptr)
+				continue;
+			if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+				continue;
+			if (SquadArray[SpawnCount]->GetViewCount()>0 || SquadArray[SpawnCount]->FSMComp->GetIsAttacking())
+			{ 
+				consistent = false;
+			}
+		}
+		if (consistent)
+		{
+			MinimapHpWidgetComp->SetVisibility(!HaveToHidden);
+			HpWidgetComp->SetVisibility(!HaveToHidden);
+			for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
+			{
+				if (SquadArray[SpawnCount] == nullptr)
+					continue;
+				if (SquadArray[SpawnCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
+					continue;
+				SquadArray[SpawnCount]->SetInGameHidden(HaveToHidden);
+			}
+		}
+    }
+    
+}
+
 // 두 점 P1, P2 사이를 직선 방정식을 이용해 일정 간격으로 점을 생성
 void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints)
 {

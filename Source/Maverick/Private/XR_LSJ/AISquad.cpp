@@ -13,6 +13,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "LDG/Soldier.h"
 #include "LDG/SoldierAIController.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AAISquad::AAISquad()
@@ -33,6 +34,8 @@ AAISquad::AAISquad()
 	GetGunMeshComp()->SetRelativeRotation(FRotator(23.987173,20.151969,-190.523942));
 	
 	Tags.Add("Enemy");
+	
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel8,ECollisionResponse::ECR_Overlap);
 
 	AIControllerClass = AAISquadController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -140,6 +143,30 @@ void AAISquad::SetCommandState(EAIUnitCommandState Command)
 		break;
 	}
 }
+
+void AAISquad::SetInGameHidden(bool val)
+{
+	SetActorHiddenInGame(val);
+}
+
+void AAISquad::AddViewCount()
+{
+	viewCount++;
+	if (IsHidden())
+	{
+		if(FDelInGameHidden.IsBound())
+			FDelInGameHidden.Execute(false);
+	}
+}
+void AAISquad::MinusViewCount()
+{
+	viewCount--;
+	if (viewCount <= 0)
+	{
+		if(FDelInGameHidden.IsBound())
+			FDelInGameHidden.Execute(true);
+	}
+}
 void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -153,7 +180,7 @@ void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AAISquad::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 }
 void AAISquad::TestMove()
 {
