@@ -11,6 +11,7 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class UBoxComponent;
 class UNiagaraSystem;
 class ATankBase;
 class ARifleSoldier;
@@ -30,10 +31,13 @@ class MAVERICK_API AOperatorPawn : public APawn
 	GENERATED_BODY()
 
 	// Components
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Collsion, meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* Collsion;
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
 	// Input

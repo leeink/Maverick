@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/RifleSoldier.h"
@@ -24,7 +25,10 @@ AOperatorPawn::AOperatorPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
+	Collsion = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
+	SetRootComponent(Collsion);
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 0.0f;
