@@ -8,6 +8,7 @@
 #include "AISquad.generated.h" 
 
 DECLARE_DELEGATE(FDel_TargetDie);
+DECLARE_DELEGATE_OneParam(FDel_InGameHidden,bool);
 DECLARE_DELEGATE_OneParam(FDel_FailToDestination,int32);
 DECLARE_DELEGATE_OneParam(FDel_SquadUnitDie,int32);
 DECLARE_DELEGATE_OneParam(FDel_SquadUnitDamaged,float);
@@ -60,12 +61,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
+
 	int32 GetMySquadNumber() const { return MySquadNumber; }
 	void SetMySquadNumber(int32 val) { MySquadNumber = val; }
 	class USkeletalMeshComponent* GetGunMeshComp() const { return GunMeshComp; }
 	void SetGunMeshComp(class USkeletalMeshComponent* val) { GunMeshComp = val; }
 	FSquadData GetSquadAbility() const { return SquadAbility; }
 	void SetSquadAbility(FSquadData val) { SquadAbility = val; }
+
+	void SetInGameHidden(bool val);
+	UFUNCTION(BlueprintCallable)
+	virtual void AddViewCount();
+	UFUNCTION(BlueprintCallable)
+	virtual void MinusViewCount();
+	virtual int32 GetViewCount() const {return viewCount;}
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -91,4 +100,6 @@ public:
 	FDel_SquadUnitDamaged FDelSquadUnitDamaged;
 	//목적지에 도달하지 못했을 때 SquadManager에 알려주는 델리게이트
 	FDel_FailToDestination FDelFailToDestination;
+	//인게임에서 보여지거나 감춰야할 때 SquadManager에 알리는 델리게이트
+	FDel_InGameHidden FDelInGameHidden;
 };

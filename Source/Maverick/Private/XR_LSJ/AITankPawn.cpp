@@ -176,15 +176,13 @@ void AAITankPawn::StopAttack()
 {
 	SetCommandState(EAIUnitCommandState::IDLE);
 	FindCloseTargetUnit();
+
 }
 
 void AAITankPawn::AttackTargetUnit(AActor* TargetActor)
 {
 	Target = TargetActor;
 	SetCommandState(EAIUnitCommandState::ATTACK);
-	
-	//타겟 바라보기
-	
 }
 
 // Called when the game starts or when spawned
@@ -235,6 +233,8 @@ void AAITankPawn::BeginPlay()
 	if(false==StartGoalLocation.Equals(FVector::ZeroVector))
 		FindPath(StartGoalLocation);
 	GetWorld()->GetTimerManager().SetTimer(FindEnemy, this, &AAITankPawn::FindCloseTargetPlayerUnit, 3.0f, true);
+
+	SetVisibleTank(false);
 }
 void AAITankPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -389,6 +389,28 @@ void AAITankPawn::FindCloseTargetUnit()
     }
 }
 
+void AAITankPawn::AddViewCount()
+{
+	viewCount++;
+	if (IsHidden())
+	{
+		SetVisibleTank(true);
+	}
+}
+void AAITankPawn::MinusViewCount()
+{
+	viewCount--;
+	if (viewCount <= 0)
+	{
+		SetVisibleTank(false);
+	}
+}
+void AAITankPawn::SetVisibleTank(bool val)
+{
+	MinimapHpWidgetComp->SetVisibility(val);
+	HpWidgetComp->SetVisibility(val);
+	SetActorHiddenInGame(!val);
+}
 void AAITankPawn::FindPath(const FVector& TargetLocation)
 {
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
@@ -487,8 +509,11 @@ bool AAITankPawn::CalculateBallisticVelocity(
 
 void AAITankPawn::FireCannon()
 {
-	if(nullptr == Target)
+	if (nullptr == Target)
+	{
 		return;
+	}
+		
 	 ASoldier* TargetPlayerUnit = Cast<ASoldier>(Target);
     if (TargetPlayerUnit)
     {
@@ -496,18 +521,23 @@ void AAITankPawn::FireCannon()
 	    if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
 	    {      
 			Target = nullptr;
-			
 			FindCloseTargetPlayerUnit();
 		    return;
 	    }
 		else if (controller==nullptr)
 		{
 			Target = nullptr;
-			
 			FindCloseTargetPlayerUnit();
 		    return;
 		}
     }
+	AddViewCount();
+	FTimerHandle VisibleHandle;
+	GetWorld()->GetTimerManager().SetTimer(VisibleHandle,[&]()
+	{
+		MinusViewCount();
+	},2.0f,false);
+
 	//목표에 도달하기 위해 총알 Velocity 구하기
 	FVector OutVelocity;
 	float ArrivalTime = FVector::Distance(Target->GetActorLocation() , MeshComp->GetSocketLocation(TEXT("gun_jntSocket")))*(.0002f);
