@@ -59,8 +59,8 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	//시작시 이동할 목표 지점
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
-
-	EAIUnitCommandState CurrentTankState;
+	//현재 탱크 상태 
+	EAIUnitActionState CurrentActionState;
 public:
 	//탱크 죽음 알림 델리게이트
 	FDel_TankUnitDie FDelTankUnitDie;
@@ -80,23 +80,25 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual EAIUnitCommandState GetCurrentCommandState() override;
 	UFUNCTION(BlueprintCallable)
-	virtual EAIUnitCommandState GetCurrentTankState();
+	virtual EAIUnitActionState GetCurrentActionState();
 	void SetMinimapUIZOrder(int32 Value);
 	virtual void SetCommandState(EAIUnitCommandState Command) override;
-	virtual void SetTankState(EAIUnitCommandState Command);
+	virtual void SetActionState(EAIUnitActionState State);
 	//Bullet
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> BulletFactory; 
 
 	UFUNCTION(BlueprintCallable)
 	virtual void FindPath(const FVector& TargetLocation);
-
+	//PlayerUnit이 보고 있는 수 ++
 	UFUNCTION(BlueprintCallable)
 	virtual void AddViewCount();
+	//PlayerUnit이 보고 있는 수 --
 	UFUNCTION(BlueprintCallable)
 	virtual void MinusViewCount();
-
+	//PlayerUnit이 보고 있는 수
 	virtual int32 GetViewCount() const {return viewCount;}
+	//탱크 유닛 감추기
 	UFUNCTION(BlueprintCallable)
 	void SetViewCountToHidden();
 protected:

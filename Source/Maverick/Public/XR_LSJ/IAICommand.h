@@ -19,6 +19,15 @@ enum class EAIUnitCommandState : uint8
 	Defense,
 };
 UENUM(BlueprintType)
+enum class EAIUnitActionState : uint8
+{
+	IDLE  ,
+	MOVE   ,
+	IDLEATTACK  ,
+	MOVEATTACK  ,
+	DIE  ,
+};
+UENUM(BlueprintType)
 enum class EAIUnitCategory : uint8
 {
 	SQUAD UMETA(DisplayName = "ºÐ´ë"),

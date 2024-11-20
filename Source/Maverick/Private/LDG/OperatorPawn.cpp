@@ -208,7 +208,33 @@ void AOperatorPawn::OnMouseLeftCompleted(const FInputActionValue& Value)
 	UnitControlHUD -> MarqueeReleased();
 }
 
-
+void AOperatorPawn::OnMouseRightMinimap(FVector Location)
+{
+	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
+	{
+		for(auto* Unit: SelectedUnits)
+		{
+			if(Unit != nullptr)
+			{
+				if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
+				{
+					RifleController -> MoveCommand(Location);
+				}
+			}
+				
+		}
+		for(auto* Tank: SelectedTanks)
+		{
+			if(Tank != nullptr)
+			{
+				if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+				{
+					TankAIController -> MoveCommand(Location);
+				}
+			}
+		}
+	}
+}
 void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 {
 	if(AOperatorPlayerController* PlayerController = Cast<AOperatorPlayerController>(GetController()))
@@ -226,9 +252,7 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 						RifleController -> MoveCommand(HitResult.Location);
 					}
 				}
-				
 			}
-
 			for(auto* Tank: SelectedTanks)
 			{
 				if(Tank != nullptr)
