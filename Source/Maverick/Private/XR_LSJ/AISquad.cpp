@@ -167,6 +167,14 @@ void AAISquad::MinusViewCount()
 			FDelInGameHidden.Execute(true);
 	}
 }
+
+void AAISquad::SetViewCountToHidden()
+{
+	viewCount = 0;
+	if(FDelInGameHidden.IsBound())
+		FDelInGameHidden.Execute(true);
+}
+
 void AAISquad::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
