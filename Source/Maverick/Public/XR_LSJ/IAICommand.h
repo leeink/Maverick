@@ -38,6 +38,8 @@ class MAVERICK_API IIAICommand
 {
 	GENERATED_BODY()
 protected:
+	//인게임에서 감춰진 상태인가?
+	int32 viewCount;
 	bool DefenseMode;
 	EAIUnitCommandState CurrentCommandState;
 	EAIUnitCategory AIUnitCategory;

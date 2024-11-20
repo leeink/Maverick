@@ -90,7 +90,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void FindPath(const FVector& TargetLocation);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void AddViewCount();
+	UFUNCTION(BlueprintCallable)
+	virtual void MinusViewCount();
+	virtual int32 GetViewCount() const {return viewCount;}
 protected:
+	void SetVisibleTank(bool val);
 	void FireCannon();
 	float GetLookTargetAngle(FVector TargetLocation);
 	UFUNCTION()
@@ -109,7 +116,8 @@ protected:
     FVector& OutVelocity);
 	virtual void FindCloseTargetUnit();
 
-	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
+	
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* HpWidgetComp;
 	UPROPERTY(EditDefaultsOnly,meta = (AllowPrivateAccess = true))
 	class UWidgetComponent* MinimapHpWidgetComp;

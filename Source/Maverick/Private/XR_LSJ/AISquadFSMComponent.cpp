@@ -91,7 +91,7 @@ void UAISquadFSMComponent::TickIdle(const float& DeltaTime)
 }
 void UAISquadFSMComponent::TickMove(const float& DeltaTime)
 {
-	if (GetIsAttacking())
+	if (GetIsAttacking()&&GetTarget())
 	{
 		RotateUpperbodyToTarget(DeltaTime);
 	}
@@ -330,6 +330,14 @@ void UAISquadFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 void UAISquadFSMComponent::SetIsAttacking(bool val, AActor* TargetActor)
 {
 	IsAttacking = val;
+
+	//안보이는상태이고 공격중이면 보이게 만든다.
+	if(AISquadBody->IsHidden() && IsAttacking)
+		AISquadBody->AddViewCount();
+	//보이는 상태이고 공격중이 아니라면 안보이게 만든다.
+	else if(false==AISquadBody->IsHidden() && false==IsAttacking)
+		AISquadBody->MinusViewCount();
+
 	Target = TargetActor;
 	AISquadAnimInstance->SetIsAttacking(val);
 	AISquadController->StopMovement();

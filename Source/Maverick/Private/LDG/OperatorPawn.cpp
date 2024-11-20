@@ -10,8 +10,10 @@
 #include "InputActionValue.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "LDG/ArmySelectWidget.h"
 #include "LDG/OperatorPlayerController.h"
 #include "LDG/RifleSoldier.h"
 #include "LDG/SoldierAIController.h"
@@ -45,9 +47,10 @@ AOperatorPawn::AOperatorPawn()
 void AOperatorPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
 	
 	UnitControlHUD = Cast<AUnitControlHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0) -> GetHUD());
+	ArmySelectWidget = Cast<UArmySelectWidget>(CreateWidget(GetWorld(), ArmySelectWidgetClass));
+	ArmySelectWidget -> AddToViewport();
 }
 
 void AOperatorPawn::PossessedBy(AController* NewController)
@@ -396,6 +399,8 @@ void AOperatorPawn::OnSelectSlot1(const FInputActionValue& Value)
 				{
 					bWaitingForSecondClick = false;
 				}, DoubleClickInterval, false);
+
+				ArmySelectWidget -> ActivationWidget(0);
 			}
 		}
 		
@@ -487,6 +492,8 @@ void AOperatorPawn::OnSelectSlot2(const FInputActionValue& Value)
 				{
 					bWaitingForSecondClick = false;
 				}, DoubleClickInterval, false);
+				
+				ArmySelectWidget -> ActivationWidget(1);
 			}
 		}
 		
@@ -578,6 +585,8 @@ void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
 				{
 					bWaitingForSecondClick = false;
 				}, DoubleClickInterval, false);
+
+				ArmySelectWidget -> ActivationWidget(2);
 			}
 		}
 		
