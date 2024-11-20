@@ -75,6 +75,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void MinusViewCount();
 	virtual int32 GetViewCount() const {return viewCount;}
+	UFUNCTION(BlueprintCallable)
+	void SetViewCountToHidden();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

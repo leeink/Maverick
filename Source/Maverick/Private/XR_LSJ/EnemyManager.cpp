@@ -327,6 +327,8 @@ void AEnemyManager::MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLoca
 {
 		int32 UnitCount = 0;
 		//가까운 분대를 배치 시킨다. 분대가 없다면 탱크를 배치한다.
+		if(OccupiedLocationStruct.SquadLocation.Num()<=0 ||  OccupiedLocationStruct.DefensiveUnit.Num()<=0)
+			return;
 		for (int32 DefensiveUnitCount = 0; DefensiveUnitCount < OccupiedLocationStruct.DefensiveUnit.Num(); DefensiveUnitCount++)
 		{
 			if (OccupiedLocationStruct.DefensiveUnit[DefensiveUnitCount] == false)
@@ -381,7 +383,7 @@ void AEnemyManager::MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLoca
 				}
 			}
 		}
-		if (UnitCount <= 0) //탱크를 배치
+		if (UnitCount <= 0 && OccupiedLocationStruct.DefensiveUnit.Num()>0) //탱크를 배치
 		{
 			if (OccupiedLocationStruct.DefensiveUnit[0] == false)
 			{
@@ -414,24 +416,27 @@ void AEnemyManager::MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLoca
 //점령 이동
 void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStruct)
 {
-	int32 CurrentRemainSquad = -1;
-	int32 CurrentRemainTank = -1;
+	int32 CurrentRemainSquad = 0;
+	int32 CurrentRemainTank = 0;
+
+	if(OccupiedLocationStruct.SquadLocation.Num()<=0)
+		return;
+	
 	for (int32 pSquadManagerCount = 0;pSquadManagerCount<EnemySquadAll.Num(); pSquadManagerCount++)
 	{
 		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
 			continue;
 		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::Defense)
 			continue;
-		if (CurrentRemainSquad == -1)
-		{
-			EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.OccupiedLocation);
-		}
-		else
-		{
-			EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.SquadLocation[CurrentRemainSquad]);
-		}
-		CurrentRemainSquad++;
+
+		EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.SquadLocation[CurrentRemainSquad++]);
+		if(OccupiedLocationStruct.SquadLocation.Num()<= CurrentRemainSquad)
+			break;
 	}
+	if(OccupiedLocationStruct.TankLocation.Num()<=0)
+		return;
+
+	
 	for (int32 pTankCount = 0;pTankCount<EnemyTankAll.Num(); pTankCount++)
 	{
 		if (EnemyTankAll[pTankCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
@@ -440,13 +445,11 @@ void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStru
 			continue;
 		if (EnemyTankAll[pTankCount]->GetDefenseMode())
 			continue;
-		if(CurrentRemainSquad<=0&&CurrentRemainTank==-1)
-			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.OccupiedLocation);
-		else
-			EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank]);
-		
+			
+		EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.TankLocation[CurrentRemainTank++]);
 		//UE_LOG(LogTemp,Error,TEXT("pTankCount %d CurrentRemainTank %s"),pTankCount,*OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank].ToString());
-		CurrentRemainTank++;
+		if(OccupiedLocationStruct.TankLocation.Num()<= CurrentRemainTank)
+			break;
 	}
 }
 void AEnemyManager::EndPlay(const EEndPlayReason::Type EndPlayReason)

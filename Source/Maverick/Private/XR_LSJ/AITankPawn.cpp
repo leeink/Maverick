@@ -405,6 +405,13 @@ void AAITankPawn::MinusViewCount()
 		SetVisibleTank(false);
 	}
 }
+
+void AAITankPawn::SetViewCountToHidden()
+{
+	viewCount=0;
+	SetVisibleTank(false);
+}
+
 void AAITankPawn::SetVisibleTank(bool val)
 {
 	MinimapHpWidgetComp->SetVisibility(val);

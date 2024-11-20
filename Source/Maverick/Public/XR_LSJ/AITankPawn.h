@@ -95,7 +95,10 @@ public:
 	virtual void AddViewCount();
 	UFUNCTION(BlueprintCallable)
 	virtual void MinusViewCount();
+
 	virtual int32 GetViewCount() const {return viewCount;}
+	UFUNCTION(BlueprintCallable)
+	void SetViewCountToHidden();
 protected:
 	void SetVisibleTank(bool val);
 	void FireCannon();
