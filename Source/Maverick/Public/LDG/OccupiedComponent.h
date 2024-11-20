@@ -16,10 +16,14 @@ class MAVERICK_API UOccupiedComponent : public UBoxComponent
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Occupied", meta = (AllowPrivateAccess = "true"))
 	float OccupiedTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Occupied", meta = (AllowPrivateAccess = "true"))
+	bool bIsOccupied;
 	
 	float OccupyingTime;
 	int IsOccupiedNumber;
-	bool bIsOccupied;
+
+
 
 public:
 	UOccupiedComponent();
