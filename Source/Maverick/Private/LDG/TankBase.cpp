@@ -44,7 +44,7 @@ ATankBase::ATankBase()
 	MiniMapWidget -> SetWidgetSpace(EWidgetSpace::World);
 	MiniMapWidget -> SetRelativeLocation(FVector(0.f,0.f,10000.f));
 	MiniMapWidget -> SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
-	MiniMapWidget -> SetRelativeScale3D(FVector(5.f));
+	MiniMapWidget -> SetRelativeScale3D(FVector(8.f));
 	MiniMapWidget -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MiniMapWidget -> CastShadow = false;
 	
