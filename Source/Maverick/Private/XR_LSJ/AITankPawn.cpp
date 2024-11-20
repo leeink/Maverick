@@ -41,7 +41,7 @@ AAITankPawn::AAITankPawn()
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 
 	CurrentCommandState = EAIUnitCommandState::IDLE;
-	CurrentTankState= EAIUnitCommandState::IDLE;
+	CurrentActionState= EAIUnitActionState::IDLE;
 	AIUnitCategory = EAIUnitCategory::TANK;
 
 	
@@ -81,9 +81,9 @@ EAIUnitCommandState AAITankPawn::GetCurrentCommandState()
 	return CurrentCommandState;
 }
 
-EAIUnitCommandState AAITankPawn::GetCurrentTankState()
+EAIUnitActionState AAITankPawn::GetCurrentActionState()
 {
-	return CurrentTankState;
+	return CurrentActionState;
 }
 
 void AAITankPawn::SetMinimapUIZOrder(int32 Value)
@@ -94,54 +94,35 @@ void AAITankPawn::SetMinimapUIZOrder(int32 Value)
 }
 void AAITankPawn::SetCommandState(EAIUnitCommandState Command)
 {
-	if (nullptr != Target && Command == EAIUnitCommandState::IDLE)
-	{
-		MoveWheelAnimation(0);
-		return;
-	}
-		
-	if (CurrentCommandState != EAIUnitCommandState::ATTACK)
-		PreState = CurrentCommandState;
-
 	CurrentCommandState = Command;
+}
 
-	//UE_LOG(LogTemp, Warning, TEXT("PreState %d"),(int)PreState);
-	//UE_LOG(LogTemp, Warning, TEXT("CurrentCommandState %d"),(int)CurrentCommandState);
-
-	switch ( CurrentCommandState )
+void AAITankPawn::SetActionState(EAIUnitActionState State)
+{
+	CurrentActionState=State;
+	switch ( CurrentActionState )
 	{
-	case EAIUnitCommandState::IDLE:
-
+	case EAIUnitActionState::IDLE:
 		GetController()->StopMovement();
 		MoveWheelAnimation(0);
 		break;
-	case EAIUnitCommandState::MOVE:
-		MoveWheelAnimation(MovementComponent->GetMaxSpeed());
+	case EAIUnitActionState::MOVE:
+		MoveWheelAnimation(100);
 		break;
-	case EAIUnitCommandState::ATTACK:
-		
+	case EAIUnitActionState::IDLEATTACK:
 		break;
-	case EAIUnitCommandState::DAMAGE:
-		
+	case EAIUnitActionState::MOVEATTACK:
 		break;
-	case EAIUnitCommandState::DIE:
+	case EAIUnitActionState::DIE:
+		MoveWheelAnimation(0);
 		GetController()->StopMovement();
 		if (FDelUnitDie.IsBound())
 			FDelUnitDie.Execute();
 		GetWorld()->GetTimerManager().ClearTimer(FindEnemy);
 		if (FDelTankUnitDie.IsBound())
 			FDelTankUnitDie.Execute();
-		//겹쳐있을때 이게 문제 있는 듯>?
-		break;
-	default:
-		
 		break;
 	}
-}
-
-void AAITankPawn::SetTankState(EAIUnitCommandState Command)
-{
-	
 }
 
 float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
@@ -174,15 +155,20 @@ float AAITankPawn::GetLookTargetAngle(FVector TargetLocation)
 
 void AAITankPawn::StopAttack()
 {
-	SetCommandState(EAIUnitCommandState::IDLE);
+	if(CurrentActionState==EAIUnitActionState::IDLEATTACK)
+		SetActionState(EAIUnitActionState::IDLE);
+	else 
+		SetActionState(EAIUnitActionState::MOVE);
 	FindCloseTargetUnit();
-
 }
 
 void AAITankPawn::AttackTargetUnit(AActor* TargetActor)
 {
 	Target = TargetActor;
-	SetCommandState(EAIUnitCommandState::ATTACK);
+	if(CurrentActionState==EAIUnitActionState::IDLE)
+		SetActionState(EAIUnitActionState::IDLEATTACK);
+	else 
+		SetActionState(EAIUnitActionState::MOVEATTACK);
 }
 
 // Called when the game starts or when spawned
@@ -323,8 +309,10 @@ void AAITankPawn::FindCloseTargetPlayerUnit()
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
 		Target = nullptr;
-		if(CurrentCommandState==EAIUnitCommandState::ATTACK)
-			SetCommandState(PreState);
+		if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+			SetActionState(EAIUnitActionState::MOVE);
+		else
+			SetActionState(EAIUnitActionState::IDLE);
     }
 }
 //가까운 적 탐색
@@ -385,7 +373,10 @@ void AAITankPawn::FindCloseTargetUnit()
     else //탐색 범위 안에서 적을 찾을 수 없다면
     {
 		Target = nullptr;
-		SetCommandState(PreState);
+		if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+			SetActionState(EAIUnitActionState::MOVE);
+		else
+			SetActionState(EAIUnitActionState::IDLE);
     }
 }
 
@@ -424,11 +415,6 @@ void AAITankPawn::FindPath(const FVector& TargetLocation)
 	if (nullptr == NavSystem)
 		return;
 
-	// 지원되는 에이전트 설정을 가져오기
-    //const TArray<FNavDataConfig>& SupportedAgents = NavSystem->SupportedAgen();
-	
- 
-
 	FVector StartLocation =  GetActorLocation();
 	UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(), StartLocation, TargetLocation);
 
@@ -458,13 +444,19 @@ void AAITankPawn::OnMoveCompleted(EPathFollowingResult::Type Result)
 		}
 		else
 		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+			SetActionState(EAIUnitActionState::IDLEATTACK);
+		else 
 			SetCommandState(EAIUnitCommandState::IDLE);
 			UE_LOG(LogTemp, Warning, TEXT("Failed final destination 2!"));
 		}
 	}
 	else
 	{
-		SetCommandState(EAIUnitCommandState::IDLE);
+		if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+			SetActionState(EAIUnitActionState::IDLEATTACK);
+		else 
+			SetCommandState(EAIUnitCommandState::IDLE);
 		UE_LOG(LogTemp, Warning, TEXT("Failed final destination 3!"));
 	}
 }
@@ -476,20 +468,23 @@ void AAITankPawn::MovePathAsync(TArray<FVector>& NavPathArray)
 	AITankController->FCallback_AIController_MoveCompleted.Unbind();
 
 	//남은 경로 지점이 있는지 확인
-		if (CurrentPathPointIndex < (PathVectorArray.Num()))
-		{
-			//다음 경로 지점으로 이동
-			FVector NextPoint = PathVectorArray[CurrentPathPointIndex];
-			AITankController->MoveToLocation(NextPoint, 100.0f);
+	if (CurrentPathPointIndex < (PathVectorArray.Num()))
+	{
+		//다음 경로 지점으로 이동
+		FVector NextPoint = PathVectorArray[CurrentPathPointIndex];
+		AITankController->MoveToLocation(NextPoint, 100.0f);
 			
-			//이동 완료 후 다시 OnMoveCompleted 호출
-			AITankController->FCallback_AIController_MoveCompleted.BindUObject(this, &AAITankPawn::OnMoveCompleted);
-		}
-		else
-		{
+		//이동 완료 후 다시 OnMoveCompleted 호출
+		AITankController->FCallback_AIController_MoveCompleted.BindUObject(this, &AAITankPawn::OnMoveCompleted);
+	}
+	else
+	{
+		if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+			SetActionState(EAIUnitActionState::IDLEATTACK);
+		else 
 			SetCommandState(EAIUnitCommandState::IDLE);
-			UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Reached final destination!"));
+	}
 }
 bool AAITankPawn::CalculateBallisticVelocity(
     const FVector& StartLocation, 
@@ -567,23 +562,19 @@ void AAITankPawn::FireCannon()
 	if (Bullet)
 	{
 		Bullet->SetOwner(this);
-		//FVector BulletScale = FVector(100,100,100);
-		
-		//UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), OutVelocity, MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), Target->GetActorLocation(),
-		//GetWorld()->GetGravityZ(),.9f);
 		Bullet->SetExplosiveRange(TankAbility.ExplosiveRange);
 		Bullet->SetExplosiveMaxDamage(TankAbility.ExplosiveMaxDamage);
 		Bullet->SetExplosiveMinDamage(TankAbility.ExplosiveMinDamage);
 		Bullet->InitMovement(OutVelocity);
 	}
 }
-// Called every frame
+
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if(CurrentCommandState == EAIUnitCommandState::DIE)
 		return;
-	if (GetCurrentCommandState() == EAIUnitCommandState::ATTACK)
+	if (GetCurrentActionState() == EAIUnitActionState::IDLEATTACK || GetCurrentActionState() == EAIUnitActionState::MOVEATTACK)
 	{
 		FireTotalTime+=DeltaTime;
 		if ( GetLookTargetAngle(FVector::ZeroVector) - TurretRotation > 1.f)
@@ -603,9 +594,7 @@ void AAITankPawn::Tick(float DeltaTime)
 				FireTotalTime=0;
 				FireCannon();
 			}
-			
 		}
-		
 	}
 	else
 	{
@@ -619,9 +608,7 @@ void AAITankPawn::Tick(float DeltaTime)
 			TurretRotation -= DeltaTime * TurretRotSpeed;
 			RotateYawurret(TurretRotation);
 		}
-
 	}
-
 }
 
 // Called to bind functionality to input
@@ -634,31 +621,28 @@ void AAITankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 float AAITankPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
-	//GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
+
 	if (Damage > 0)
 	{
 		CurrentTankHp -= Damage;
 		UAIUnitHpBar* HpBarUI =Cast<UAIUnitHpBar>(HpWidgetComp->GetUserWidgetObject());
 		if(nullptr==HpBarUI)
 			return Damage;
-		HpBarUI->SetHpBar((float)(CurrentTankHp -= Damage) / MaxTankHp);
-		if (CurrentTankHp <= 0)
-		{
-			SetCommandState(EAIUnitCommandState::DIE);
-			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
-			HpWidgetComp->Deactivate();
-			DieAnimation(true);
-		}
 		UHpBarNewIcon* HpBarNewIcon =Cast<UHpBarNewIcon>(MinimapHpWidgetComp->GetUserWidgetObject());
 		if(nullptr==HpBarNewIcon)
 			return Damage;
+		CurrentTankHp -= Damage;
+		HpBarUI->SetHpBar((float)(CurrentTankHp) / MaxTankHp);
 		HpBarNewIcon->SetHpBar((float)(CurrentTankHp) / MaxTankHp);
 		if (CurrentTankHp <= 0)
 		{
-			//SetCommandState(EAIUnitCommandState::DIE);
+			SetCommandState(EAIUnitCommandState::DIE);
+			SetActionState(EAIUnitActionState::DIE);
+			HpBarUI->SetVisibility(ESlateVisibility::Collapsed);
+			HpWidgetComp->Deactivate();
 			HpBarNewIcon->SetVisibility(ESlateVisibility::Collapsed);
 			MinimapHpWidgetComp->Deactivate();
-			//DieAnimation(true);
+			DieAnimation(true);
 		}
 	}
 	return Damage;

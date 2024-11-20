@@ -150,7 +150,7 @@ class MAVERICK_API AOperatorPawn : public APawn
 public:
 	// Sets default values for this pawn's properties
 	AOperatorPawn();
-
+	void OnMouseRightMinimap(FVector Location);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
