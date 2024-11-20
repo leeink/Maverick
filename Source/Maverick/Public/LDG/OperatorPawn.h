@@ -11,6 +11,8 @@
 #include "GameFramework/Pawn.h"
 #include "OperatorPawn.generated.h"
 
+class UArmySelectWidget;
+class UBoxComponent;
 class UNiagaraSystem;
 class ATankBase;
 class ARifleSoldier;
@@ -30,10 +32,13 @@ class MAVERICK_API AOperatorPawn : public APawn
 	GENERATED_BODY()
 
 	// Components
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Collsion, meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* Collsion;
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
 	// Input
@@ -79,15 +84,12 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_ArmySlot3;
 
-	// Spectator Pawn Queue
-	TArray<AOperatorSpectatorPawn*> SpectatorPawnArray;
+	// LocationArray
+	TArray<FVector> LocationArray;
 
 	//Scroll Speed
 	UPROPERTY(EditDefaultsOnly, Category = ScrollSpeed, meta = (AllowPrivateAccess = "true"))
 	float ScrollSpeed;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpectatorClass, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AOperatorSpectatorPawn> SpectatorClass;
 
 	// Mouse Cursor Effect
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Cursor, meta = (AllowPrivateAccess = "true"))
@@ -132,7 +134,18 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY()
 	TArray<AActor*> ArmySlot3;
 
+	// Army Control Variables
 	bool bCtrlPressed;
+	float LastClickTime = 0.f;
+	float DoubleClickInterval = .2f;
+	bool bWaitingForSecondClick;
+
+	// Army Control Widgets
+	UPROPERTY(EditDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> ArmySelectWidgetClass;
+	
+	UPROPERTY(VisibleDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
+	UArmySelectWidget* ArmySelectWidget;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -149,7 +162,6 @@ protected:
 	void OnMouseRight(const FInputActionValue& Value);
 	void OnMouseWheelUp(const FInputActionValue& Value);
 	void OnMouseWheelDown(const FInputActionValue& Value);
-	void OnSpawnSpectator(const FInputActionValue& Value);
 	void OnSwitchSlot1(const FInputActionValue& Value);
 	void OnSwitchSlot2(const FInputActionValue& Value);
 	void OnSwitchSlot3(const FInputActionValue& Value);
@@ -159,6 +171,7 @@ protected:
 	void OnSelectSlot1(const FInputActionValue& Value);
 	void OnSelectSlot2(const FInputActionValue& Value);
 	void OnSelectSlot3(const FInputActionValue& Value);
+	void DoubleClickMoveLocation(FVector Location);
 
 public:	
 	// Called every frame
