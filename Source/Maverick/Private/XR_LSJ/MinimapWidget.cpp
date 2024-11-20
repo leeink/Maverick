@@ -21,18 +21,21 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
        if (AOperatorPawn* PlayerPawn = Cast<AOperatorPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
        {
             FVector2D ClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-
+            //LandScape 를 가져와서 변환하자
             // 오프셋을 월드 위치로 변환 
             float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
-            float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-462.746f)/(1035.151f-462.746f)); //462.746 //1035.151
-         
+            float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
+            UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
             float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
-            float WorldPositionY = FMath::Lerp(-21330.0,20440.0,NormalY);
+            float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
             FVector WorldPosition;
             WorldPosition.X = WorldPositionX;
-            WorldPosition.Y = WorldPositionY;
+            WorldPosition.Y = WorldPositionY + 4000.f;
             WorldPosition.Z = 150.f; // 높이값 고정 또는 특정 레벨의 높이로 설정
+            //카메라 높이에서 카메라 회전값을 넣은 LineTrace 
+            DrawDebugLine(GetWorld(),WorldPosition,WorldPosition+FVector(0,0,10000),FColor::Red,true,1000);
             PlayerPawn->OnMouseRightMinimap(WorldPosition);
+           
        }
     }
 
@@ -50,14 +53,14 @@ void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
     if (PlayerPawn)
     {
          // 오프셋을 월드 위치로 변환 
-        float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
-        float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-462.746f)/(1035.151f-462.746f)); //462.746 //1035.151
-         
-        float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
-        float WorldPositionY = FMath::Lerp(-21330.0,20440.0,NormalY);
+            float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
+            float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
+            UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
+            float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
+            float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
         FVector WorldPosition;
         WorldPosition.X = WorldPositionX;
-        WorldPosition.Y = WorldPositionY;
+        WorldPosition.Y = WorldPositionY + 2000.f;
        UE_LOG(LogTemp,Error,TEXT("%f %f %s"), NormalX,NormalY,*ClickPosition.ToString());
         WorldPosition.Z = PlayerPawn->GetActorLocation().Z; // 높이값 고정 또는 특정 레벨의 높이로 설정
         PlayerPawn->SetActorLocation(WorldPosition);
