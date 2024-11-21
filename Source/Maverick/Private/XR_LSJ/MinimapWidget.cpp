@@ -8,8 +8,11 @@
 #include "Slate/SlateBrushAsset.h"
 #include "Components/Image.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Landscape.h"
 #include "Engine/TriggerBox.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "LDG/Soldier.h"
 FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
@@ -20,6 +23,23 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
         // 클릭된 위치로 플레이어 이동
         MovePlayerToMapClick(LocalClickPosition);
 
+        if (AOperatorPawn* PlayerPawn = Cast<AOperatorPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+        {
+            
+            for (ASoldier* Unit : PlayerPawn->GetSelectedUnits())
+            {
+                TArray<FVector> Path;
+                //FindPath(Unit->GetActorLocation(),LocalClickPosition,Path);
+                TArray<FVector2D> Path2D;
+                for (FVector Location : Path)
+                {
+                    Path2D.Add(ConvertingLocationToMinimap(Location));
+                }
+                //UWidgetBlueprintLibrary::DrawLines(*CustomContext, Path2D, FLinearColor::White, true, 2.0f);
+            }
+            
+        }
+        
            
     }
     else if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
@@ -58,11 +78,11 @@ void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
     if (PlayerPawn)
     {
          // 오프셋을 월드 위치로 변환 
-            float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
-            float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
-            UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
-            float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
-            float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
+        float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
+        float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
+        UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
+        float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
+        float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
         FVector WorldPosition;
         WorldPosition.X = WorldPositionX;
         WorldPosition.Y = WorldPositionY + 2000.f;
@@ -100,6 +120,15 @@ void UMinimapWidget::CreateWarningUI(FVector Location)
 	    },0.5f,false);
 	}
 }
+
+int32 UMinimapWidget::NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+    Super::NativePaint(Args,AllottedGeometry,MyCullingRect,OutDrawElements,LayerId,InWidgetStyle,bParentEnabled);
+ //   FPaintContext Context(AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	//CustomContext = &Context;
+    return LayerId;
+}
+
 FVector2D UMinimapWidget::ConvertingLocationToMinimap(FVector Location)
 {
     //기준 좌표
@@ -117,4 +146,16 @@ FVector2D UMinimapWidget::ConvertingLocationToMinimap(FVector Location)
     //UE_LOG(LogTemp,Warning,TEXT("Location.X %f OriginLocation.X %f  NormalizedY  %f"),(Location.X - OriginLocation.X), MiniMapWorldSize.X);
     //UE_LOG(LogTemp,Warning,TEXT("Location.X - OriginLocation.X %f.NormalizedY  %f"),(Location.Y - OriginLocation.Y),MiniMapWorldSize.Y);
     return FVector2D(NormalX,NormalY);
+}
+
+void UMinimapWidget::FindPath(const FVector& StartLocation,const FVector& TargetLocation, TArray<FVector>& ArrayLocation)
+{
+    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    if(nullptr == NavSystem)
+        return;
+    UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),StartLocation,TargetLocation);
+    if (NavPath && NavPath->IsValid() && !NavPath->IsPartial())
+    {
+        ArrayLocation = NavPath->PathPoints;
+    }
 }
