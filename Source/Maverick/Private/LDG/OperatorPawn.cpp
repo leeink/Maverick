@@ -51,6 +51,7 @@ void AOperatorPawn::BeginPlay()
 	UnitControlHUD = Cast<AUnitControlHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0) -> GetHUD());
 	ArmySelectWidget = Cast<UArmySelectWidget>(CreateWidget(GetWorld(), ArmySelectWidgetClass));
 	ArmySelectWidget -> AddToViewport();
+	//ArmySelectWidget -> SetVisibility(ESlateVisibility::Hidden);
 }
 
 void AOperatorPawn::PossessedBy(AController* NewController)
