@@ -144,7 +144,7 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> ArmySelectWidgetClass;
 	
-	UPROPERTY(VisibleDefaultsOnly, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite, Category = ArmyControlWidget, meta = (AllowPrivateAccess = "true"))
 	UArmySelectWidget* ArmySelectWidget;
 	
 public:
