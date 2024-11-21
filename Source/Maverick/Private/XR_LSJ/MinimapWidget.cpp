@@ -4,8 +4,12 @@
 #include "XR_LSJ/MinimapWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "LDG/OperatorPawn.h"
-#include "../../../../Plugins/EnhancedInput/Source/EnhancedInput/Public/InputActionValue.h"
-
+#include "InputActionValue.h"
+#include "Slate/SlateBrushAsset.h"
+#include "Components/Image.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Landscape.h"
+#include "Engine/TriggerBox.h"
 FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
@@ -15,6 +19,8 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
 
         // 클릭된 위치로 플레이어 이동
         MovePlayerToMapClick(LocalClickPosition);
+
+           
     }
     else if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
@@ -35,7 +41,6 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
             //카메라 높이에서 카메라 회전값을 넣은 LineTrace 
             DrawDebugLine(GetWorld(),WorldPosition,WorldPosition+FVector(0,0,10000),FColor::Red,true,1000);
             PlayerPawn->OnMouseRightMinimap(WorldPosition);
-           
        }
     }
 
@@ -65,4 +70,51 @@ void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
         WorldPosition.Z = PlayerPawn->GetActorLocation().Z; // 높이값 고정 또는 특정 레벨의 높이로 설정
         PlayerPawn->SetActorLocation(WorldPosition);
     }
+}
+
+void UMinimapWidget::CreateWarningUI(FVector Location)
+{
+	if (UUserWidget* WarningUI = CreateWidget<UUserWidget>(GetWorld(), WarningUIClass))
+	{
+		FVector2D Position = ConvertingLocationToMinimap(Location);
+		WarningUI->SetPositionInViewport(Position);
+		WarningUI->AddToViewport();
+
+        FTimerHandle CreateWarningUIHandle1;
+	    GetWorld()->GetTimerManager().SetTimer(CreateWarningUIHandle1,[&,Position]()
+	    {
+		    if (UUserWidget* WarningUI = CreateWidget<UUserWidget>(GetWorld(), WarningUIClass))
+		    {
+			    WarningUI->SetPositionInViewport(Position);
+			    WarningUI->AddToViewport();
+		    }
+	    },0.3f,false);
+        FTimerHandle CreateWarningUIHandle2;
+	    GetWorld()->GetTimerManager().SetTimer(CreateWarningUIHandle2,[&,Position]()
+	    {
+		    if (UUserWidget* WarningUI = CreateWidget<UUserWidget>(GetWorld(), WarningUIClass))
+		    {
+			    WarningUI->SetPositionInViewport(Position);
+			    WarningUI->AddToViewport();
+		    }
+	    },0.5f,false);
+	}
+}
+FVector2D UMinimapWidget::ConvertingLocationToMinimap(FVector Location)
+{
+    //기준 좌표
+    const FVector2D OriginLocation = FVector2D(-12641.0,-22269);
+    //월드 크기
+    const FVector2D MiniMapWorldSize = FVector2D(12900.0,22000.0);
+    // 현재 위치를 Landscape의 로컬 좌표로 변환
+    const float NormalizedX = (Location.X - OriginLocation.X) / (MiniMapWorldSize.X*2.0f);
+    const float NormalizedY = (Location.Y - OriginLocation.Y) / ((MiniMapWorldSize.Y*2.0f-500.f));
+    UE_LOG(LogTemp,Warning,TEXT(" %f   %f"),NormalizedX,NormalizedY);
+    float NormalX = FMath::Lerp(300.085f,0.f,NormalizedX);
+    float NormalY = FMath::Lerp(950.f,420.f,NormalizedY); //462.746 //1035.151 1009.235107
+     UE_LOG(LogTemp,Warning,TEXT(" %f   NormalY%f"),NormalX,NormalY);
+    
+    //UE_LOG(LogTemp,Warning,TEXT("Location.X %f OriginLocation.X %f  NormalizedY  %f"),(Location.X - OriginLocation.X), MiniMapWorldSize.X);
+    //UE_LOG(LogTemp,Warning,TEXT("Location.X - OriginLocation.X %f.NormalizedY  %f"),(Location.Y - OriginLocation.Y),MiniMapWorldSize.Y);
+    return FVector2D(NormalX,NormalY);
 }

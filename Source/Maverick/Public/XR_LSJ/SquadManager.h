@@ -66,6 +66,9 @@ class MAVERICK_API ASquadManager : public AActor, public IIAICommand
 	class UWidgetComponent* MinimapHpWidgetComp;
 	UPROPERTY(EditDefaultsOnly)
 	class USpringArmComponent* MinimapHpWidgetSpringArm;
+
+	//미니맵 액터
+	class AMinimapViewer* MinimapViewer;
 public:
 	//분대원 죽음 알림 델리게이트
 	FDel_SoldierUnitDie FDelSoldierUnitDie;
@@ -109,6 +112,8 @@ protected:
 	void FindCloseTargetUnit();
 	// SquadManagerAbility.FindTargetRange 만큼 적을 탐색하고 적 분대를 공격
 	void FindTargetSquad();
+	// 미니맵에 경고 UI 표시
+	void CreateWarningUIToMinimap();
 	// 각 분대원에게 유닛 타겟 공격 지시
 	void AttackTargetUnit();
 	// 각 분대원에게 분대 타겟 공격 지시

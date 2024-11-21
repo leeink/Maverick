@@ -25,6 +25,7 @@
 #include "HpBarNewIcon.h"
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
+#include "XR_LSJ/MinimapViewer.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -215,6 +216,8 @@ void AAITankPawn::BeginPlay()
 		    
 
     }
+
+	MinimapViewer = Cast<AMinimapViewer>(UGameplayStatics::GetActorOfClass(GetWorld(),AMinimapViewer::StaticClass()));
 
 	if(false==StartGoalLocation.Equals(FVector::ZeroVector))
 		FindPath(StartGoalLocation);
@@ -533,6 +536,7 @@ void AAITankPawn::FireCannon()
 		    return;
 		}
     }
+
 	AddViewCount();
 	FTimerHandle VisibleHandle;
 	GetWorld()->GetTimerManager().SetTimer(VisibleHandle,[&]()
@@ -567,8 +571,14 @@ void AAITankPawn::FireCannon()
 		Bullet->SetExplosiveMinDamage(TankAbility.ExplosiveMinDamage);
 		Bullet->InitMovement(OutVelocity);
 	}
+	//미니맵에 경고 UI 표시
+	CreateWarningUIToMinimap();
 }
-
+void AAITankPawn::CreateWarningUIToMinimap()
+{
+	if(MinimapViewer)
+		MinimapViewer->CreateWarningUI(GetActorLocation());
+}
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
