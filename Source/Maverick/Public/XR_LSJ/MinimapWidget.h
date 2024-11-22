@@ -17,12 +17,19 @@ class MAVERICK_API UMinimapWidget : public UUserWidget
     FPaintContext* CustomContext;
     UPROPERTY(meta=(AllowPrivateAccess),BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> WarningUIClass;
+    UPROPERTY(meta=(BindWidget))
+    class UImage* Minimap;
+    TArray<TPair<FVector2D, FVector2D>> RuntimeLines;
+    TMap<class ASoldier*,TArray<TPair<FVector2D, FVector2D>>> Unit_MinimapPath;
 public:
     virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     void CreateWarningUI(FVector Location);
 protected:
-    virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled ) const;
-
+    virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled ) const override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    virtual void NativeConstruct() override;
+    void AddRuntimeLine(const FVector2D& Start, const FVector2D& End);
+    FVector ConvertingMinimapToLocation(FVector2D Position);
     FVector2D ConvertingLocationToMinimap(FVector Location);
     void FindPath(const FVector& StartLocation, const FVector& TargetLocation, TArray<FVector>& ArrayLocation);
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Minimap")

@@ -525,12 +525,20 @@ void AAITankPawn::FireCannon()
 	    ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
 	    if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
 	    {      
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
 			Target = nullptr;
 			FindCloseTargetPlayerUnit();
 		    return;
 	    }
 		else if (controller==nullptr)
 		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
 			Target = nullptr;
 			FindCloseTargetPlayerUnit();
 		    return;
