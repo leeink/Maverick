@@ -84,6 +84,9 @@ class MAVERICK_API AOperatorPawn : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* IA_ArmySlot3;
 
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IA_StopAction;
+
 	// LocationArray
 	TArray<FVector> LocationArray;
 
@@ -171,12 +174,13 @@ protected:
 	void OnSelectSlot1(const FInputActionValue& Value);
 	void OnSelectSlot2(const FInputActionValue& Value);
 	void OnSelectSlot3(const FInputActionValue& Value);
+	void OnStopAction(const FInputActionValue& Value);
 	void DoubleClickMoveLocation(FVector Location);
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
