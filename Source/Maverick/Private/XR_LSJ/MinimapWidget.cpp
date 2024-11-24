@@ -16,14 +16,14 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/LineBatchComponent.h"
 #include "LDG/SoldierAIController.h"
+#include "LDG/TankBase.h"
+#include "LDG/TankAIController.h"
 FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     // 클릭된 위치를 위젯 공간에서 좌표로 얻기
     FVector2D LocalClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
     {
-        
-
         // 클릭된 위치로 플레이어 이동
         MovePlayerToMapClick(LocalClickPosition);   
     }
@@ -45,32 +45,51 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
             CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
 			CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
             //경로 찾기
+            //거리비교
+            float minDistance = 1000000;
+            FVector StartLocation;
+            TArray<APawn*> Units;
             for (ASoldier* Unit : PlayerPawn->GetSelectedUnits())
 			{   
-                if(nullptr==Unit)
-                    continue;
-				TArray<FVector> Path;
-                TArray<TPair<FVector2D, FVector2D>> PathLines;
-				FindPath(Unit->GetActorLocation(), WorldPosition, Path);
-				for (int32 PathIdx = 0; PathIdx < Path.Num() - 1; PathIdx++)
-				{
-					FVector2D MinimapPosition = ConvertingLocationToMinimap(Path[PathIdx]);
-					FVector2D NextMinimapPosition = ConvertingLocationToMinimap(Path[PathIdx + 1]);
-                    MinimapPosition*=CurrentViewportSize;
-                    NextMinimapPosition*=CurrentViewportSize;
-                    //미니맵에 경로 그리기
-                    UE_LOG(LogTemp,Error,TEXT(" fff %s %s"),*(MinimapPosition * CurrentViewportSize).ToString(), *(NextMinimapPosition * CurrentViewportSize).ToString());
-					//AddRuntimeLine(MinimapPosition * CurrentViewportSize, NextMinimapPosition * CurrentViewportSize);
-                    PathLines.Add(TPair<FVector2D, FVector2D>(MinimapPosition, NextMinimapPosition));
-				}
-                Unit_MinimapPath.Add(Unit,PathLines);
-                break;
+               if(nullptr==Unit)
+                  continue;
+               float TargetDistance = FVector::Distance(Unit->GetActorLocation(),WorldPosition);
+               if (TargetDistance < minDistance)
+               {
+                   minDistance = TargetDistance;
+                   StartLocation = Unit->GetActorLocation();
+               }
+               Units.Add(Unit);
+            }
+            for (ATankBase* Unit : PlayerPawn->GetSelectedTanks())
+			{   
+               if(nullptr==Unit)
+                  continue;
+               float TargetDistance = FVector::Distance(Unit->GetActorLocation(),WorldPosition);
+               if (TargetDistance < minDistance)
+               {
+                   minDistance = TargetDistance;
+                   StartLocation = Unit->GetActorLocation();
+                   WorldPosition.Z = 132.0f;
+               }
+               Units.Add(Unit);
             }
             
-            if (PlayerPawn->GetSelectedTanks().Num() > 0)
-            {
-                
-            }
+            TArray<FVector> Path;
+            TArray<TPair<FVector2D, FVector2D>> PathLines;
+			FindPath(StartLocation, WorldPosition, Path);
+			for (int32 PathIdx = 0; PathIdx < Path.Num() - 1; PathIdx++)
+			{
+				FVector2D MinimapPosition = ConvertingLocationToMinimap(Path[PathIdx]);
+				FVector2D NextMinimapPosition = ConvertingLocationToMinimap(Path[PathIdx + 1]);
+                MinimapPosition*=CurrentViewportSize;
+                NextMinimapPosition*=CurrentViewportSize;
+                //미니맵에 경로 그리기
+                UE_LOG(LogTemp,Error,TEXT(" fff %s %s"),*(MinimapPosition * CurrentViewportSize).ToString(), *(NextMinimapPosition * CurrentViewportSize).ToString());
+				//AddRuntimeLine(MinimapPosition * CurrentViewportSize, NextMinimapPosition * CurrentViewportSize);
+                PathLines.Add(TPair<FVector2D, FVector2D>(MinimapPosition, NextMinimapPosition));
+			}
+            Unit_MinimapPath.Add(Units,PathLines);
        }
     }
 
@@ -139,8 +158,12 @@ int32 UMinimapWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Allot
     // Draw a line
     for (auto& pUnit_Unit_MinimapPath : Unit_MinimapPath)
     {
-        if(nullptr==pUnit_Unit_MinimapPath.Key)
+        const TArray<APawn*>& KeyArray = pUnit_Unit_MinimapPath.Key;
+        if (0 >= KeyArray.Num())
+        {
             continue;
+        }
+            
         for (auto& Position : pUnit_Unit_MinimapPath.Value)
         {
             UWidgetBlueprintLibrary::DrawLine(Context, Position.Key, Position.Value, FLinearColor::White, true, 2.0f);
@@ -153,57 +176,78 @@ int32 UMinimapWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Allot
 void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-
+    
+    //미니맵에 이동 루트 그리기
     for (auto& pUnit_Unit_MinimapPath : Unit_MinimapPath)
     {
-        if (nullptr == pUnit_Unit_MinimapPath.Key)
+        
+        int32 DieUnitCount = 0;
+        TArray<APawn*>& KeyArray = pUnit_Unit_MinimapPath.Key;
+        UE_LOG(LogTemp,Warning,TEXT("KeyArray  %d"),KeyArray.Num());
+        for (int32 UnitCount = KeyArray.Num() - 1; UnitCount>=0; UnitCount--)
         {
-            Unit_MinimapPath.Remove(pUnit_Unit_MinimapPath.Key);
+            if (nullptr == KeyArray[UnitCount] || KeyArray[UnitCount]->GetController() == nullptr)
+            {
+                DieUnitCount++;
+				continue;
+            }
+            ASoldierAIController* SoldierController = Cast<ASoldierAIController>(KeyArray[UnitCount]->GetController());
+			if (SoldierController && (SoldierController->IsDead() || SoldierController->GetCurrentState() == EState::Die || SoldierController->GetCurrentState() == EState::Attack))
+			{
+                DieUnitCount++;
+				continue;
+			}
+            ATankAIController* TankController = Cast<ATankAIController>(KeyArray[UnitCount]->GetController());
+			if (TankController && (TankController->CurrentState == ETankState::Die || TankController->CurrentState == ETankState::Attack))
+			{
+                DieUnitCount++; 
+				continue;
+			}
+           
+            // 현재 화면 크기 가져오기
+            FVector2D CurrentViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+            // 현재 화면 따라 비율 변경 
+            CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
+		    CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
+            FVector2D UnitPosition = ConvertingLocationToMinimap(pUnit_Unit_MinimapPath.Key[UnitCount]->GetActorLocation());
+            UnitPosition*=CurrentViewportSize;
+            if (pUnit_Unit_MinimapPath.Value.Num()>0)
+            {
+                if (FVector2D::Distance(UnitPosition, pUnit_Unit_MinimapPath.Value[0].Value) < 10.0f)
+                {
+                    pUnit_Unit_MinimapPath.Value.RemoveAt(0);
+                    Invalidate(EInvalidateWidgetReason::Paint);
+                }
+                else 
+                {
+                    pUnit_Unit_MinimapPath.Value[0].Key=UnitPosition;
+                    Invalidate(EInvalidateWidgetReason::Paint);
+                }
+            }
+            break;
+        }
+        if(DieUnitCount>=pUnit_Unit_MinimapPath.Key.Num() || pUnit_Unit_MinimapPath.Value.Num()<=0)
+        {
+            UE_LOG(LogTemp,Warning,TEXT("DieUnitCount  %d"),DieUnitCount);
+            UE_LOG(LogTemp,Warning,TEXT("pUnit_Unit_MinimapPath.Value.Num()  %d"),pUnit_Unit_MinimapPath.Value.Num());
+            pUnit_Unit_MinimapPath.Value.Empty();
 			Invalidate(EInvalidateWidgetReason::Paint);
+            Remove_MinimapPath.Add(pUnit_Unit_MinimapPath.Key);
             continue;
         }
-            
-        ASoldierAIController* controller = Cast<ASoldierAIController>(pUnit_Unit_MinimapPath.Key->GetController());
-	    if (controller&&(controller->IsDead()||controller->GetCurrentState()==EState::Die))
-		{
-			Unit_MinimapPath.Remove(pUnit_Unit_MinimapPath.Key);
-			Invalidate(EInvalidateWidgetReason::Paint);
-			continue;
-		}
-        // 현재 화면 크기 가져오기
-        FVector2D CurrentViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
-        // 현재 화면 따라 비율 변경 
-        CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
-		CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
-        FVector2D UnitPosition = ConvertingLocationToMinimap(pUnit_Unit_MinimapPath.Key->GetActorLocation());
-        UnitPosition*=CurrentViewportSize;
-        if (pUnit_Unit_MinimapPath.Value.Num()>0)
-        {
-            if (FVector2D::Distance(UnitPosition, pUnit_Unit_MinimapPath.Value[0].Value) < 10.0f)
-            {
-                RuntimeLines.Empty();
-                pUnit_Unit_MinimapPath.Value.RemoveAt(0);
-                RuntimeLines=pUnit_Unit_MinimapPath.Value;
-                Invalidate(EInvalidateWidgetReason::Paint);
-            }
-            else 
-            {
-                RuntimeLines.Empty();
-                pUnit_Unit_MinimapPath.Value[0].Key=UnitPosition;
-                RuntimeLines = pUnit_Unit_MinimapPath.Value;
-                Invalidate(EInvalidateWidgetReason::Paint);
-            }
-             
-       }
-       else
-        pUnit_Unit_MinimapPath.Key = nullptr;
     }
+
+    for (const TArray<APawn*>& Key : Remove_MinimapPath)
+	{
+		Unit_MinimapPath.Remove(Key);
+	}
+    Remove_MinimapPath.Empty();
 }
 
 void UMinimapWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-    
+
 }
 
 void UMinimapWidget::AddRuntimeLine(const FVector2D& Start, const FVector2D& End)

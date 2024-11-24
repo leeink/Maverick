@@ -544,6 +544,21 @@ void AAITankPawn::FireCannon()
 		    return;
 		}
     }
+	ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(Target);
+	if (TargetPlayerTankUnit)
+	{
+		ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+		if (controller && (controller->CurrentState == ETankState::Die))
+		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
+			Target = nullptr;
+			FindCloseTargetPlayerUnit();
+		    return;
+		}
+	}
 
 	AddViewCount();
 	FTimerHandle VisibleHandle;

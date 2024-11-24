@@ -20,7 +20,8 @@ class MAVERICK_API UMinimapWidget : public UUserWidget
     UPROPERTY(meta=(BindWidget))
     class UImage* Minimap;
     TArray<TPair<FVector2D, FVector2D>> RuntimeLines;
-    TMap<class ASoldier*,TArray<TPair<FVector2D, FVector2D>>> Unit_MinimapPath;
+    TMap<TArray<APawn*>,TArray<TPair<FVector2D, FVector2D>>> Unit_MinimapPath;
+    TArray<TArray<APawn*>> Remove_MinimapPath;
 public:
     virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     void CreateWarningUI(FVector Location);
