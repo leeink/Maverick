@@ -23,6 +23,4 @@ EBTNodeResult::Type UBTTas_TankShellShot::ExecuteTask(UBehaviorTreeComponent& Ow
 		UE_LOG(LogTemp, Warning, TEXT("Failed to cast to ATankAIController"));
 		return EBTNodeResult::Failed;
 	}
-	
-	return EBTNodeResult::Failed;
 }

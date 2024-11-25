@@ -150,6 +150,7 @@ void AOperatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(IA_ArmySlot1 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot1);
 		EnhancedInputComponent->BindAction(IA_ArmySlot2 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot2);
 		EnhancedInputComponent->BindAction(IA_ArmySlot3 , ETriggerEvent::Started , this , &AOperatorPawn::OnSelectSlot3);
+		EnhancedInputComponent->BindAction(IA_StopAction, ETriggerEvent::Started, this, &AOperatorPawn::OnStopAction);
 	}
 }
 
@@ -614,6 +615,30 @@ void AOperatorPawn::OnSelectSlot3(const FInputActionValue& Value)
 			}
 		}
 		
+	}
+}
+
+void AOperatorPawn::OnStopAction(const FInputActionValue& Value)
+{
+	for(auto* Unit: SelectedUnits)
+	{
+		if(Unit != nullptr)
+		{
+			if(ASoldierAIController* RifleController = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(Unit)))
+			{
+				RifleController -> IdleCommand();
+			}
+		}
+	}
+	for(auto* Tank: SelectedTanks)
+	{
+		if(Tank != nullptr)
+		{
+			if(ATankAIController* TankAIController = Cast<ATankAIController>(Tank -> GetController()))
+			{
+				TankAIController -> IdleCommand();
+			}
+		}
 	}
 }
 

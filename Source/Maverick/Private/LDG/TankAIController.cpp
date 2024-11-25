@@ -34,6 +34,7 @@ void ATankAIController::IdleCommand()
 	if(PossessedPawn -> IsSelected())
 	{
 		SetState(ETankState::Idle);
+		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(ETankState::Idle));
 	}
 }
 
