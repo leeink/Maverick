@@ -21,6 +21,8 @@
 #include "AI/Navigation/NavigationTypes.h"
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
+#include "XR_LSJ/MinimapViewer.h"
+#include "Kismet/GameplayStatics.h"
 
 FVector ASquadManager::GetTargetLocation()
 {
@@ -146,7 +148,10 @@ void ASquadManager::BeginPlay()
 			HpBarNewIcon->SetHpBar(1.0f);
 		} 
     }
-        
+    
+    //미니맵 액터
+    MinimapViewer = Cast<AMinimapViewer>(UGameplayStatics::GetActorOfClass(GetWorld(),AMinimapViewer::StaticClass()));
+
     SetCurrentSquadCount(MaxSpawnCount);
     SetInGameHidden(true);
 }
@@ -519,11 +524,18 @@ void ASquadManager::FindTargetSquad()
 			GetWorldTimerManager().SetTimer(AttackEnemy, RespawnDelegate, 10.0f, true);
     }
 }
+
+void ASquadManager::CreateWarningUIToMinimap()
+{
+	if(MinimapViewer)
+		MinimapViewer->CreateWarningUI(GetActorLocation());
+}
 void ASquadManager::AttackTargetUnit()
 {
     if(Target.Num() < CurrentSquadCount)
        return;
-   
+   	//미니맵에 경고 UI 표시
+	CreateWarningUIToMinimap();
      for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
     {
         if(SquadArray[SquadCount]==nullptr)

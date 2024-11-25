@@ -61,6 +61,9 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	FVector StartGoalLocation;
 	//현재 탱크 상태 
 	EAIUnitActionState CurrentActionState;
+
+	//미니맵 액터
+	class AMinimapViewer* MinimapViewer;
 public:
 	//탱크 죽음 알림 델리게이트
 	FDel_TankUnitDie FDelTankUnitDie;
@@ -102,6 +105,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetViewCountToHidden();
 protected:
+//미니맵에 경고 UI 생성
+	void CreateWarningUIToMinimap();
 	void SetVisibleTank(bool val);
 	void FireCannon();
 	float GetLookTargetAngle(FVector TargetLocation);

@@ -14,6 +14,8 @@
 #include "LDG/Soldier.h"
 #include "LDG/SoldierAIController.h"
 #include "Components/CapsuleComponent.h"
+#include "LDG/TankBase.h"
+#include "LDG/TankAIController.h"
 
 // Sets default values
 AAISquad::AAISquad()
@@ -99,6 +101,19 @@ void AAISquad::AttackFire()
 			return;
 		}
 	}
+	ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(FSMComp->GetTarget());
+	if (TargetPlayerTankUnit)
+	{
+		ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+		if (controller && (controller->CurrentState == ETankState::Die))
+		{
+			FSMComp->SetTarget(nullptr);
+			if(FDelTargetDie.IsBound())
+				FDelTargetDie.Execute();
+			return;
+		}
+	}
+
 	IIAICommand* TargetUnit = Cast<IIAICommand>(FSMComp->GetTarget());
 	if (TargetUnit && TargetUnit->GetCurrentCommandState() == EAIUnitCommandState::DIE || nullptr == FSMComp->GetTarget())
 	{

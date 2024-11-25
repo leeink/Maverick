@@ -25,6 +25,7 @@
 #include "HpBarNewIcon.h"
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
+#include "XR_LSJ/MinimapViewer.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -215,6 +216,8 @@ void AAITankPawn::BeginPlay()
 		    
 
     }
+
+	MinimapViewer = Cast<AMinimapViewer>(UGameplayStatics::GetActorOfClass(GetWorld(),AMinimapViewer::StaticClass()));
 
 	if(false==StartGoalLocation.Equals(FVector::ZeroVector))
 		FindPath(StartGoalLocation);
@@ -522,17 +525,41 @@ void AAITankPawn::FireCannon()
 	    ASoldierAIController* controller = Cast<ASoldierAIController>(TargetPlayerUnit->GetController());
 	    if (controller&&(controller->GetCurrentState()==EState::Die||controller->IsDead()))
 	    {      
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
 			Target = nullptr;
 			FindCloseTargetPlayerUnit();
 		    return;
 	    }
 		else if (controller==nullptr)
 		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
 			Target = nullptr;
 			FindCloseTargetPlayerUnit();
 		    return;
 		}
     }
+	ATankBase* TargetPlayerTankUnit = Cast<ATankBase>(Target);
+	if (TargetPlayerTankUnit)
+	{
+		ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
+		if (controller && (controller->CurrentState == ETankState::Die))
+		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
+			Target = nullptr;
+			FindCloseTargetPlayerUnit();
+		    return;
+		}
+	}
+
 	AddViewCount();
 	FTimerHandle VisibleHandle;
 	GetWorld()->GetTimerManager().SetTimer(VisibleHandle,[&]()
@@ -567,8 +594,14 @@ void AAITankPawn::FireCannon()
 		Bullet->SetExplosiveMinDamage(TankAbility.ExplosiveMinDamage);
 		Bullet->InitMovement(OutVelocity);
 	}
+	//미니맵에 경고 UI 표시
+	CreateWarningUIToMinimap();
 }
-
+void AAITankPawn::CreateWarningUIToMinimap()
+{
+	if(MinimapViewer)
+		MinimapViewer->CreateWarningUI(GetActorLocation());
+}
 void AAITankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
