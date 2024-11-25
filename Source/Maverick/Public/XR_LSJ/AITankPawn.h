@@ -64,6 +64,11 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 
 	//미니맵 액터
 	class AMinimapViewer* MinimapViewer;
+	//탱크 발사 사운드
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
+	class USoundBase* GunFireSound;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
+	class USoundAttenuation* SA_Unit;
 public:
 	//탱크 죽음 알림 델리게이트
 	FDel_TankUnitDie FDelTankUnitDie;

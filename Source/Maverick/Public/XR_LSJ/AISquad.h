@@ -39,7 +39,10 @@ class MAVERICK_API AAISquad : public ACharacter, public IIAICommand
 
 	UPROPERTY(EditDefaultsOnly,Meta = (AllowPrivateAccess = true))
 	class USkeletalMeshComponent* GunMeshComp;
-
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
+	class USoundBase* GunFireSound;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
+	class USoundAttenuation* SA_Unit;
 public:
 	// Sets default values for this character's properties
 	AAISquad();

@@ -26,6 +26,7 @@
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
 #include "XR_LSJ/MinimapViewer.h"
+#include "Sound/SoundBase.h"
 
 // Sets default values
 AAITankPawn::AAITankPawn()
@@ -578,7 +579,9 @@ void AAITankPawn::FireCannon()
 	CalculateBallisticVelocity(MeshComp->GetSocketLocation(TEXT("gun_jntSocket")), TargetLocation,ArrivalTime,OutVelocity);
 
 	
-	//float LaunchSpeed = 13300.f; // 초기 발사 속도 설정
+	// 총 사운드
+	if(GunFireSound&&SA_Unit)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(),GunFireSound,GetActorLocation(),.8f,1.0f,0.f,SA_Unit);
 	
 	//muzzle 이펙트 
 	FireFx(true);
