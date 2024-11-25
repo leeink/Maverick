@@ -35,7 +35,9 @@ void ASoldierAIController::IdleCommand()
 {
 	if(PossessedPawn -> IsSelected())
 	{
+		GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Idle Command"));
 		SetState(EState::Idle);
+		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Idle));
 	}
 }
 
@@ -60,6 +62,11 @@ void ASoldierAIController::ChaseCommand(FVector GoalLocation)
 		//PossessedPawn -> GetFlockingComponent() -> SetDestination(GoalLocation);
 		GetBlackboardComponent() -> SetValueAsVector(FName(TEXT("TargetLocation")), GoalLocation);
 		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Chase));
+
+		if(AActor* Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor")))))
+		{
+			SetState(EState::Attack);
+		}
 	}
 }
 

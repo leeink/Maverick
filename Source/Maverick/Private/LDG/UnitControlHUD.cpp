@@ -32,6 +32,11 @@ void AUnitControlHUD::DrawHUD()
 		GetActorsInSelectionRectangle(ASoldier::StaticClass(), StartMousePosition, CurrentMousePosition, InRectangleUnits, false, false);
 		GetActorsInSelectionRectangle(ATankBase::StaticClass(), StartMousePosition, CurrentMousePosition, InRectangleTanks, false, false);
 
+		if(InRectangleTanks.Num() <= 0 && InRectangleUnits.Num() <= 0)
+		{
+			return;
+		}
+		
 		// Unit Selection -----------------------------------------------
 		for(auto* Unit: InRectangleUnits)
 		{
