@@ -283,6 +283,12 @@ void AEnemyManager::AddTank(ATankBase* Tank)
 	MaxTankCount++;
 	PlayerTankCount++;
 }
+void AEnemyManager::AddSoldier(ASoldier* Soldier)
+{
+	Soldier->Del_PlayerSoldierUnitDie.BindUFunction(this, FName("DiePlayerSoldier"));
+	MaxPlayerSoldierCount++;
+	PlayerSoldierCount++;
+}
 void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)
 {
 	switch (pOccupiedLocationActor->GetOccupiedLocationType())

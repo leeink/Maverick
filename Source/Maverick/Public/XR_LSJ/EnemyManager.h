@@ -154,4 +154,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	//탱크 추가시 실행해야하는 함수
 	void AddTank(class ATankBase* Tank);
+	void AddSoldier(ASoldier* Soldier);
 };
