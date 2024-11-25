@@ -17,6 +17,4 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 		UE_LOG(LogTemp, Warning, TEXT("Failed to cast to ASoldierAIController"));
 		return EBTNodeResult::Failed;
 	}
-	
-	return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
