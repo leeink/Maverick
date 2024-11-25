@@ -111,7 +111,7 @@ void ASoldierAIController::EnemyDetection()
 		{EnemyTraceType},
 		false,
 		{PossessedPawn},
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		HitResult,
 		true,
 		FLinearColor::Red,
