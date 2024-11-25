@@ -16,6 +16,8 @@
 #include "Components/CapsuleComponent.h"
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 // Sets default values
 AAISquad::AAISquad()
@@ -123,7 +125,9 @@ void AAISquad::AttackFire()
 	}
 	//muzzle ÀÌÆåÆ® 
 	GunMuzzleFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(GunMuzzleFXSystem,GetGunMeshComp(),TEXT("Muzzle"),FVector::ZeroVector,FRotator::ZeroRotator,FVector(5,5,5),EAttachLocation::SnapToTarget,true,ENCPoolMethod::AutoRelease);
-	
+	// ÃÑ »ç¿îµå
+	if(GunFireSound&&SA_Unit)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(),GunFireSound,GetActorLocation(),.1f,1.0f,0.f,SA_Unit);
 	//ÃÑ¾Ë ¹æÇâ
 	FVector LaunchDirection = (FSMComp->GetTarget()->GetActorLocation() - GetGunMeshComp()->GetSocketLocation(TEXT("Muzzle"))).GetSafeNormal();
 	//ÃÑ¾Ë ¼ÒÈ¯

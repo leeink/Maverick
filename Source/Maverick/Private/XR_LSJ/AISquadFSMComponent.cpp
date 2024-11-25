@@ -335,8 +335,16 @@ void UAISquadFSMComponent::SetIsAttacking(bool val, AActor* TargetActor)
 	if(AISquadBody->IsHidden() && IsAttacking)
 		AISquadBody->AddViewCount();
 	//보이는 상태이고 공격중이 아니라면 안보이게 만든다.
-	else if(false==AISquadBody->IsHidden() && false==IsAttacking)
-		AISquadBody->MinusViewCount();
+	else if (false == AISquadBody->IsHidden() && false == IsAttacking)
+	{
+		FTimerHandle HiddenHandle;
+		GetWorld()->GetTimerManager().SetTimer(HiddenHandle, [&]()
+		{
+			AISquadBody->MinusViewCount();
+		}, 2.5f, false);
+	}
+		
+		
 
 	Target = TargetActor;
 	AISquadAnimInstance->SetIsAttacking(val);
