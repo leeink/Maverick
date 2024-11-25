@@ -42,8 +42,10 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
             // 현재 화면 크기 가져오기
             FVector2D CurrentViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
             // 현재 화면 따라 비율 변경 
-            CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
-			CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
+            //CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
+			//CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
+			CurrentViewportSize.X = 1920 / CurrentViewportSize.X;
+			CurrentViewportSize.Y = 1080 / CurrentViewportSize.Y;
             //경로 찾기
             //거리비교
             float minDistance = 1000000;
@@ -82,13 +84,20 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
 			{
 				FVector2D MinimapPosition = ConvertingLocationToMinimap(Path[PathIdx]);
 				FVector2D NextMinimapPosition = ConvertingLocationToMinimap(Path[PathIdx + 1]);
-                MinimapPosition*=CurrentViewportSize;
-                NextMinimapPosition*=CurrentViewportSize;
+                //MinimapPosition*=CurrentViewportSize;
+                MinimapPosition.X*=CurrentViewportSize.X;
+                MinimapPosition.Y*=CurrentViewportSize.Y;
+                //NextMinimapPosition*=CurrentViewportSize;
+                NextMinimapPosition.X*=(CurrentViewportSize.X);
+                NextMinimapPosition.Y*=CurrentViewportSize.Y;
                 //미니맵에 경로 그리기
                 UE_LOG(LogTemp,Error,TEXT(" fff %s %s"),*(MinimapPosition * CurrentViewportSize).ToString(), *(NextMinimapPosition * CurrentViewportSize).ToString());
 				//AddRuntimeLine(MinimapPosition * CurrentViewportSize, NextMinimapPosition * CurrentViewportSize);
                 PathLines.Add(TPair<FVector2D, FVector2D>(MinimapPosition, NextMinimapPosition));
 			}
+            if(Unit_MinimapPath.Contains(Units))
+            Unit_MinimapPath[Units]=PathLines;
+            else
             Unit_MinimapPath.Add(Units,PathLines);
        }
     }
@@ -186,7 +195,7 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         UE_LOG(LogTemp,Warning,TEXT("KeyArray  %d"),KeyArray.Num());
         for (int32 UnitCount = KeyArray.Num() - 1; UnitCount>=0; UnitCount--)
         {
-            if (nullptr == KeyArray[UnitCount] || KeyArray[UnitCount]->GetController() == nullptr)
+            if (nullptr == KeyArray[UnitCount] || KeyArray[UnitCount]->GetController() == nullptr ||  KeyArray[UnitCount]->IsActorBeingDestroyed())
             {
                 DieUnitCount++;
 				continue;
@@ -207,13 +216,15 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
             // 현재 화면 크기 가져오기
             FVector2D CurrentViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
             // 현재 화면 따라 비율 변경 
-            CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
-		    CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
+            CurrentViewportSize.X = 1955 / CurrentViewportSize.X;
+			CurrentViewportSize.Y = 1065 / CurrentViewportSize.Y;
+            //CurrentViewportSize.X = 1852 / CurrentViewportSize.X;
+		    //CurrentViewportSize.Y = 1073 / CurrentViewportSize.Y;
             FVector2D UnitPosition = ConvertingLocationToMinimap(pUnit_Unit_MinimapPath.Key[UnitCount]->GetActorLocation());
             UnitPosition*=CurrentViewportSize;
             if (pUnit_Unit_MinimapPath.Value.Num()>0)
             {
-                if (FVector2D::Distance(UnitPosition, pUnit_Unit_MinimapPath.Value[0].Value) < 10.0f)
+                if (FVector2D::Distance(UnitPosition, pUnit_Unit_MinimapPath.Value[0].Value) < 20.0f)
                 {
                     pUnit_Unit_MinimapPath.Value.RemoveAt(0);
                     Invalidate(EInvalidateWidgetReason::Paint);

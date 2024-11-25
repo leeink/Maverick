@@ -20,6 +20,7 @@ class MAVERICK_API UMinimapWidget : public UUserWidget
     UPROPERTY(meta=(BindWidget))
     class UImage* Minimap;
     TArray<TPair<FVector2D, FVector2D>> RuntimeLines;
+
     TMap<TArray<APawn*>,TArray<TPair<FVector2D, FVector2D>>> Unit_MinimapPath;
     TArray<TArray<APawn*>> Remove_MinimapPath;
 public:
