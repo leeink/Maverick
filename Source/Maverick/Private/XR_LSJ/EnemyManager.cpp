@@ -277,6 +277,12 @@ void AEnemyManager::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimer(BeginCheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,5.0f,false);
 	GetWorld()->GetTimerManager().SetTimer(CheckPlayerUnitLocationHandle,this,&AEnemyManager::CheckPlayerUnitLocation,50.0f,true);
 }
+void AEnemyManager::AddTank(ATankBase* Tank)
+{
+	Tank->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
+	MaxTankCount++;
+	PlayerTankCount++;
+}
 void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)
 {
 	switch (pOccupiedLocationActor->GetOccupiedLocationType())
