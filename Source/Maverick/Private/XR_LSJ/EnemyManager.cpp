@@ -148,7 +148,7 @@ void AEnemyManager::BeginPlay()
 {
 	Super::BeginPlay();
 	OccupiedTop = true;
-	OccupiedBottom = false;
+	OccupiedBottom = true;
 	EndGame = false;
 	if (EnemyCountClass)
 	{
@@ -280,7 +280,7 @@ void AEnemyManager::BeginPlay()
 void AEnemyManager::AddTank(ATankBase* Tank)
 {
 	Tank->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
-	MaxTankCount++;
+	MaxPlayerTankCount++;
 	PlayerTankCount++;
 	UserControlUI->SetTankCount(PlayerTankCount);
 }
@@ -314,24 +314,21 @@ void AEnemyManager::CheckPlayerUnitLocation()
 	//왜 이도ㅇ을 안하지?
 		//중간에 CheckPlayerUnitLocation이 실행되서
 		//LandScape에 충돌판정이 되어서
-	//점령한 곳이 없다면 위쪽을 점령한다.
-	if (false == OccupiedTop && false == OccupiedBottom)
-	{
-		MoveToTakeOver(TopOccupiedLocationStruct);
-	}
-	else if (false == OccupiedTop) //아래쪽을 점령했다면 최소 분대를 아래쪽에 배치하고 위쪽을 점령한다.
+	//아래가 점령되었다면
+	if (false == OccupiedBottom)
 	{
 		//최소 방어 분대 배치 체크
-		MinDefensiveDeployment(BottomOccupiedLocationStruct);
-		
+		//MinDefensiveDeployment(BottomOccupiedLocationStruct);
+		UE_LOG(LogTemp,Error,TEXT("TopOccupiedLocationStruct"));
 		//위쪽을 점령한다.
 		MoveToTakeOver(TopOccupiedLocationStruct);
 	}
-	else if (false == OccupiedBottom)
+	//아래가 점령 되지 않았다면
+	else if (true == OccupiedBottom)
 	{
 		//최소 방어 분대 배치 체크
-		MinDefensiveDeployment(TopOccupiedLocationStruct);
-
+		//MinDefensiveDeployment(TopOccupiedLocationStruct);
+		UE_LOG(LogTemp,Error,TEXT("BottomOccupiedLocationStruct"));
 		//아래쪽을 점령한다.
 		MoveToTakeOver(BottomOccupiedLocationStruct);
 	}
@@ -414,8 +411,8 @@ void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStru
 	{
 		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::DIE)
 			continue;
-		if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::Defense)
-			continue;
+		/*if (EnemySquadAll[pSquadManagerCount]->GetCurrentCommandState()==EAIUnitCommandState::Defense)
+			continue;*/
 
 		EnemySquadAll[pSquadManagerCount]->CheckLocationForObject(OccupiedLocationStruct.SquadLocation[CurrentRemainSquad++]);
 		if(OccupiedLocationStruct.SquadLocation.Num()<= CurrentRemainSquad)
@@ -431,9 +428,8 @@ void AEnemyManager::MoveToTakeOver(FOccupiedLocationStruct& OccupiedLocationStru
 			continue;
 		if (EnemyTankAll[pTankCount]->GetCurrentCommandState() != EAIUnitCommandState::IDLE)
 			continue;
-		if (EnemyTankAll[pTankCount]->GetDefenseMode())
-			continue;
-			
+		//if (EnemyTankAll[pTankCount]->GetDefenseMode())
+		//	continue;
 		EnemyTankAll[pTankCount]->FindPath(OccupiedLocationStruct.TankLocation[CurrentRemainTank++]);
 		//UE_LOG(LogTemp,Error,TEXT("pTankCount %d CurrentRemainTank %s"),pTankCount,*OccupiedLocationStruct.TankLocation[CurrentRemainTank<0?CurrentRemainTank=0:CurrentRemainTank].ToString());
 		if(OccupiedLocationStruct.TankLocation.Num()<= CurrentRemainTank)
