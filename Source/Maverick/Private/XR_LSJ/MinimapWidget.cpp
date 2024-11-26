@@ -91,7 +91,7 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
                 NextMinimapPosition.X*=(CurrentViewportSize.X);
                 NextMinimapPosition.Y*=CurrentViewportSize.Y;
                 //미니맵에 경로 그리기
-                UE_LOG(LogTemp,Error,TEXT(" fff %s %s"),*(MinimapPosition * CurrentViewportSize).ToString(), *(NextMinimapPosition * CurrentViewportSize).ToString());
+                //UE_LOG(LogTemp,Error,TEXT(" fff %s %s"),*(MinimapPosition * CurrentViewportSize).ToString(), *(NextMinimapPosition * CurrentViewportSize).ToString());
 				//AddRuntimeLine(MinimapPosition * CurrentViewportSize, NextMinimapPosition * CurrentViewportSize);
                 PathLines.Add(TPair<FVector2D, FVector2D>(MinimapPosition, NextMinimapPosition));
 			}
@@ -118,13 +118,13 @@ void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
          // 오프셋을 월드 위치로 변환 
         float NormalX = FMath::Lerp(0.f,1.f,(ClickPosition.X-29.294f)/(374.085-29.294));
         float NormalY = FMath::Lerp(1.f,0.f,(ClickPosition.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
-        UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
+        //UE_LOG(LogTemp,Warning,TEXT("ClickPosition.Y %f"),ClickPosition.Y);
         float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
         float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
         FVector WorldPosition;
         WorldPosition.X = WorldPositionX;
         WorldPosition.Y = WorldPositionY + 2000.f;
-       UE_LOG(LogTemp,Error,TEXT("%f %f %s"), NormalX,NormalY,*ClickPosition.ToString());
+       //UE_LOG(LogTemp,Error,TEXT("%f %f %s"), NormalX,NormalY,*ClickPosition.ToString());
         WorldPosition.Z = PlayerPawn->GetActorLocation().Z; // 높이값 고정 또는 특정 레벨의 높이로 설정
         PlayerPawn->SetActorLocation(WorldPosition);
     }
@@ -192,7 +192,7 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         
         int32 DieUnitCount = 0;
         TArray<APawn*>& KeyArray = pUnit_Unit_MinimapPath.Key;
-        UE_LOG(LogTemp,Warning,TEXT("KeyArray  %d"),KeyArray.Num());
+        //UE_LOG(LogTemp,Warning,TEXT("KeyArray  %d"),KeyArray.Num());
         for (int32 UnitCount = KeyArray.Num() - 1; UnitCount>=0; UnitCount--)
         {
             if (nullptr == KeyArray[UnitCount] || KeyArray[UnitCount]->GetController() == nullptr ||  KeyArray[UnitCount]->IsActorBeingDestroyed())
@@ -239,8 +239,6 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         }
         if(DieUnitCount>=pUnit_Unit_MinimapPath.Key.Num() || pUnit_Unit_MinimapPath.Value.Num()<=0)
         {
-            UE_LOG(LogTemp,Warning,TEXT("DieUnitCount  %d"),DieUnitCount);
-            UE_LOG(LogTemp,Warning,TEXT("pUnit_Unit_MinimapPath.Value.Num()  %d"),pUnit_Unit_MinimapPath.Value.Num());
             pUnit_Unit_MinimapPath.Value.Empty();
 			Invalidate(EInvalidateWidgetReason::Paint);
             Remove_MinimapPath.Add(pUnit_Unit_MinimapPath.Key);
