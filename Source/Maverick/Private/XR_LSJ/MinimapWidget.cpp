@@ -35,7 +35,7 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
             //미니맵 위치를 월드 위치로 변환
             FVector WorldPosition = ConvertingMinimapToLocation(ClickPosition);
             //카메라 높이에서 카메라 회전값을 넣은 LineTrace 
-            DrawDebugLine(GetWorld(),WorldPosition,WorldPosition+FVector(0,0,10000),FColor::Red,true,1000);
+            //DrawDebugLine(GetWorld(),WorldPosition,WorldPosition+FVector(0,0,10000),FColor::Red,true,1000);
             PlayerPawn->OnMouseRightMinimap(WorldPosition);
 
             
@@ -259,6 +259,12 @@ void UMinimapWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+}
+
+void UMinimapWidget::NativeDestruct()
+{
+    Super::NativeDestruct();
+    GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
 
 void UMinimapWidget::AddRuntimeLine(const FVector2D& Start, const FVector2D& End)
