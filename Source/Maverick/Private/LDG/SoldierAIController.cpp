@@ -35,7 +35,7 @@ void ASoldierAIController::IdleCommand()
 {
 	if(PossessedPawn -> IsSelected())
 	{
-		GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Idle Command"));
+		//GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Idle Command"));
 		SetState(EState::Idle);
 		GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Idle));
 	}
