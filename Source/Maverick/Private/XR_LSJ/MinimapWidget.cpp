@@ -195,7 +195,17 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         //UE_LOG(LogTemp,Warning,TEXT("KeyArray  %d"),KeyArray.Num());
         for (int32 UnitCount = KeyArray.Num() - 1; UnitCount>=0; UnitCount--)
         {
-            if (nullptr == KeyArray[UnitCount] || KeyArray[UnitCount]->GetController() == nullptr ||  KeyArray[UnitCount]->IsActorBeingDestroyed())
+            if (nullptr == KeyArray[UnitCount])
+            {
+                DieUnitCount++;
+				continue;
+            }
+            if (KeyArray[UnitCount]->GetController() == nullptr)
+            {
+                DieUnitCount++;
+				continue;
+            }
+            if (KeyArray[UnitCount]->IsActorBeingDestroyed())
             {
                 DieUnitCount++;
 				continue;

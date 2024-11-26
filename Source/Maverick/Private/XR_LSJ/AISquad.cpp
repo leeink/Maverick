@@ -53,7 +53,8 @@ FVector AAISquad::GetTargetLocation()
 float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float Damage = Super::TakeDamage(DamageAmount,DamageEvent,EventInstigator,DamageCauser);
-	if(SquadAbility.Hp<=0)
+	UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
+	if(FSMComp->GetCurrentState()==EEnemyState::DIE)
 		return Damage;
 	//GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Red,TEXT("Damage"));
 	if (Damage > 0)
@@ -71,7 +72,7 @@ float AAISquad::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
 			GetController()->StopMovement();
 			if(FDelSquadUnitDie.IsBound())
 				FDelSquadUnitDie.Execute(MySquadNumber);
-			//UE_LOG(LogTemp,Error,TEXT("MySquadNumber %d %s"),MySquadNumber,*GetName());
+			
 			if(FDelUnitDie.IsBound())
 				FDelUnitDie.Execute();
 		}

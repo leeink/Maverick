@@ -152,6 +152,7 @@ void UAISquadFSMComponent::OnMoveCompleted(EPathFollowingResult::Type Result)
 	}
 	else
 	{
+		SetState(EEnemyState::IDLE);
 		AISquadController->FCallback_AIController_MoveCompleted.RemoveAll(this);
 		//SquadManager가 이동 불가능한 위치를 주었다면 델리게이트 호출
 		if(AISquadBody->FDelFailToDestination.IsBound())

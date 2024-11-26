@@ -181,7 +181,7 @@ void AAITankPawn::BeginPlay()
 	TankAbility.Hp = 10000.f;
 	MaxTankHp = TankAbility.Hp;
 	CurrentTankHp = MaxTankHp;
-    TankAbility.FindTargetRange = 6000.f;
+    TankAbility.FindTargetRange = 4000.f;
 	TankAbility.ExplosiveRange = 600.f;
 	TankAbility.ExplosiveMaxDamage = 105.f;
 	TankAbility.ExplosiveMinDamage = 5.f;
@@ -550,6 +550,16 @@ void AAITankPawn::FireCannon()
 	{
 		ATankAIController* controller = Cast<ATankAIController>(TargetPlayerTankUnit->GetController());
 		if (controller && (controller->CurrentState == ETankState::Die))
+		{
+			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
+				SetActionState(EAIUnitActionState::MOVE);
+			else
+				SetActionState(EAIUnitActionState::IDLE);
+			Target = nullptr;
+			FindCloseTargetPlayerUnit();
+		    return;
+		}
+		else if (controller==nullptr)
 		{
 			if(CurrentActionState == EAIUnitActionState::MOVEATTACK)
 				SetActionState(EAIUnitActionState::MOVE);
