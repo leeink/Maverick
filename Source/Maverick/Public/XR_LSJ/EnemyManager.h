@@ -153,6 +153,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	//탱크 추가시 실행해야하는 함수
+	UFUNCTION(BlueprintCallable)
 	void AddTank(class ATankBase* Tank);
+	UFUNCTION(BlueprintCallable)
 	void AddSoldier(ASoldier* Soldier);
 };

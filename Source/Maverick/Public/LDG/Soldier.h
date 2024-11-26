@@ -58,6 +58,9 @@ class MAVERICK_API ASoldier : public ACharacter
 	UPROPERTY()
 	class USoldierHealthWidget* SoldierHealthWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category =  PathKey, meta = (AllowPrivateAccess = "true"))
+	int MinimapPathKey;
+
 public:
 	// Sets default values for this character's properties
 	ASoldier();
@@ -85,4 +88,6 @@ public:
 	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
 	FORCEINLINE UArmyWidgetBase* GetArmyWidgetInstance() const { return ArmyWidgetInstance; }
 	FORCEINLINE UFlockingComponent* GetFlockingComponent() const { return FlockingComponent; }
+	FORCEINLINE int GetMinimapPathKey() const { return MinimapPathKey; }
+	FORCEINLINE void SetMinimapPathKey(int NewKey) { MinimapPathKey = NewKey; }
 };
