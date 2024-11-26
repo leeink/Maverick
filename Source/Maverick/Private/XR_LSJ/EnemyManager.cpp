@@ -282,12 +282,14 @@ void AEnemyManager::AddTank(ATankBase* Tank)
 	Tank->Del_PlayerTankUnitDie.BindUFunction(this, FName("DiePlayerTank"));
 	MaxTankCount++;
 	PlayerTankCount++;
+	UserControlUI->SetTankCount(PlayerTankCount);
 }
 void AEnemyManager::AddSoldier(ASoldier* Soldier)
 {
 	Soldier->Del_PlayerSoldierUnitDie.BindUFunction(this, FName("DiePlayerSoldier"));
 	MaxPlayerSoldierCount++;
 	PlayerSoldierCount++;
+	UserControlUI->SetSoldierCount(PlayerSoldierCount);
 }
 void AEnemyManager::UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct,AOccupiedLocation* pOccupiedLocationActor)
 {
