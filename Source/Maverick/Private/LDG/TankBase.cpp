@@ -14,6 +14,7 @@
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/OperatorPawn.h"
 #include "LDG/TankAIController.h"
+#include "XR_LSJ/EnemyManager.h"
 
 ATankBase::ATankBase()
 {

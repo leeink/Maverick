@@ -14,6 +14,7 @@
 #include "LDG/OperatorPawn.h"
 #include "LDG/SoldierAIController.h"
 #include "LDG/SoldierHealthWidget.h"
+#include "XR_LSJ/EnemyManager.h"
 
 // Sets default values
 ASoldier::ASoldier()

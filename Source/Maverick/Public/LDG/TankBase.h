@@ -76,6 +76,9 @@ class MAVERICK_API ATankBase : public APawn
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DamagedMesh, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AActor> DamagedMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category =  PathKey, meta = (AllowPrivateAccess = "true"))
+	int MinimapPathKey;
 	
 public:
 	ATankBase();
@@ -105,4 +108,6 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	FORCEINLINE UParticleSystem* GetShotEffect() const { return ShotEffect; }
 	FORCEINLINE UParticleSystem* GetExplosionEffect() const { return ExplosionEffect; }
+	FORCEINLINE int GetMinimapPathKey() const { return MinimapPathKey; }
+	FORCEINLINE void SetMinimapPathKey(int NewKey) { MinimapPathKey = NewKey; }
 };
