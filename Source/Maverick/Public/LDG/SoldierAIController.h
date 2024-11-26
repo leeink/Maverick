@@ -57,6 +57,7 @@ public:
 	void SetState(EState NewState);
 
 	void IdleCommand();
+	UFUNCTION(BlueprintCallable)
 	void MoveCommand(FVector GoalLocation);
 	void ChaseCommand(FVector GoalLocation);
 	void AttackCommand();
