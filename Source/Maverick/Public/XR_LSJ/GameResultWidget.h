@@ -27,7 +27,6 @@ class MAVERICK_API UGameResultWidget : public UUserWidget
 	TSubclassOf<UUserWidget> ScrollBox_BasicSlot;
 	UPROPERTY(EditDefaultsOnly,Category = "Widget")
 	TSubclassOf<UUserWidget> ScrollBox_ValueSlot;
-
 protected:
 	UFUNCTION()
 	void ToMainLevel();

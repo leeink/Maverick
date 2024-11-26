@@ -10,6 +10,7 @@
 #include "Components/Button.h"
 #include "XR_LSJ/ResultIconWidget.h"
 
+
 void UGameResultWidget::ToMainLevel()
 {
 	FString LevelPath = L"/Game/XR_LSJ/Maps/MainMenu.MainMenu";

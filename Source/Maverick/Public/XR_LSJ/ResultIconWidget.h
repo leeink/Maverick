@@ -17,6 +17,9 @@ class MAVERICK_API UResultIconWidget : public UUserWidget
 	class UTextBlock* Text_Win;
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* Text_Defeat;
+	
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* Defeat;
 public:
 	void SetVisibleIcon(bool Win);
 };
