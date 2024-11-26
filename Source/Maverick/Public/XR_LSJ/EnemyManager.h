@@ -142,6 +142,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 	void UpdateOccupiedLocationStruct(FOccupiedLocationStruct& pOccupiedLocationStruct, class AOccupiedLocation* pOccupiedLocationActor);
 	void CheckPlayerUnitLocation();
 	void MinDefensiveDeployment(FOccupiedLocationStruct& OccupiedLocationStruct);
@@ -151,5 +152,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	//탱크 추가시 실행해야하는 함수
+	void AddTank(class ATankBase* Tank);
+	void AddSoldier(ASoldier* Soldier);
 };
