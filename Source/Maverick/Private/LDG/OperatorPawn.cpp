@@ -252,6 +252,7 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 					{
 						RifleController -> MoveCommand(HitResult.Location);
 					}
+					Unit->SetMinimapPathKey(-1);
 				}
 			}
 			for(auto* Tank: SelectedTanks)
@@ -262,6 +263,7 @@ void AOperatorPawn::OnMouseRight(const FInputActionValue& Value)
 					{
 						TankAIController -> MoveCommand(HitResult.Location);
 					}
+					Tank->SetMinimapPathKey(-1);
 				}
 			}
 			if(MoveCursorEffect != nullptr)
