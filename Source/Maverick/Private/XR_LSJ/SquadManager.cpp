@@ -96,7 +96,7 @@ void ASquadManager::BeginPlay()
     SquadManagerAbility.Hp = 300.f;
     
     
-    SquadManagerAbility.FindTargetRange = 4000.f;
+    SquadManagerAbility.FindTargetRange = 2650.f;
 	for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
 	{
 		SquadArray.Add(GetWorld()->SpawnActor<AAISquad>(SpawnSquadPactory, GetActorLocation() + SquadPositionArray[SpawnCount], GetActorRotation()));
@@ -149,13 +149,13 @@ void ASquadManager::BeginPlay()
 		} 
     }
     
-    //¹Ì´Ï¸Ê ¾×ÅÍ
+    //ï¿½Ì´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½
     MinimapViewer = Cast<AMinimapViewer>(UGameplayStatics::GetActorOfClass(GetWorld(),AMinimapViewer::StaticClass()));
 
     SetCurrentSquadCount(MaxSpawnCount);
     SetInGameHidden(true);
 }
-// È¿À²ÀûÀÎ °Å¸® ºñ±³ ÇÔ¼ö (Á¦°ö±Ù ¿¬»ê ¾øÀÌ)
+// È¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ ï¿½Ô¼ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 bool ASquadManager::IsCloserThan(const FVector& PointA, const FVector& PointB, const FVector& PointC)
 {
     float DistSquaredOrign = (PointB-PointA).SizeSquared();
@@ -180,7 +180,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
     FLinearColor TraceColor = FLinearColor::Gray;
     FLinearColor TraceHitColor = FLinearColor::Blue;
     float DrawTime = 1.0f;
-    //SquadManagerAbility.FindTargetRange ¹üÀ§ Å½»ö
+    //SquadManagerAbility.FindTargetRange ï¿½ï¿½ï¿½ï¿½ Å½ï¿½ï¿½
     const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
     if (Hit)
     {
@@ -204,7 +204,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
         {
             if(false ==HitResult.GetActor()->ActorHasTag("Player"))
                 continue;
-                //ÀûÀÌ Á×¾ú´Ù¸é
+                //ï¿½ï¿½ï¿½ï¿½ ï¿½×¾ï¿½ï¿½Ù¸ï¿½
             ASoldier* TargetPlayerUnit = Cast<ASoldier>(HitResult.GetActor());
             if (TargetPlayerUnit)
             {
@@ -236,8 +236,8 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 				}
 			}
             
-             //°¢ ºÐ´ë¿ø¿¡°Ô Ã£Àº Àûµé Áß °¡Àå °¡±î¿î ÀûÀÌ°í Áß°£¿¡ Àå¾Ö¹°ÀÌ ¾ø´Ù¸é Å¸°ÙÀ¸·Î ÁöÁ¤
-            //Å¸°Ù¿¡°Ô °ø°Ý Áö½Ã
+             //ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            //Å¸ï¿½Ù¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		    for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		    {
                 if(SquadArray[SquadCount]==nullptr)
@@ -245,8 +245,8 @@ void ASquadManager::FindCloseTargetPlayerUnit()
                 if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                     continue;
                 //UE_LOG(LogTemp,Error,TEXT("Target find"));
-                //Áß°£¿¡ Àå¾Ö¹°ÀÌ ¾ø´Ù¸é
-                //°¢ ºÐ´ë¿ø¸¶´Ù ¸Ó¸®¸¦ ±âÁØÀ¸·Î Àû »çÀÌ¿¡ ¹æÇØ¹°ÀÌ ¾ø°í
+                //ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
+                //ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ó¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				FHitResult OutHit;
 				FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
 				FVector EndLocation = HitResult.GetActor()->GetActorLocation();
@@ -278,7 +278,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 		    }
         }
       
-		//¸¶Áö¸· ÀûÀ» º®°ú »ó°ü¾øÀÌ °ø°ÝÇÏ¹Ç·Î ÇÑ¹ø ´õ »çÀÌ¿¡ Àå¾Ö¹°ÀÌ ÀÖ´ÂÁö °Ë»çÇØ¾ßÇÑ´Ù.
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ ï¿½Ñ¹ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½ï¿½Ø¾ï¿½ï¿½Ñ´ï¿½.
 		for (int SquadCount = 0; SquadCount < MaxSpawnCount; SquadCount++)
 		{
             if(SquadArray[SquadCount]==nullptr)
@@ -304,10 +304,10 @@ void ASquadManager::FindCloseTargetPlayerUnit()
             }
 		}
          
-        //Å½»ö ¹üÀ§ ¾È¿¡ ÀûÀ» °ø°ÝÇÑ´Ù.
+        //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
         if (CanAttackEnemy)
             AttackTargetUnit();
-        else //Å½»ö ¹üÀ§ ¾È¿¡ Àû Á¸ÀçÇÏÁö¸¸ ¹æÇØ¹°ÀÌ ÀÖ´Ù¸é °ø°ÝÀ» Áß´ÜÇÑ´Ù.
+        else //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ ï¿½Ö´Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß´ï¿½ï¿½Ñ´ï¿½.
         { 
             for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 			{
@@ -320,7 +320,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 			}
         }
     }
-    else //Å½»ö ¹üÀ§ ¾È¿¡¼­ ÀûÀ» Ã£À» ¼ö ¾ø´Ù¸é
+    else //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
     {
          for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		 {
@@ -333,7 +333,7 @@ void ASquadManager::FindCloseTargetPlayerUnit()
 		 }
     }
 }
-//°¡±î¿î Àû Å½»ö
+//ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Å½ï¿½ï¿½
 void ASquadManager::FindCloseTargetUnit()
 {
     FVector Start = GetActorLocation();
@@ -351,7 +351,7 @@ void ASquadManager::FindCloseTargetUnit()
     FLinearColor TraceColor = FLinearColor::Gray;
     FLinearColor TraceHitColor = FLinearColor::Blue;
     float DrawTime = 1.0f;
-    //SquadManagerAbility.FindTargetRange ¹üÀ§ Å½»ö
+    //SquadManagerAbility.FindTargetRange ï¿½ï¿½ï¿½ï¿½ Å½ï¿½ï¿½
     const bool Hit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,Radius,TraceChannel,bTraceComplex,ActorsToIgnore,DrawDebugType,OutHits,bIgnoreSelf,TraceColor,TraceHitColor);
     if (Hit)
     {
@@ -379,16 +379,16 @@ void ASquadManager::FindCloseTargetUnit()
             if(false ==HitResult.GetActor()->ActorHasTag("Enemy"))
                 continue;
             
-             //°¢ ºÐ´ë¿ø¿¡°Ô Ã£Àº Àûµé Áß °¡Àå °¡±î¿î ÀûÀÌ°í Áß°£¿¡ Àå¾Ö¹°ÀÌ ¾ø´Ù¸é Å¸°ÙÀ¸·Î ÁöÁ¤
-            //Å¸°Ù¿¡°Ô °ø°Ý Áö½Ã
+             //ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            //Å¸ï¿½Ù¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		    for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		    {
                 if(SquadArray[SquadCount]==nullptr)
                     continue;
                 if(SquadArray[SquadCount]->FSMComp->GetCurrentState() == EEnemyState::DIE)
                     continue;
-                //Áß°£¿¡ Àå¾Ö¹°ÀÌ ¾ø´Ù¸é
-                //°¢ ºÐ´ë¿ø¸¶´Ù ¸Ó¸®¸¦ ±âÁØÀ¸·Î Àû »çÀÌ¿¡ ¹æÇØ¹°ÀÌ ¾ø°í
+                //ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
+                //ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ó¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				FHitResult OutHit;
 				FVector StartLocation = SquadArray[SquadCount]->GetMesh()->GetSocketLocation(TEXT("Head"));
 				FVector EndLocation = FoundEnemy->GetTargetLocation();
@@ -416,7 +416,7 @@ void ASquadManager::FindCloseTargetUnit()
                 break;
             
         }
-		//¸¶Áö¸· ÀûÀ» º®°ú »ó°ü¾øÀÌ °ø°ÝÇÏ¹Ç·Î ÇÑ¹ø ´õ »çÀÌ¿¡ Àå¾Ö¹°ÀÌ ÀÖ´ÂÁö °Ë»çÇØ¾ßÇÑ´Ù.
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ ï¿½Ñ¹ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½ï¿½Ø¾ï¿½ï¿½Ñ´ï¿½.
 		for (int SquadCount = 0; SquadCount < MaxSpawnCount; SquadCount++)
 		{
             if(SquadArray[SquadCount]==nullptr)
@@ -440,10 +440,10 @@ void ASquadManager::FindCloseTargetUnit()
 				}
             }
 		}
-        //Å½»ö ¹üÀ§ ¾È¿¡ ÀûÀ» °ø°ÝÇÑ´Ù.
+        //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
         if (CanAttackEnemy)
             AttackTargetUnit();
-        else //Å½»ö ¹üÀ§ ¾È¿¡ Àû Á¸ÀçÇÏÁö¸¸ ¹æÇØ¹°ÀÌ ÀÖ´Ù¸é °ø°ÝÀ» Áß´ÜÇÑ´Ù.
+        else //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ ï¿½Ö´Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß´ï¿½ï¿½Ñ´ï¿½.
         { 
             for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 			{
@@ -456,7 +456,7 @@ void ASquadManager::FindCloseTargetUnit()
 			}
         }
     }
-    else //Å½»ö ¹üÀ§ ¾È¿¡¼­ ÀûÀ» Ã£À» ¼ö ¾ø´Ù¸é
+    else //Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
     {
          for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
 		 {
@@ -534,7 +534,7 @@ void ASquadManager::AttackTargetUnit()
 {
     if(Target.Num() < CurrentSquadCount)
        return;
-   	//¹Ì´Ï¸Ê¿¡ °æ°í UI Ç¥½Ã
+   	//ï¿½Ì´Ï¸Ê¿ï¿½ ï¿½ï¿½ï¿½ UI Ç¥ï¿½ï¿½
 	CreateWarningUIToMinimap();
      for (int SquadCount = 0; SquadCount<MaxSpawnCount; SquadCount++)
     {
@@ -559,8 +559,8 @@ void ASquadManager::AttackTargetSquad(AActor* TargetActor)
             continue;
         if(SquadPawn->FSMComp->GetCurrentState() == EEnemyState::DIE)
             continue;
-        //»çÁ¤°Å¸® ¾È¿¡ ÀÖ°í //Á¤¸é¿¡¼­ °¡±õ°í
-        //ÀÓ½Ã·Î ·£´ý
+        //ï¿½ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ ï¿½È¿ï¿½ ï¿½Ö°ï¿½ //ï¿½ï¿½ï¿½é¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        //ï¿½Ó½Ã·ï¿½ ï¿½ï¿½ï¿½ï¿½
         int RandomIdx = FMath::RandRange(0, TargetSquadManager->GetCurrentSquadCount()-1);
         SquadPawn->FSMComp->SetIsAttacking(true, TargetSquadManager->GetSquadArray()[RandomIdx]);
     }
@@ -589,7 +589,7 @@ void ASquadManager::FindPath(const FVector& TargetLocation)
 		   GetSquadArray()[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
-    else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // °æ·Î°¡ ²÷°åÀ»¶§
+    else if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // ï¿½ï¿½Î°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     {
          
     }
@@ -622,7 +622,7 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
 		   GetSquadArray()[SquadCount]->FSMComp->MovePathAsync(ArrayLocation);
 	   }
     }
-    else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // °æ·Î°¡ ²÷°åÀ»¶§
+    else //if(NavPath && NavPath->IsValid() && NavPath->IsPartial()) // ï¿½ï¿½Î°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     {
          UE_LOG(LogTemp, Warning, TEXT("No Path"));
     }
@@ -630,95 +630,95 @@ void ASquadManager::FindObstructionPath(TArray<FVector>& TargetLocation)
 
 void ASquadManager::CheckLocationForObject()
 {
-       // Æ®·¹ÀÌ½º ½ÃÀÛ°ú ³¡ À§Ä¡ ¼³Á¤
+       // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½Û°ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
     FVector BoxStart = ArrivalPoint;
-    FVector BoxEnd = BoxStart; // XÃàÀ¸·Î 1000 À¯´Ö ¶³¾îÁø °÷
+    FVector BoxEnd = BoxStart; // Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1000 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
-    // ¹Ú½º Å©±â ¼³Á¤ (X, Y, Z ¹ÝÁö¸§)
+    // ï¿½Ú½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (X, Y, Z ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     FVector BoxHalfSize = FVector(200.f, 200.f, 100.f);
 
-    // ¹Ú½ºÀÇ È¸Àü ¼³Á¤ (ÇÊ¿ä¿¡ µû¶ó È¸Àü Àû¿ë)
+    // ï¿½Ú½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ê¿ä¿¡ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     FQuat Rotation = FQuat::Identity;
 
-    // Æ®·¹ÀÌ½º Ã¤³Î°ú Ãæµ¹ ÆÄ¶ó¹ÌÅÍ ¼³Á¤
+    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ Ã¤ï¿½Î°ï¿½ ï¿½æµ¹ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     FCollisionQueryParams TraceParams(FName(TEXT("PawnMove")), false, this);
 
-    // Æ®·¹ÀÌ½º °á°ú¸¦ ÀúÀåÇÒ FHitResult
+    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ FHitResult
     FHitResult HitResult;
 
-    // ¹Ú½º Æ®·¹ÀÌ½º ¼öÇà
+    // ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½
     bool bHit = GetWorld()->SweepSingleByChannel(
-        HitResult,         // Ãæµ¹ °á°ú
-        BoxStart,             // ½ÃÀÛ À§Ä¡
-        BoxEnd,               // ³¡ À§Ä¡
-        Rotation,          // ¹Ú½ºÀÇ È¸Àü
-        ECC_GameTraceChannel1,    // Æ®·¹ÀÌ½º Ã¤³Î (°¡½Ã¼º Ã¤³Î »ç¿ë)
-        FCollisionShape::MakeBox(BoxHalfSize),  // ¹Ú½º ¸ð¾ç ¼³Á¤
-        TraceParams        // Ãß°¡ ÆÄ¶ó¹ÌÅÍ
+        HitResult,         // ï¿½æµ¹ ï¿½ï¿½ï¿½
+        BoxStart,             // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
+        BoxEnd,               // ï¿½ï¿½ ï¿½ï¿½Ä¡
+        Rotation,          // ï¿½Ú½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½
+        ECC_GameTraceChannel1,    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ Ã¤ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã¼ï¿½ Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½)
+        FCollisionShape::MakeBox(BoxHalfSize),  // ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        TraceParams        // ï¿½ß°ï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½
     );
 
-     // °á°ú Ã³¸®
-    if (bHit) //¸ñÇ¥ÁöÁ¡¿¡ ¿ÀºêÁ§Æ® Á¸Àç ½Ã 
+     // ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    if (bHit) //ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoundingBox(HitResult.GetActor(), 100.0f);
         //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
-        // µð¹ö±×¿ë ¹Ú½º Æ®·¹ÀÌ½º ½Ã°¢È­ (Ãæµ¹ ½Ã »¡°£»ö)
+        // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½Ã°ï¿½È­ (ï¿½æµ¹ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
     }
-    else //¸ñÇ¥ÁöÁ¡¿¡ ¿ÀºêÁ§Æ®°¡ ¾ø´Ù¸é
+    else //ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
     {
        FindPath(BoxStart);
        ArrivalPoint *= -1;
-        // µð¹ö±×¿ë ¹Ú½º Æ®·¹ÀÌ½º ½Ã°¢È­ (Ãæµ¹ ¾øÀ» ½Ã ÃÊ·Ï»ö)
+        // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½Ã°ï¿½È­ (ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê·Ï»ï¿½)
         //DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
     }
 }
 void ASquadManager::CheckLocationForObject(const FVector& TargetLocation)
 {
     LastGoalLocation = TargetLocation;
-       // Æ®·¹ÀÌ½º ½ÃÀÛ°ú ³¡ À§Ä¡ ¼³Á¤
+       // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½Û°ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
     FVector BoxStart = TargetLocation;
-    FVector BoxEnd = BoxStart; // XÃàÀ¸·Î 1000 À¯´Ö ¶³¾îÁø °÷
+    FVector BoxEnd = BoxStart; // Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1000 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
-    // ¹Ú½º Å©±â ¼³Á¤ (X, Y, Z ¹ÝÁö¸§)
+    // ï¿½Ú½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (X, Y, Z ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     FVector BoxHalfSize = FVector(200.f, 200.f, 100.f);
 
-    // ¹Ú½ºÀÇ È¸Àü ¼³Á¤ (ÇÊ¿ä¿¡ µû¶ó È¸Àü Àû¿ë)
+    // ï¿½Ú½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ê¿ä¿¡ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     FQuat Rotation = FQuat::Identity;
 
-    // Æ®·¹ÀÌ½º Ã¤³Î°ú Ãæµ¹ ÆÄ¶ó¹ÌÅÍ ¼³Á¤
+    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ Ã¤ï¿½Î°ï¿½ ï¿½æµ¹ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     FCollisionQueryParams TraceParams(FName(TEXT("PawnMove")), false, this);
 
-    // Æ®·¹ÀÌ½º °á°ú¸¦ ÀúÀåÇÒ FHitResult
+    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ FHitResult
     FHitResult HitResult;
 
-    // ¹Ú½º Æ®·¹ÀÌ½º ¼öÇà
+    // ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½
     bool bHit = GetWorld()->SweepSingleByChannel(
-        HitResult,         // Ãæµ¹ °á°ú
-        BoxStart,             // ½ÃÀÛ À§Ä¡
-        BoxEnd,               // ³¡ À§Ä¡
-        Rotation,          // ¹Ú½ºÀÇ È¸Àü
-        ECC_GameTraceChannel1,    // Æ®·¹ÀÌ½º Ã¤³Î (°¡½Ã¼º Ã¤³Î »ç¿ë)
-        FCollisionShape::MakeBox(BoxHalfSize),  // ¹Ú½º ¸ð¾ç ¼³Á¤
-        TraceParams        // Ãß°¡ ÆÄ¶ó¹ÌÅÍ
+        HitResult,         // ï¿½æµ¹ ï¿½ï¿½ï¿½
+        BoxStart,             // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
+        BoxEnd,               // ï¿½ï¿½ ï¿½ï¿½Ä¡
+        Rotation,          // ï¿½Ú½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½
+        ECC_GameTraceChannel1,    // Æ®ï¿½ï¿½ï¿½Ì½ï¿½ Ã¤ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã¼ï¿½ Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½)
+        FCollisionShape::MakeBox(BoxHalfSize),  // ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        TraceParams        // ï¿½ß°ï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½
     );
 
-     // °á°ú Ã³¸®
-    if (bHit&&nullptr!=HitResult.GetActor()) //¸ñÇ¥ÁöÁ¡¿¡ ¿ÀºêÁ§Æ® Á¸Àç ½Ã 
+     // ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    if (bHit&&nullptr!=HitResult.GetActor()) //ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 
     {
         ObstructionPoints = GetSurfacePointsOnRotatedBoxComp(HitResult.GetActor(), 100.0f);
         //UE_LOG(LogTemp, Log, TEXT("ObstructionPoints(%d)"), ObstructionPoints.Num());
         FindObstructionPath(ObstructionPoints);
         ArrivalPoint *= -1;
-        // µð¹ö±×¿ë ¹Ú½º Æ®·¹ÀÌ½º ½Ã°¢È­ (Ãæµ¹ ½Ã »¡°£»ö)
+        // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½Ã°ï¿½È­ (ï¿½æµ¹ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         //DrawDebugBox(GetWorld(), HitResult.ImpactPoint, BoxHalfSize, Rotation, FColor::Red, false, 2.f);
     }
-    else //¸ñÇ¥ÁöÁ¡¿¡ ¿ÀºêÁ§Æ®°¡ ¾ø´Ù¸é
+    else //ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½
     {
        FindPath(TargetLocation);
-        // µð¹ö±×¿ë ¹Ú½º Æ®·¹ÀÌ½º ½Ã°¢È­ (Ãæµ¹ ¾øÀ» ½Ã ÃÊ·Ï»ö)
+        // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½Ú½ï¿½ Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½Ã°ï¿½È­ (ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê·Ï»ï¿½)
         //DrawDebugBox(GetWorld(), BoxEnd, BoxHalfSize, Rotation, FColor::Green, false, 2.f);
     }
 }
@@ -788,30 +788,30 @@ void ASquadManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-// ºÐ´ë¿ø ¼ö¸¸Å­ FVector ¸¸µé±â
+// ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å­ FVector ï¿½ï¿½ï¿½ï¿½ï¿½
 void ASquadManager::MakeObstructionPoint(AActor* TargetActor, TArray<FVector>& OutPoints, EObstructionDirection DirectionNum)
 {
-    if (OutPoints.Num() == 1 || (OutPoints.Num()<GetCurrentSquadCount() && OutPoints.Num() >= 1)) //ÀÓ½Ã Á¶Ä¡·Î ºÐ´ë¿øº¸´Ù OutPoints.Num()ÀÌ ÀÛÀ¸¸é À§Ä¡¸¦ Ãß°¡ÇÑ´Ù.
+    if (OutPoints.Num() == 1 || (OutPoints.Num()<GetCurrentSquadCount() && OutPoints.Num() >= 1)) //ï¿½Ó½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ OutPoints.Num()ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ñ´ï¿½.
     {
         FVector Temp = OutPoints[0];
         FVector BaseForwardVector;
         FVector BaseRightVector;
-        if (DirectionNum == EObstructionDirection::Left) //ÁÂÃø¿¡¼­ ¿ìÃøÀ» ¹Ù¶óº»´Ù.
+        if (DirectionNum == EObstructionDirection::Left) //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº»´ï¿½.
         {
             BaseForwardVector = TargetActor->GetActorRightVector();
             BaseRightVector = (-1.f)*TargetActor->GetActorForwardVector();
         }
-        else if (DirectionNum == EObstructionDirection::Right) //¿ìÃø¿¡¼­ ÁÂÃøÀ» ¹Ù¶óº»´Ù.
+        else if (DirectionNum == EObstructionDirection::Right) //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº»´ï¿½.
         {
             BaseForwardVector = (-1.f)*TargetActor->GetActorRightVector();
             BaseRightVector = TargetActor->GetActorForwardVector();
         }        
-         else if (DirectionNum == EObstructionDirection::Down) //ÇÏ´Ü¿¡¼­ »ó´ÜÀ» ¹Ù¶óº»´Ù.
+         else if (DirectionNum == EObstructionDirection::Down) //ï¿½Ï´Ü¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº»´ï¿½.
         {
             BaseForwardVector = TargetActor->GetActorForwardVector();
             BaseRightVector = TargetActor->GetActorRightVector();
         }
-         else //»ó´Ü¿¡¼­ ÇÏ´ÜÀ» ¹Ù¶óº»´Ù.
+         else //ï¿½ï¿½Ü¿ï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½Ù¶óº»´ï¿½.
         {
             BaseForwardVector = (-1.f)*TargetActor->GetActorForwardVector();
             BaseRightVector = (-1.f)*TargetActor->GetActorRightVector();
@@ -843,15 +843,15 @@ void ASquadManager::MoveToValidDestination(int32 SquadNumber)
     FNavLocation RandomLocation;
     float MinDistance = 100.0f;
     float MaxRadius = 300.0f;
-    // ¹Ýº¹ÀûÀ¸·Î Ã£±â
-    for (int32 i = 0; i < 10; ++i) // ÃÖ´ë 10¹ø ½Ãµµ
+    // ï¿½Ýºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
+    for (int32 i = 0; i < 10; ++i) // ï¿½Ö´ï¿½ 10ï¿½ï¿½ ï¿½Ãµï¿½
     {
-        // MaxRadius ³»¿¡¼­ ³»ºñ°ÔÀÌ¼Ç °¡´ÉÇÑ ÀÓÀÇÀÇ À§Ä¡ Ã£±â
+        // MaxRadius ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ Ã£ï¿½ï¿½
         if (NavSystem->GetRandomReachablePointInRadius(LastGoalLocation, MaxRadius, RandomLocation))
         {
             
             RandomLocation.Location.Z = 218.0f;
-            // Ã£Àº À§Ä¡°¡ MinDistance ÀÌ»ó ¶³¾îÁ® ÀÖ´ÂÁö È®ÀÎ
+            // Ã£ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ MinDistance ï¿½Ì»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             if (FVector::Dist(GetActorLocation(), RandomLocation.Location) >= MinDistance || i==9)
             {
                 UNavigationPath* NavPath = NavSystem->FindPathToLocationSynchronously(GetWorld(),SquadArray[SquadNumber]->GetActorLocation(),RandomLocation.Location);
@@ -874,7 +874,7 @@ void ASquadManager::MoveToValidDestination(int32 SquadNumber)
 
 void ASquadManager::SetInGameHidden(bool HaveToHidden)
 {
-    //ºÐ´ë¿ø ´©±¸¶óµµ º¸¿©Áø´Ù¸é ºÐ´ë ÀüÃ¼¸¦ º¸ÀÌ°Ô ¸¸µç´Ù.
+    //ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½Ð´ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
     if (false == HaveToHidden)
     {
          MinimapHpWidgetComp->SetVisibility(!HaveToHidden);
@@ -888,7 +888,7 @@ void ASquadManager::SetInGameHidden(bool HaveToHidden)
 			SquadArray[SpawnCount]->SetInGameHidden(HaveToHidden);
 		}
     }
-    else  //ºÐ´ë¿ø ¸ðµÎ¸¦ °¨Ãá´Ù.
+    else  //ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½.
     {
         bool consistent = true;
 		for (int SpawnCount = 0; SpawnCount < MaxSpawnCount; SpawnCount++)
@@ -919,30 +919,30 @@ void ASquadManager::SetInGameHidden(bool HaveToHidden)
     
 }
 
-// µÎ Á¡ P1, P2 »çÀÌ¸¦ Á÷¼± ¹æÁ¤½ÄÀ» ÀÌ¿ëÇØ ÀÏÁ¤ °£°ÝÀ¸·Î Á¡À» »ý¼º
+// ï¿½ï¿½ ï¿½ï¿½ P1, P2 ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 void ASquadManager::GeneratePointsBetweenTwoCorners(const FVector& P1, const FVector& P2, float Interval, TArray<FVector>& OutPoints)
 {
     float Distance = FVector::Dist(P1, P2);
-    int32 NumPoints = FMath::CeilToInt(Distance / Interval);  // 50cm °£°ÝÀ¸·Î ¸î °³ÀÇ Á¡À» »ý¼ºÇÒÁö °è»ê
+    int32 NumPoints = FMath::CeilToInt(Distance / Interval);  // 50cm ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     for (int32 i = 1; i <= NumPoints-1; ++i)
     {
-        float t = i / static_cast<float>(NumPoints);  // t´Â 0¿¡¼­ 1 »çÀÌ¸¦ ÀÏÁ¤ÇÏ°Ô Áõ°¡
+        float t = i / static_cast<float>(NumPoints);  // tï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ 1 ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½
 		FVector Point = FMath::Lerp(P1, P2, t);       // P(t) = (1 - t) * P1 + t * P2
         Point.Z = GetSquadArray()[0]->GetActorLocation().Z;
-        OutPoints.Add(Point);                         // Á¡À» °á°ú ¹è¿­¿¡ Ãß°¡
+        OutPoints.Add(Point);                         // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½è¿­ï¿½ï¿½ ï¿½ß°ï¿½
     }
 }
-// ÀÏÁ¤ °£°Ý(50cm)À¸·Î ¹Ù¿îµù ¹Ú½º ÁÖÀ§¸¦ µÑ·¯½Ñ Á¡µéÀ» SquadManager¿ÍÀÇ °Å¸® ±âÁØÀ¸·Î Á¤·Ä
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(50cm)ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¿ï¿½ï¿½ ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ SquadManagerï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* TargetActor, float Interval /*= 50.0f*/)
 {
     TArray<FVector> VertexArray;
     TArray<FVector> NewVertexArray;
     if (!TargetActor)
     {
-        return NewVertexArray;  // ¾×ÅÍ°¡ ¾øÀ¸¸é ºó ¹è¿­ ¹ÝÈ¯
+        return NewVertexArray;  // ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½è¿­ ï¿½ï¿½È¯
     }
 
-    // ¾×ÅÍÀÇ ¹Ù¿îµù ¹Ú½º °è»ê
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¿ï¿½ï¿½ ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½
     FBox ActorBoundingBox = TargetActor->GetComponentsBoundingBox();
     
 
@@ -951,7 +951,7 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
 	{
         UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
 
-        // 8°³ÀÇ ±Ø´ÜÀû ²ÀÁöÁ¡À» °è»êÇÒ º¯¼öµé
+        // 8ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         FVector3f MinX, MaxX, MinY, MaxY;
 		FPositionVertexBuffer& VertexBuffer = StaticMesh->GetRenderData()->LODResources[0].VertexBuffers.PositionVertexBuffer;
 		MinX = MaxX = VertexBuffer.VertexPosition(0);
@@ -967,27 +967,27 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
 			 if (EachVector1.Y > MaxY.Y) MaxY = EachVector1;
 
 		 }
-          // ¿ùµå º¯È¯ (À§Ä¡, È¸Àü, ½ºÄÉÀÏ Àû¿ë)
+          // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ (ï¿½ï¿½Ä¡, È¸ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
          FTransform ActorTransform = TargetActor->GetActorTransform();
 
-		 FVector FrontLeftVertex = ActorTransform.TransformPosition(FVector(    MinX.X - 20.0f, MinY.Y - 20.0f, 0)); // ÁÂÇÏ´Ü ¾ÕÂÊ
-		 FVector FrontRightVertex = ActorTransform.TransformPosition(FVector(   MaxX.X + 20.0f, MinY.Y - 20.0f, 0)); // ¿ìÇÏ´Ü ¾ÕÂÊ
-		 FVector BackLeftVertex = ActorTransform.TransformPosition(FVector(     MinX.X - 20.0f, MaxY.Y + 20.0f, 0)); // ÁÂÇÏ´Ü µÚÂÊ
-		 FVector BackRightVertex = ActorTransform.TransformPosition(FVector(    MaxX.X + 20.0f, MaxY.Y + 20.0f, 0)); // ¿ìÇÏ´Ü µÚÂÊ
+		 FVector FrontLeftVertex = ActorTransform.TransformPosition(FVector(    MinX.X - 20.0f, MinY.Y - 20.0f, 0)); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 FVector FrontRightVertex = ActorTransform.TransformPosition(FVector(   MaxX.X + 20.0f, MinY.Y - 20.0f, 0)); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 FVector BackLeftVertex = ActorTransform.TransformPosition(FVector(     MinX.X - 20.0f, MaxY.Y + 20.0f, 0)); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 FVector BackRightVertex = ActorTransform.TransformPosition(FVector(    MaxX.X + 20.0f, MaxY.Y + 20.0f, 0)); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
          
-         //ÁÂ¿ì»óÇÏ ²ÀÁöÁ¡
-		 VertexArray.Add(FrontLeftVertex); // ÁÂÇÏ´Ü ¾ÕÂÊ
-		 VertexArray.Add(FrontRightVertex); // ¿ìÇÏ´Ü ¾ÕÂÊ
-		 VertexArray.Add(BackLeftVertex); // ÁÂÇÏ´Ü µÚÂÊ
-		 VertexArray.Add(BackRightVertex); // ¿ìÇÏ´Ü µÚÂÊ
+         //ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(FrontLeftVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(FrontRightVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(BackLeftVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(BackRightVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-         //ÁÂ¿ì»óÇÏ ¹æÇâ
-         VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MinY.Y - 5.0f, 0))); // ÁÂÇÏ´Ü ¾ÕÂÊ
-		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MaxY.Y + 5.0f, 0))); // ¿ìÇÏ´Ü ¾ÕÂÊ
-		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X- 5.0f,  MinY.Y + (MaxY.Y- MinY.Y)/2, 0))); // ÁÂÇÏ´Ü µÚÂÊ
-		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MaxX.X + 5.0f, MinY.Y + (MaxY.Y- MinY.Y)/2 , 0))); // ¿ìÇÏ´Ü µÚÂÊ
+         //ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+         VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MinY.Y - 5.0f, 0))); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X + (MaxX.X-MinX.X)/2, MaxY.Y + 5.0f, 0))); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MinX.X- 5.0f,  MinY.Y + (MaxY.Y- MinY.Y)/2, 0))); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(ActorTransform.TransformPosition(FVector(MaxX.X + 5.0f, MinY.Y + (MaxY.Y- MinY.Y)/2 , 0))); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
          
-         //TargetActor¿Í SquadManager¾×ÅÍÀÇ °¡±î¿î ¹æÇâ¿¡ ÇØ´çÇÏ´Â À§Ä¡¸¦ ±¸ÇÑ´Ù.
+         //TargetActorï¿½ï¿½ SquadManagerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¿¡ ï¿½Ø´ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½.
          EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;
 
@@ -1002,32 +1002,32 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
          }
          switch (ObstructionDirection)
          {
-         case EObstructionDirection::Left: //VertexArray[4] : ÁÂÃø ¹æÇâ
+         case EObstructionDirection::Left: //VertexArray[4] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
              break;
-         case EObstructionDirection::Right: //VertexArray[5] : ¿ìÃø ¹æÇâ
+         case EObstructionDirection::Right: //VertexArray[5] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
              break;
-         case EObstructionDirection::Down: //VertexArray[6] : ÇÏ´Ü ¹æÇâ
+         case EObstructionDirection::Down: //VertexArray[6] : ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
              break;
-         case EObstructionDirection::Up: //VertexArray[7] : »ó´Ü ¹æÇâ
+         case EObstructionDirection::Up: //VertexArray[7] : ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
              break;
          default:
              break;
          }
-             //¾öÆó À§Ä¡°¡ ºÐ´ë¿ø ¼öº¸´Ù Àû´Ù¸é ºÐ´ë¿ø À§Ä¡¸¦ ÁöÁ¤ÇØÁØ´Ù.
+             //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½.
 		 if (NewVertexArray.Num() < GetCurrentSquadCount())
 			 MakeObstructionPoint(TargetActor, NewVertexArray, ObstructionDirection);
-         //³»ÀûÀ» ÇÑ ÈÄ °¡±î¿î ¹æÇâÀÇ ²ÀÁöÁ¡À» ±¸ÇÑ´Ù.
-         //VertexArray[4] : ÁÂÃø ¹æÇâ
+         //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½.
+         //VertexArray[4] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
          //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
-         //VertexArray[5] : ¿ìÃø ¹æÇâ
+         //VertexArray[5] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
          //GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
-         //VertexArray[6] : ÇÏ´Ü ¹æÇâ
+         //VertexArray[6] : ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
          //GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
-         //VertexArray[7] : »ó´Ü ¹æÇâ
+         //VertexArray[7] : ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
          //GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
 
          //float TargetActorTopDirection = FVector::DotProduct(TargetActor->GetActorRightVector(), GetActorLocation());
@@ -1067,10 +1067,10 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
   //          UE_LOG(LogTemp, Log, TEXT("DistanceVertex(%d)"), i);
   //          
   //      }
-  //      //4 : ÁÂÃø
-  //      //5 : ¿ìÃø
-  //      //6 : ÇÏ´Ü
-  //      //7 : »ó´Ü
+  //      //4 : ï¿½ï¿½ï¿½ï¿½
+  //      //5 : ï¿½ï¿½ï¿½ï¿½
+  //      //6 : ï¿½Ï´ï¿½
+  //      //7 : ï¿½ï¿½ï¿½
   //  }
   //  UE_LOG(LogTemp, Log, TEXT("VertexArray(%d)"), j);
   //  DrawDebugSphere(TargetActor->GetWorld(), VertexArray[5], 10.0f, 12, FColor::Red, false, 5.0f);
@@ -1086,73 +1086,73 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoundingBox(AActor* Targ
     return NewVertexArray;
 }
 
-// ÀÏÁ¤ °£°Ý(50cm)À¸·Î ¹Ù¿îµù ¹Ú½º ÁÖÀ§¸¦ µÑ·¯½Ñ Á¡µéÀ» SquadManager¿ÍÀÇ °Å¸® ±âÁØÀ¸·Î Á¤·Ä
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(50cm)ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¿ï¿½ï¿½ ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ SquadManagerï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetActor, float Interval /*= 50.0f*/)
 {
     TArray<FVector> VertexArray;
     TArray<FVector> NewVertexArray;
     if (!TargetActor)
     {
-        return NewVertexArray;  // ¾×ÅÍ°¡ ¾øÀ¸¸é ºó ¹è¿­ ¹ÝÈ¯
+        return NewVertexArray;  // ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½è¿­ ï¿½ï¿½È¯
     }
     
     UBoxComponent* BoxComponent = TargetActor->FindComponentByClass<UBoxComponent>();
 	if (BoxComponent)
 	{
-        // 8°³ÀÇ ±Ø´ÜÀû ²ÀÁöÁ¡À» °è»êÇÒ º¯¼öµé
+        // 8ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         FVector MinXY, MaxX, MaxY, MaxXY;
 		MinXY = FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0);
         MaxX =  FVector(BoxComponent->GetScaledBoxExtent().X,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0);
 		MaxY = FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,BoxComponent->GetScaledBoxExtent().Y,0);
         MaxXY = FVector(BoxComponent->GetScaledBoxExtent().X,BoxComponent->GetScaledBoxExtent().Y,0);
 
-        // ¿ùµå º¯È¯ (À§Ä¡, È¸Àü, ½ºÄÉÀÏ Àû¿ë)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ (ï¿½ï¿½Ä¡, È¸ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         FTransform ActorTransform = TargetActor->GetActorTransform();
 
-		FVector FrontLeftVertex = ActorTransform.TransformPosition(MinXY); // ÁÂ»ó´Ü ¿ÞÂÊ
-		FVector FrontRightVertex = ActorTransform.TransformPosition(MaxX); // ¿ì»ó´Ü ¿À¸¥ÂÊ
-		FVector BackLeftVertex = ActorTransform.TransformPosition(MaxY); // ÁÂÇÏ´Ü ¿ÞÂÊ
-		FVector BackRightVertex = ActorTransform.TransformPosition(MaxXY); // ¿ìÇÏ´Ü ¿À¸¥ÂÊ
+		FVector FrontLeftVertex = ActorTransform.TransformPosition(MinXY); // ï¿½Â»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		FVector FrontRightVertex = ActorTransform.TransformPosition(MaxX); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		FVector BackLeftVertex = ActorTransform.TransformPosition(MaxY); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+		FVector BackRightVertex = ActorTransform.TransformPosition(MaxXY); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
          
-         //ÁÂ¿ì»óÇÏ ²ÀÁöÁ¡
-		 VertexArray.Add(FrontLeftVertex);// ÁÂ»ó´Ü ¿ÞÂÊ
+         //ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		 VertexArray.Add(FrontLeftVertex);// ï¿½Â»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("FrontLeftVertex %s"),*VertexArray.Last().ToString());
-		 VertexArray.Add(FrontRightVertex);  // ¿ì»ó´Ü ¿À¸¥ÂÊ
+		 VertexArray.Add(FrontRightVertex);  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("FrontRightVertex %s"),*VertexArray.Last().ToString());
-		 VertexArray.Add(BackLeftVertex); // ÁÂÇÏ´Ü ¿ÞÂÊ
+		 VertexArray.Add(BackLeftVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("BackLeftVertex %s"),*VertexArray.Last().ToString());
-		 VertexArray.Add(BackRightVertex); // ¿ìÇÏ´Ü ¿À¸¥ÂÊ
+		 VertexArray.Add(BackRightVertex); // ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("BackRightVertex %s"),*VertexArray.Last().ToString());
 
-         //ÁÂ¿ì»óÇÏ ¹æÇâ
+         //ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
          FVector LeftSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X*-1.0f,0,0));
          FVector LeftDirection = LeftSideLocation - TargetActor->GetActorLocation();
          LeftDirection.Normalize();
-         VertexArray.Add(LeftSideLocation+LeftDirection*1000.0f); // ÁÂ
+         VertexArray.Add(LeftSideLocation+LeftDirection*1000.0f); // ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("left %s"),*VertexArray.Last().ToString());
          //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Red, false, 100.0f);
 
          FVector RightSideLocation = ActorTransform.TransformPosition(FVector(BoxComponent->GetScaledBoxExtent().X,0,0));
          FVector RightDirection = RightSideLocation - TargetActor->GetActorLocation();
          RightDirection.Normalize();
-		 VertexArray.Add(RightSideLocation+RightDirection*1000.0f); // ¿ì
+		 VertexArray.Add(RightSideLocation+RightDirection*1000.0f); // ï¿½ï¿½
 		 //UE_LOG(LogTemp,Error,TEXT("right %s"),*VertexArray.Last().ToString());
          //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Yellow, false, 100.0f);
 
          FVector FrontSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y*-1.0f,0));
          FVector FrontDirection = FrontSideLocation - TargetActor->GetActorLocation();
          FrontDirection.Normalize();
-         VertexArray.Add(FrontSideLocation+FrontDirection*1000.0f); // »ó
+         VertexArray.Add(FrontSideLocation+FrontDirection*1000.0f); // ï¿½ï¿½
 		 //UE_LOG(LogTemp,Error,TEXT("up %s"),*VertexArray.Last().ToString());
          //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Blue, false, 100.0f);
 
          FVector BackSideLocation = ActorTransform.TransformPosition(FVector(0,BoxComponent->GetScaledBoxExtent().Y,0));
          FVector BackDirection = BackSideLocation - TargetActor->GetActorLocation();
          BackDirection.Normalize();
-         VertexArray.Add(BackSideLocation+BackDirection*1000.0f); // ÇÏ
+         VertexArray.Add(BackSideLocation+BackDirection*1000.0f); // ï¿½ï¿½
          //UE_LOG(LogTemp,Error,TEXT("down %s"),*VertexArray.Last().ToString());
          //DrawDebugSphere(GetWorld(), VertexArray.Last(), 10.0f, 12, FColor::Black, false, 100.0f);
-         //TargetActor¿Í SquadManager¾×ÅÍÀÇ °¡±î¿î ¹æÇâ¿¡ ÇØ´çÇÏ´Â À§Ä¡¸¦ ±¸ÇÑ´Ù.
+         //TargetActorï¿½ï¿½ SquadManagerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¿¡ ï¿½Ø´ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½.
          EObstructionDirection ObstructionDirection = EObstructionDirection::Left;
          float DirectionVertexDistance = MaxMoveLength;
 
@@ -1167,26 +1167,26 @@ TArray<FVector> ASquadManager::GetSurfacePointsOnRotatedBoxComp(AActor* TargetAc
          }
          switch (ObstructionDirection)
          {
-         case EObstructionDirection::Left: //VertexArray[4] : ÁÂÃø ¹æÇâ
+         case EObstructionDirection::Left: //VertexArray[4] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[2], 100.0f, NewVertexArray);
             //UE_LOG(LogTemp,Error,TEXT("left"));
              break;
-         case EObstructionDirection::Right: //VertexArray[5] : ¿ìÃø ¹æÇâ
+         case EObstructionDirection::Right: //VertexArray[5] : ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[1], VertexArray[3], 100.0f, NewVertexArray);
             //UE_LOG(LogTemp,Error,TEXT("Right"));
              break;
-         case EObstructionDirection::Down: //VertexArray[6] : »ó´Ü ¹æÇâ
+         case EObstructionDirection::Down: //VertexArray[6] : ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[0], VertexArray[1], 100.0f, NewVertexArray);
              //UE_LOG(LogTemp,Error,TEXT("Down"));
              break;
-         case EObstructionDirection::Up: //VertexArray[7] : ÇÏ´Ü ¹æÇâ
+         case EObstructionDirection::Up: //VertexArray[7] : ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
             GeneratePointsBetweenTwoCorners(VertexArray[2], VertexArray[3], 100.0f, NewVertexArray);
              //UE_LOG(LogTemp,Error,TEXT("Up"));
              break;
          default:
              break;
          }
-             //¾öÆó À§Ä¡°¡ ºÐ´ë¿ø ¼öº¸´Ù Àû´Ù¸é ºÐ´ë¿ø À§Ä¡¸¦ ÁöÁ¤ÇØÁØ´Ù.
+             //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½Ð´ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½.
 		 if (NewVertexArray.Num() < GetCurrentSquadCount())
 			 MakeObstructionPoint(TargetActor, NewVertexArray, ObstructionDirection);
         
