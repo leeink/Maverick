@@ -19,11 +19,6 @@ void ATankAIController::OnPossess(APawn* InPawn)
 	StartDetectionTimer();
 }
 
-void ATankAIController::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-}
-
 void ATankAIController::SetState(ETankState NewState)
 {
 	CurrentState = NewState;

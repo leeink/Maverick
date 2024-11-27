@@ -50,7 +50,6 @@ public:
 
 public:
 	virtual void OnPossess(APawn* InPawn) override;
-	virtual void Tick(float DeltaSeconds) override;
 
 	void SetState(ETankState NewState);
 
