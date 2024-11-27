@@ -12,6 +12,7 @@
 #include "LDG/ArmyWidgetBase.h"
 #include "LDG/FlockingComponent.h"
 #include "LDG/OperatorPawn.h"
+#include "LDG/RifleSoliderAnimInstance.h"
 #include "LDG/SoldierAIController.h"
 #include "LDG/SoldierHealthWidget.h"
 #include "XR_LSJ/EnemyManager.h"
@@ -118,7 +119,7 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		if(auto* con = Cast<ASoldierAIController>(UAIBlueprintHelperLibrary::GetAIController(this)))
 		{
 			con -> Die();
-
+			con -> GetRifleAnimInstance() -> Montage_Stop(.25f);
 			if(Del_PlayerSoldierUnitDie.IsBound())
 			{
 				Del_PlayerSoldierUnitDie.Execute();
@@ -131,13 +132,9 @@ float ASoldier::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 				{
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), DieSound, GetActorLocation());
 				}
-				//Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Remove(this);
-				/*GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Pre Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Num()));
-				Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Remove(this);
-				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Post Number: %d"), Cast<AOperatorPawn>(GetWorld() -> GetFirstPlayerController() -> GetPawn()) -> GetSelectedUnits().Num()));
-				*/
+				
 				Destroy();
-			}, 3.0f, false, 3.0f);
+			}, 3.0f, false, 2.f);
 		}
 	}
 	
