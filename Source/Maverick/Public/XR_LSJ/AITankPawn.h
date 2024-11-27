@@ -56,21 +56,21 @@ class MAVERICK_API AAITankPawn : public APawn , public IIAICommand
 	int32 MaxTankHp;
 	FTimerHandle FindEnemy;
 
-	//½ÃÀÛ½Ã ÀÌµ¿ÇÒ ¸ñÇ¥ ÁöÁ¡
+	//ì‹œì‘ì‹œ ì´ë™í•  ëª©í‘œ ì§€ì 
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	FVector StartGoalLocation;
-	//ÇöÀç ÅÊÅ© »óÅÂ 
+	//í˜„ì¬ íƒ±í¬ ìƒíƒœ 
 	EAIUnitActionState CurrentActionState;
 
-	//¹Ì´Ï¸Ê ¾×ÅÍ
+	//ë¯¸ë‹ˆë§µ ì•¡í„°
 	class AMinimapViewer* MinimapViewer;
-	//ÅÊÅ© ¹ß»ç »ç¿îµå
+	//íƒ±í¬ ë°œì‚¬ ì‚¬ìš´ë“œ
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
 	class USoundBase* GunFireSound;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Meta = (AllowPrivateAccess = true))
 	class USoundAttenuation* SA_Unit;
 public:
-	//ÅÊÅ© Á×À½ ¾Ë¸² µ¨¸®°ÔÀÌÆ®
+	//íƒ±í¬ ì£½ìŒ ì•Œë¦¼ ë¸ë¦¬ê²Œì´íŠ¸
 	FDel_TankUnitDie FDelTankUnitDie;
 	// Sets default values for this pawn's properties
 	AAITankPawn();
@@ -98,19 +98,19 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void FindPath(const FVector& TargetLocation);
-	//PlayerUnitÀÌ º¸°í ÀÖ´Â ¼ö ++
+	//PlayerUnitì´ ë³´ê³  ìˆëŠ” ìˆ˜ ++
 	UFUNCTION(BlueprintCallable)
 	virtual void AddViewCount();
-	//PlayerUnitÀÌ º¸°í ÀÖ´Â ¼ö --
+	//PlayerUnitì´ ë³´ê³  ìˆëŠ” ìˆ˜ --
 	UFUNCTION(BlueprintCallable)
 	virtual void MinusViewCount();
-	//PlayerUnitÀÌ º¸°í ÀÖ´Â ¼ö
+	//PlayerUnitì´ ë³´ê³  ìˆëŠ” ìˆ˜
 	virtual int32 GetViewCount() const {return viewCount;}
-	//ÅÊÅ© À¯´Ö °¨Ãß±â
+	//íƒ±í¬ ìœ ë‹› ê°ì¶”ê¸°
 	UFUNCTION(BlueprintCallable)
 	void SetViewCountToHidden();
 protected:
-//¹Ì´Ï¸Ê¿¡ °æ°í UI »ı¼º
+//ë¯¸ë‹ˆë§µì— ê²½ê³  UI ìƒì„±
 	void CreateWarningUIToMinimap();
 	void SetVisibleTank(bool val);
 	void FireCannon();
@@ -127,7 +127,7 @@ protected:
 	virtual void MovePathAsync(TArray<FVector>& NavPathArray);
 	bool CalculateBallisticVelocity(const FVector& StartLocation, 
     const FVector& EndLocation, 
-    float DesiredTime, // ¸ñÇ¥ µµ´Ş ½Ã°£
+    float DesiredTime, // ëª©í‘œ ë„ë‹¬ ì‹œê°„
     FVector& OutVelocity);
 	virtual void FindCloseTargetUnit();
 
@@ -141,10 +141,10 @@ protected:
 public:
 	virtual FVector GetTargetLocation();
 	void FindCloseTargetPlayerUnit();
-	//Ã¼·Â¹Ù UI Class
+	//ì²´ë ¥ë°” UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UAIUnitHpBar> HpBarClass;
-	//Ã¼·Â¹Ù UI Class
+	//ì²´ë ¥ë°” UI Class
 	UPROPERTY(EditDefaultsOnly,Category = "HpBar")
 	TSubclassOf<class UHpBarNewIcon> MinimapHpWidgetClass;
 	// Called every frame

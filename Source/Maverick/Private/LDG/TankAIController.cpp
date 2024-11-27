@@ -83,8 +83,8 @@ void ATankAIController::AttackCommand()
 
 float ATankAIController::GetRotationAngle()
 {
-	AActor * Target = Cast<AActor>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
-	if(Target != nullptr)
+	AAITankPawn * Target = Cast<AAITankPawn>(GetBlackboardComponent() -> GetValueAsObject(FName(TEXT("TargetActor"))));
+	if(Target != nullptr && (Target -> GetCurrentCommandState() != EAIUnitCommandState::DIE))
 	{
 		FVector ForwardVector = PossessedPawn -> GetActorForwardVector();
 		FVector TargetLocation = Target -> GetActorLocation();
