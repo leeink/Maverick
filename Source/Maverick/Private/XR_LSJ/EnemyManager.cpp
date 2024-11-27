@@ -324,12 +324,13 @@ void AEnemyManager::CheckPlayerUnitLocation()
 		MoveToTakeOver(TopOccupiedLocationStruct);
 	}
 	//아래가 점령 되지 않았다면
-	else if (true == OccupiedBottom)
+	else if (true == OccupiedBottom && BottomMoveCount<1)
 	{
 		//최소 방어 분대 배치 체크
 		//MinDefensiveDeployment(TopOccupiedLocationStruct);
 		UE_LOG(LogTemp,Error,TEXT("BottomOccupiedLocationStruct"));
 		//아래쪽을 점령한다.
+		BottomMoveCount++;
 		MoveToTakeOver(BottomOccupiedLocationStruct);
 	}
 }

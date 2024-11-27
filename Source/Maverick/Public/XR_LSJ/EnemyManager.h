@@ -91,6 +91,8 @@ class MAVERICK_API AEnemyManager : public AActor
 	FOccupiedLocationStruct BottomOccupiedLocationStruct;
 	//플레이어 유닛의 위치를 확인하는 FTimerHandle
 	FTimerHandle CheckPlayerUnitLocationHandle;
+
+	int32 BottomMoveCount;
 public:	
 	// Sets default values for this actor's properties
 	AEnemyManager();
