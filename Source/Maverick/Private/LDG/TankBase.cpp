@@ -76,6 +76,7 @@ void ATankBase::Selected()
 {
 	bSelected = true;
 	SelectedDecal -> SetVisibility(true);
+	GEngine -> AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Selected"));
 }
 
 void ATankBase::Deselected()
