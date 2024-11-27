@@ -420,15 +420,28 @@ FVector UMinimapWidget::ConvertingMinimapToLocation(FVector2D Position)
 {
     //LandScape 를 가져와서 변환하자
     // 오프셋을 월드 위치로 변환 
-    float NormalX = FMath::Lerp(0.f,1.f,(Position.X-29.294f)/(374.085-29.294));
-    float NormalY = FMath::Lerp(1.f,0.f,(Position.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
-    float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
-    float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
+    float NormalX = FMath::Lerp(0.f,1.f,FMath::Clamp(Position.X-27.f,0,374.f-27.f)/(374.f-27.f)); //27.000000 //373.621613
+    float NormalY = FMath::Lerp(1.f,0.f,FMath::Clamp(Position.Y-480.f,0,1060.f-480)/(1060.f-480.f)); //462.746 //1035.151 //1060~480 1 0
+
+    float WorldPositionX = FMath::Lerp(21650-10481.0,-10481.0,NormalX);
+    float WorldPositionY = FMath::Lerp(-19279,39591-19279,NormalY); //1054.779541 //506.431274
     FVector WorldPosition;
     WorldPosition.X = WorldPositionX;
-    WorldPosition.Y = WorldPositionY + 4000.f;
+    WorldPosition.Y = WorldPositionY;
     WorldPosition.Z = 150.f; // 높이값 고정 또는 특정 레벨의 높이로 설정
+
     return WorldPosition;
+    ////LandScape 를 가져와서 변환하자
+    //// 오프셋을 월드 위치로 변환 
+    //float NormalX = FMath::Lerp(0.f,1.f,(Position.X-29.294f)/(374.085-29.294));
+    //float NormalY = FMath::Lerp(1.f,0.f,(Position.Y-470.f)/(1054.f-470.f)); //462.746 //1035.151
+    //float WorldPositionX = FMath::Lerp(11080.0,-11090.0,NormalX);
+    //float WorldPositionY = FMath::Lerp(-23280.0,18780.0,NormalY); //1054.779541 //506.431274
+    //FVector WorldPosition;
+    //WorldPosition.X = WorldPositionX;
+    //WorldPosition.Y = WorldPositionY + 4000.f;
+    //WorldPosition.Z = 150.f; // 높이값 고정 또는 특정 레벨의 높이로 설정
+    //return WorldPosition;
 }
 FVector2D UMinimapWidget::ConvertingLocationToMinimap(FVector Location)
 {
