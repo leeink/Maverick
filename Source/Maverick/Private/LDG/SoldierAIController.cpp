@@ -82,12 +82,8 @@ void ASoldierAIController::AttackCommand()
 void ASoldierAIController::Die()
 {
 	SetState(EState::Die);
+	GetBlackboardComponent() -> SetValueAsEnum(FName(TEXT("State")), static_cast<uint8>(EState::Die));
 	PossessedPawn -> GetCapsuleComponent() -> SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	if(RifleAnimInstance -> Montage_IsPlaying(RifleAnimInstance -> GetAttackMontage()))
-	{
-		RifleAnimInstance -> StopAllMontages(.1f);
-	}
-	RifleAnimInstance -> PlayDeathMontage();
 }
 
 void ASoldierAIController::StartDetectionTimer()
