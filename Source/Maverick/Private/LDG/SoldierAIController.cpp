@@ -21,11 +21,6 @@ void ASoldierAIController::OnPossess(APawn* InPawn)
 	StartDetectionTimer();
 }
 
-void ASoldierAIController::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-}
-
 void ASoldierAIController::SetState(EState NewState)
 {
 	CurrentState = NewState;
