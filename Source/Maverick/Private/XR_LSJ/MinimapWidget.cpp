@@ -18,18 +18,20 @@
 #include "LDG/SoldierAIController.h"
 #include "LDG/TankBase.h"
 #include "LDG/TankAIController.h"
-FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply UMinimapWidget::NativeOnMouseButtonDoubleClick( const FGeometry& InGeometry, const FPointerEvent& InMouseEvent )
 {
-    // 클릭된 위치를 위젯 공간에서 좌표로 얻기
-    FVector2D LocalClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
-        // 클릭된 위치로 플레이어 이동
-        MovePlayerToMapClick(LocalClickPosition);   
+        CreatePathLine(InGeometry,InMouseEvent);
+        return FReply::Handled();
     }
-    else if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-    {
-       if (AOperatorPawn* PlayerPawn = Cast<AOperatorPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+
+    return Super::NativeOnMouseButtonDoubleClick(InGeometry, InMouseEvent);
+}
+
+void UMinimapWidget::CreatePathLine(const FGeometry& InGeometry,const FPointerEvent& InMouseEvent)
+{
+    if (AOperatorPawn* PlayerPawn = Cast<AOperatorPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
        {
             FVector2D ClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
             //미니맵 위치를 월드 위치로 변환
@@ -87,8 +89,8 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
                Units.Add(Unit);
             }
             if(Units.Num()<=0)
-                return FReply::Handled();
-            TArray<FVector> Path;
+				return;
+			TArray<FVector> Path;
             TArray<TPair<FVector2D, FVector2D>> PathLines;
 			FindPath(StartLocation, WorldPosition, Path);
 			for (int32 PathIdx = 0; PathIdx < Path.Num() - 1; PathIdx++)
@@ -106,64 +108,27 @@ FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
 			}
             Num_MinimapPath.Add(NextKey,PathLines);
             Num_Units.Add(NextKey,Units);
+    }
+}
+FReply UMinimapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+  
+    // 클릭된 위치를 위젯 공간에서 좌표로 얻기
+    FVector2D LocalClickPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        // 클릭된 위치로 플레이어 이동
+        MovePlayerToMapClick(LocalClickPosition);   
 
-
-            //////////////////////////////////////////////////////
-            /*
-            for (ASoldier* Unit : PlayerPawn->GetSelectedUnits())
-			{   
-               if(nullptr==Unit)
-                  continue;
-               float TargetDistance = FVector::Distance(Unit->GetActorLocation(),WorldPosition);
-               if (TargetDistance < minDistance)
-               {
-                   minDistance = TargetDistance;
-                   StartLocation = Unit->GetActorLocation();
-               }
-               Units.Add(Unit);
-            }
-            for (ATankBase* Unit : PlayerPawn->GetSelectedTanks())
-			{   
-               if(nullptr==Unit)
-                  continue;
-               float TargetDistance = FVector::Distance(Unit->GetActorLocation(),WorldPosition);
-               if (TargetDistance < minDistance)
-               {
-                   minDistance = TargetDistance;
-                   StartLocation = Unit->GetActorLocation();
-                   WorldPosition.Z = 132.0f;
-               }
-               Units.Add(Unit);
-            }
-            if(Units.Num()<=0)
-                return;
-            TArray<FVector> Path;
-            TArray<TPair<FVector2D, FVector2D>> PathLines;
-			FindPath(StartLocation, WorldPosition, Path);
-			for (int32 PathIdx = 0; PathIdx < Path.Num() - 1; PathIdx++)
-			{
-				FVector2D MinimapPosition = ConvertingLocationToMinimap(Path[PathIdx]);
-				FVector2D NextMinimapPosition = ConvertingLocationToMinimap(Path[PathIdx + 1]);
-
-                MinimapPosition.X*=CurrentViewportSize.X;
-                MinimapPosition.Y*=CurrentViewportSize.Y;
-    
-                NextMinimapPosition.X*=(CurrentViewportSize.X);
-                NextMinimapPosition.Y*=CurrentViewportSize.Y;
-                //미니맵에 경로 그리기
-                PathLines.Add(TPair<FVector2D, FVector2D>(MinimapPosition, NextMinimapPosition));
-			}
-            if(Unit_MinimapPath.Contains(Units))
-                Unit_MinimapPath[Units]=PathLines;
-            else
-                Unit_MinimapPath.Add(Units,PathLines);
-            */
-       }
+    }
+    else if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        CreatePathLine(InGeometry,InMouseEvent);
     }
 
 
 
-    return FReply::Handled();
+     return FReply::Handled();
 }
 void UMinimapWidget::MovePlayerToMapClick(const FVector2D& ClickPosition)
 {
@@ -437,7 +402,7 @@ void UMinimapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UMinimapWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-
+    
 }
 
 void UMinimapWidget::NativeDestruct()
